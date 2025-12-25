@@ -184,12 +184,28 @@
 
 <script src="script.js"></script>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- CONFIGURAÇÃO (MANTENHA A SUA) ---
+    // --- CONFIGURAÇÃO ---
     const firebaseConfig = {
         apiKey: "AIzaSyCTJGH90GaYbdRChcjOtpff5o6ZYzlYA8k",
         authDomain: "guia-baixo-app.firebaseapp.com",
@@ -203,11 +219,15 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Variáveis e Elementos
+    // Variáveis
     let currentUser = null;
     let currentModId = 0;
     let currentLessId = 0;
+    
+    // Cache dos dados de progresso (para não ler o banco toda hora)
+    let userProgressData = {}; 
 
+    // Elementos UI
     const loginScreen = document.getElementById('login-screen');
     const appContainer = document.getElementById('app-container');
     const emailInput = document.getElementById('email');
@@ -218,6 +238,7 @@
     const progressArea = document.getElementById('progress-area');
     const progressSlider = document.getElementById('progress-slider');
     const progressVal = document.getElementById('progress-val');
+    const menuContainer = document.getElementById('menu-container');
 
     // --- LOGIN ---
     btnLogin.addEventListener('click', () => {
@@ -229,8 +250,7 @@
             .catch((error) => {
                 btnLogin.innerText = "ENTRAR";
                 errorMsg.style.display = 'block';
-                if(error.code === 'auth/invalid-credential') errorMsg.innerText = "Dados incorretos.";
-                else errorMsg.innerText = "Erro: " + error.message;
+                errorMsg.innerText = "Dados incorretos.";
             });
     });
 
@@ -240,27 +260,29 @@
         });
     }
 
-    // --- MONITORAMENTO DE ESTADO (AUTH) ---
+    // --- MONITORAMENTO DE ESTADO ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
             
-            // Esconde login / Mostra App
+            // Esconde login
             loginScreen.style.opacity = '0';
             setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
             appContainer.style.opacity = '1';
             appContainer.style.pointerEvents = 'all';
             
-            // --- CORREÇÃO AQUI: Tenta atualizar o menu várias vezes ---
-            // Tenta imediatamente
-            updateSidebarPercentages();
-            // Tenta depois de 1 segundo (garante que o script.js rodou)
-            setTimeout(updateSidebarPercentages, 1000);
-            // Tenta depois de 3 segundos (garantia final para conexões lentas)
-            setTimeout(updateSidebarPercentages, 3000);
+            // 1. Carrega os dados do banco UMA VEZ e salva na memória
+            await fetchUserProgress();
             
+            // 2. Tenta preencher o menu agora (vai que ele já existe...)
+            fillSidebarFromMemory();
+
+            // 3. Ativa o "Observador" para garantir (caso o menu apareça depois)
+            startMenuObserver();
+
         } else {
             currentUser = null;
+            userProgressData = {}; // Limpa memória
             loginScreen.style.display = 'flex';
             setTimeout(() => { loginScreen.style.opacity = '1'; }, 10);
             appContainer.style.opacity = '0';
@@ -277,11 +299,9 @@
 
         progressVal.innerText = valor + "%";
         
-        // Atualiza o menu lateral na hora
-        const sidebarSpan = document.getElementById(`percent-${currentModId}-${currentLessId}`);
-        if(sidebarSpan) {
-            sidebarSpan.innerText = valor > 0 ? valor + "%" : "";
-        }
+        // Atualiza memória local e menu
+        userProgressData[lessonKey] = valor;
+        updateSingleSidebarItem(currentModId, currentLessId, valor);
 
         try {
             await setDoc(userRef, { [lessonKey]: valor }, { merge: true });
@@ -292,39 +312,53 @@
         progressVal.innerText = e.target.value + "%";
     });
 
-    // --- FUNÇÃO DE UPDATE VISUAL DO MENU ---
-    async function updateSidebarPercentages() {
+    // --- FUNÇÕES AUXILIARES ---
+
+    // Busca tudo do banco e guarda na variável userProgressData
+    async function fetchUserProgress() {
         if(!currentUser) return;
-        
         const userRef = doc(db, "users", currentUser.uid);
         try {
             const docSnap = await getDoc(userRef);
             if (docSnap.exists()) {
-                const data = docSnap.data();
-                // Percorre todos os dados salvos
-                for (const [key, value] of Object.entries(data)) {
-                    if (key.startsWith('progresso_')) {
-                        // Converte chave do banco ("progresso_0_1") para ID do HTML ("percent-0-1")
-                        const sidebarId = key.replace('progresso_', 'percent-');
-                        const span = document.getElementById(sidebarId);
-                        
-                        // Se encontrou o span (significa que o menu já existe), preenche
-                        if(span && value > 0) {
-                            span.innerText = value + "%";
-                        }
-                    }
-                }
+                userProgressData = docSnap.data();
             }
-        } catch (error) { console.error("Erro ao atualizar menu:", error); }
+        } catch (error) { console.error("Erro ao buscar dados:", error); }
     }
 
-    // --- PONTE COM O SCRIPT.JS ---
-    window.addEventListener('load', () => {
-        // Se já estiver logado quando a página terminar de carregar, força atualização do menu
-        if(currentUser) {
-            setTimeout(updateSidebarPercentages, 500);
+    // Preenche o menu usando os dados que já estão na memória
+    function fillSidebarFromMemory() {
+        for (const [key, value] of Object.entries(userProgressData)) {
+            if (key.startsWith('progresso_')) {
+                const sidebarId = key.replace('progresso_', 'percent-');
+                const span = document.getElementById(sidebarId);
+                if(span && value > 0) {
+                    span.innerText = value + "%";
+                }
+            }
         }
+    }
 
+    function updateSingleSidebarItem(mod, less, val) {
+        const span = document.getElementById(`percent-${mod}-${less}`);
+        if(span) span.innerText = val > 0 ? val + "%" : "";
+    }
+
+    // --- O OBSERVADOR (A MÁGICA) ---
+    // Fica vigiando se novos itens são adicionados ao menu
+    function startMenuObserver() {
+        const observer = new MutationObserver((mutations) => {
+            // Se algo mudou no menu, tentamos preencher os números de novo
+            fillSidebarFromMemory();
+        });
+
+        if(menuContainer) {
+            observer.observe(menuContainer, { childList: true, subtree: true });
+        }
+    }
+
+    // --- PONTE COM SCRIPT.JS ---
+    window.addEventListener('load', () => {
         if(typeof loadLesson !== 'undefined') {
             const originalLoad = window.loadLesson;
             
@@ -341,23 +375,16 @@
                 progressVal.innerText = "0%";
                 progressSlider.disabled = true;
 
+                // Usa o dado da memória (muito mais rápido que ir no banco de novo)
                 const lessonKey = `progresso_${modIdx}_${lessIdx}`;
-                const userRef = doc(db, "users", currentUser.uid);
-
-                try {
-                    const docSnap = await getDoc(userRef);
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        const savedValue = data[lessonKey] || 0;
-                        progressSlider.value = savedValue;
-                        progressVal.innerText = savedValue + "%";
-                    }
-                } catch (error) { console.error("Erro:", error); } 
-                finally { progressSlider.disabled = false; }
+                const savedValue = userProgressData[lessonKey] || 0;
+                
+                progressSlider.value = savedValue;
+                progressVal.innerText = savedValue + "%";
+                progressSlider.disabled = false;
             }
         }
     });
 </script>
-
 </body>
 </html>
