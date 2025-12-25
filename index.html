@@ -11,6 +11,24 @@
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 
     <style>
+
+        /* Estilo para links dentro do texto */
+.link-interno {
+    color: #2980b9;
+    font-weight: bold;
+    text-decoration: underline;
+    cursor: pointer;
+    background: #ecf0f1;
+    padding: 2px 5px;
+    border-radius: 4px;
+    transition: 0.2s;
+}
+.link-interno:hover {
+    background: #d6eaf8;
+    color: #1a5276;
+}
+
+
         /* === ESTILOS VISUAIS (CSS) === */
         
         /* Reset básico */
@@ -349,7 +367,7 @@
                 lessons: [
                     { 
                         title: "Aula 04: Tônica e Quinta", 
-                        text: "Explicação sobre intervalos.", 
+                       text: "Para entender esta aula, você precisa lembrar das cordas soltas.\n\nSe não lembra, revise a <span class='link-interno' onclick='loadLesson(0, 1)'>Aula 02: Cordas Soltas</span> antes de continuar.\n\nTambém é importante estar com a técnica em dia. Veja a <span class='link-interno' onclick='loadLesson(0, 2)'>Aula 03: Mão Direita</span>.",
                         img: "imagens/aula03-quinta.png", 
                         audioBass: "audios/aula03-bass.mp3", audioBack: ""
                     },
@@ -437,7 +455,7 @@
             // Textos
             document.getElementById('display-module').innerText = courseData[modIdx].module;
             document.getElementById('display-title').innerText = data.title;
-            document.getElementById('display-text').innerText = data.text;
+            document.getElementById('display-text').innerHTML = data.text.replace(/\n/g, "<br>");
 
             // Imagem
             const imgEl = document.getElementById('display-img');
