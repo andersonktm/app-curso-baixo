@@ -123,6 +123,14 @@ body {
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
 .lesson-link { 
+    /* --- O QUE MUDOU: FLEXBOX ROBUSTO --- */
+    display: flex;                  /* Ativa o modo flexível */
+    justify-content: space-between; /* Empurra texto p/ esquerda e % p/ direita */
+    align-items: center;            /* Centraliza verticalmente */
+    flex-wrap: nowrap;              /* IMPEDE que a % caia para a linha de baixo */
+    gap: 10px;                      /* Garante um espaço mínimo entre texto e % */
+    
+    /* --- SEUS ESTILOS ORIGINAIS (MANTIDOS) --- */
     padding: 10px 15px; 
     cursor: pointer; 
     font-size: 0.9rem; 
@@ -243,3 +251,84 @@ audio { width: 100%; height: 40px; filter: invert(0.9); }
     .logo-area { display: flex; justify-content: space-between; align-items: center; }
     .container { padding: 20px; }
 }
+
+
+
+  /* --- TELA DE LOGIN --- */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #2c3e50; z-index: 9999;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            color: white; transition: opacity 0.5s;
+        }
+        .login-box { background: white; padding: 30px; border-radius: 10px; width: 300px; text-align: center; color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .login-input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        .login-btn { width: 100%; padding: 12px; background: #e67e22; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; font-size: 16px; transition: 0.3s; }
+        .login-btn:hover { background: #d35400; }
+        .error-msg { color: #e74c3c; font-size: 14px; display: none; margin-top: 10px; font-weight: bold; }
+
+        /* --- LAYOUT FIX --- */
+        #app-container { 
+            opacity: 0; transition: opacity 1s; pointer-events: none;
+            width: 100%; height: 100vh; display: flex; overflow: hidden;
+        }
+
+        .btn-logout {
+            background: #c0392b;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 0;
+            width: 100%;
+            font-size: 0.95rem;
+            font-weight: bold;
+        }
+
+        /* --- ESTILO DA BARRA DE PROGRESSO ESCURA --- */
+        .progress-box {
+            background: #1e272e; /* Fundo bem escuro */
+            color: #ecf0f1;
+            border-radius: 8px;
+            padding: 25px; 
+            margin-top: 40px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #34495e;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .progress-label { font-size: 0.9rem; color: #bdc3c7; font-weight: 600; margin-bottom: 15px; display: block; letter-spacing: 1px; }
+        
+        .progress-slider {
+            width: 100%; cursor: pointer; height: 12px; background: #34495e; border-radius: 6px; outline: none; -webkit-appearance: none;
+        }
+        .progress-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #27ae60; cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+        }
+        .progress-value { color: #2ecc71; font-weight: bold; font-size: 1.2rem; margin-left: 8px; }
+
+        /* --- ESTILO DA PORCENTAGEM NO MENU LATERAL --- */
+.menu-percent {
+    /* --- AJUSTE PARA NÃO QUEBRAR --- */
+    flex-shrink: 0;    /* Impede que a bolinha da porcentagem seja esmagada */
+    white-space: nowrap; /* Garante que o texto da % não quebre */
+    
+    font-size: 0.75rem; 
+    color: #2ecc71; 
+    font-weight: bold; 
+    background: rgba(46, 204, 113, 0.15); 
+    padding: 2px 6px; 
+    border-radius: 4px; 
+}
+
+
+/* === RODAPÉ DO MENU LATERAL === */
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid #333; /* Linha separadora sutil */
+    background: var(--bg-sidebar); /* Garante que o fundo seja o mesmo */
+    margin-top: auto; /* Segurança extra para forçar para baixo */
+}
+
+

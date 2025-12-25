@@ -21,6 +21,7 @@ let currentUser = null;
 let currentModId = 0;
 let currentLessId = 0;
 let userProgressData = {}; 
+let menuObserver = null; // Guardamos o observador aqui
 
 // Elementos UI
 const loginScreen = document.getElementById('login-screen');
@@ -66,16 +67,16 @@ onAuthStateChanged(auth, async (user) => {
         appContainer.style.opacity = '1';
         appContainer.style.pointerEvents = 'all';
         
-        // 1. Carrega dados do banco
+        // 1. Carrega dados
         await fetchUserProgress();
         
-        // 2. Tenta preencher a memória visualmente
+        // 2. Preenche memória
         fillSidebarFromMemory();
 
-        // 3. Ativa o vigia do menu (Isso garante que apareça assim que o menu carregar)
+        // 3. Inicia o observador seguro
         startMenuObserver();
 
-        // 4. Atualiza o slider da aula atual
+        // 4. Atualiza o slider se necessário
         if(progressArea) updateSliderUI(currentModId, currentLessId);
 
     } else {
@@ -85,11 +86,15 @@ onAuthStateChanged(auth, async (user) => {
         setTimeout(() => { loginScreen.style.opacity = '1'; }, 10);
         appContainer.style.opacity = '0';
         appContainer.style.pointerEvents = 'none';
+        
+        // Desliga observador ao sair
+        if(menuObserver) { menuObserver.disconnect(); menuObserver = null; }
     }
 });
 
 // --- SLIDER (SALVAR) ---
 if(progressSlider) {
+    // Evento 'change' só dispara quando solta o mouse (Evita chamadas excessivas)
     progressSlider.addEventListener('change', async (e) => {
         if(!currentUser) return;
         const valor = e.target.value;
@@ -98,8 +103,9 @@ if(progressSlider) {
 
         progressVal.innerText = valor + "%";
         
-        // Atualiza memória e menu visualmente
+        // Atualiza memória
         userProgressData[lessonKey] = valor;
+        // Atualiza sidebar visualmente
         updateSingleSidebarItem(currentModId, currentLessId, valor);
 
         try {
@@ -107,6 +113,7 @@ if(progressSlider) {
         } catch (error) { console.error("Erro ao salvar:", error); }
     });
 
+    // Evento 'input' é visual (enquanto arrasta)
     progressSlider.addEventListener('input', (e) => {
         progressVal.innerText = e.target.value + "%";
     });
@@ -128,14 +135,17 @@ async function fetchUserProgress() {
 function fillSidebarFromMemory() {
     for (const [key, value] of Object.entries(userProgressData)) {
         if (key.startsWith('progresso_')) {
-            // AQUI ESTAVA O ERRO: Precisamos trocar TODOS os underlines por traços
-            // progresso_0_1 vira percent-0-1
+            // Corrige o ID: 'progresso_0_1' -> 'percent-0-1'
             let sidebarId = key.replace('progresso_', 'percent-');
             sidebarId = sidebarId.replace(/_/g, '-'); 
 
             const span = document.getElementById(sidebarId);
-            if(span && value > 0) {
-                span.innerText = value + "%";
+            if(span) {
+                const novoTexto = value > 0 ? value + "%" : "";
+                // PROTEÇÃO ANTI-LOOP: Só escreve se for diferente
+                if(span.innerText !== novoTexto) {
+                    span.innerText = novoTexto;
+                }
             }
         }
     }
@@ -143,7 +153,13 @@ function fillSidebarFromMemory() {
 
 function updateSingleSidebarItem(mod, less, val) {
     const span = document.getElementById(`percent-${mod}-${less}`);
-    if(span) span.innerText = val > 0 ? val + "%" : "";
+    if(span) {
+        const novoTexto = val > 0 ? val + "%" : "";
+        // PROTEÇÃO ANTI-LOOP: Verifica antes de escrever
+        if(span.innerText !== novoTexto) {
+            span.innerText = novoTexto;
+        }
+    }
 }
 
 function updateSliderUI(mod, less) {
@@ -157,15 +173,25 @@ function updateSliderUI(mod, less) {
     progressVal.innerText = savedValue + "%";
 }
 
-// Observador: Assim que o script.js criar o menu, nós colocamos as porcentagens
+// Observador Inteligente
 function startMenuObserver() {
     if(!menuContainer) return;
+    if(menuObserver) menuObserver.disconnect(); // Garante que não tem duplicados
     
-    const observer = new MutationObserver((mutations) => {
-        fillSidebarFromMemory();
+    menuObserver = new MutationObserver((mutations) => {
+        // Filtra para ver se foi uma mudança de estrutura (Script.js criou menu)
+        // Ignora se a mudança foi num span de porcentagem (nossa própria culpa)
+        const isMenuRebuild = mutations.some(m => {
+            return m.type === 'childList' && 
+                   (!m.target.id || !m.target.id.startsWith('percent-'));
+        });
+
+        if (isMenuRebuild) {
+            fillSidebarFromMemory();
+        }
     });
 
-    observer.observe(menuContainer, { childList: true, subtree: true });
+    menuObserver.observe(menuContainer, { childList: true, subtree: true });
 }
 
 // --- PONTE COM SCRIPT.JS ---
