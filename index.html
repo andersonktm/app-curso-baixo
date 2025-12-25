@@ -13,57 +13,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="style.css">
-
-    <style>
-        /* --- TELA DE LOGIN --- */
-        #login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #2c3e50; z-index: 9999;
-            display: flex; align-items: center; justify-content: center; flex-direction: column;
-            color: white; transition: opacity 0.5s;
-        }
-        .login-box { background: white; padding: 30px; border-radius: 10px; width: 300px; text-align: center; color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .login-input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
-        .login-btn { width: 100%; padding: 12px; background: #e67e22; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; font-size: 16px; transition: 0.3s; }
-        .login-btn:hover { background: #d35400; }
-        .error-msg { color: #e74c3c; font-size: 14px; display: none; margin-top: 10px; font-weight: bold; }
-
-        /* --- LAYOUT FIX --- */
-        #app-container { 
-            opacity: 0; transition: opacity 1s; pointer-events: none;
-            width: 100%; height: 100vh; display: flex; overflow: hidden;
-        }
-
-        .btn-logout { background: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; width: 100%; font-size: 0.9rem; }
-
-        /* --- ESTILO DA BARRA DE PROGRESSO ESCURA --- */
-        .progress-box {
-            background: #1e272e; /* Fundo bem escuro */
-            color: #ecf0f1;
-            border-radius: 8px;
-            padding: 25px; 
-            margin-top: 40px;
-            margin-bottom: 20px;
-            text-align: center;
-            border: 1px solid #34495e;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        .progress-label { font-size: 0.9rem; color: #bdc3c7; font-weight: 600; margin-bottom: 15px; display: block; letter-spacing: 1px; }
-        
-        .progress-slider {
-            width: 100%; cursor: pointer; height: 12px; background: #34495e; border-radius: 6px; outline: none; -webkit-appearance: none;
-        }
-        .progress-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #27ae60; cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
-        }
-        .progress-value { color: #2ecc71; font-weight: bold; font-size: 1.2rem; margin-left: 8px; }
-
-        /* --- ESTILO DA PORCENTAGEM NO MENU LATERAL --- */
-        .menu-percent {
-            font-size: 0.75rem; color: #2ecc71; font-weight: bold; float: right;
-            background: rgba(46, 204, 113, 0.15); padding: 2px 6px; border-radius: 4px; margin-top: 2px;
-        }
-    </style>
 </head>
 <body>
 
@@ -91,32 +40,28 @@
                         <option value="4/4">4/4 (Rock/Pop)</option>
                         <option value="2/4">2/4 (Samba/Polka)</option>
                         <option value="3/4">3/4 (Valsa)</option>
-                        <option value="2/2">2/2 (Cut Time)</option>
                         <option value="6/8">6/8 (Blues/Jazz)</option>
-                        <option value="7/4">7/4 (Prog)</option>
                     </select>
                 </div>
                 <div style="font-size: 2rem; font-weight: bold; color: #e67e22;">
                     <span id="bpm-val">100</span> <span style="font-size: 1rem; color: #7f8c8d;">BPM</span>
                 </div>
             </div>
-            <p style="font-size:0.8rem; color:#666; margin:0;">Toque nas barras: Mudo > Fraco (Roxo) > Forte (Azul)</p>
             <div id="sequencer-track" class="sequencer-container"></div>
-            <input type="range" id="bpm-range" min="40" max="220" value="100" style="width: 100%; margin: 20px 0; cursor: pointer;" oninput="updateBpm(this.value)">
-            <button id="btn-play-metro" onclick="togglePlayMetronome()" style="background: #2c3e50; color: white; border: none; padding: 15px 50px; font-size: 1.2rem; border-radius: 50px; cursor: pointer; transition:0.2s;">▶ INICIAR</button>
+            <input type="range" id="bpm-range" min="40" max="220" value="100" style="width: 100%; margin: 20px 0;" oninput="updateBpm(this.value)">
+            <button id="btn-play-metro" onclick="togglePlayMetronome()" style="background: #2c3e50; color: white; border: none; padding: 15px 50px; font-size: 1.2rem; border-radius: 50px; cursor: pointer;">▶ INICIAR</button>
         </div>
     </div>
 
-    <div id="map-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center;">
-        <div class="modal-content" style="width: 95%; max-width: 1000px; height: 90%; background: white; padding: 10px; border-radius: 8px; position: relative; display: flex; flex-direction: column;">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:10px;">
-                <h2 style="margin:0; color:#2c3e50;">Seu Caminho de Evolução</h2>
+    <div id="map-modal">
+        <div class="modal-content" style="width: 95%; max-width: 1000px; height: 90%; background: white; padding: 10px; display: flex; flex-direction: column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:10px;">
+                <h2 style="margin:0; color:#2c3e50;">Seu Caminho</h2>
                 <button class="close-modal" onclick="toggleMap()" style="position:static;">X</button>
             </div>
-            <div id="roadmap-container" style="flex: 1; overflow: auto; text-align: center; cursor: move;">
+            <div id="roadmap-container" style="flex: 1; overflow: auto; text-align: center;">
                 <div class="mermaid" id="mermaid-graph"></div>
             </div>
-            <p style="text-align:center; color:#7f8c8d; font-size:0.8rem; margin-top:5px;">Clique numa caixa para ir para a aula.</p>
         </div>
     </div>
 
@@ -128,7 +73,7 @@
         <div class="tools-area">
             <button class="btn-metronome" onclick="toggleMetronome()"><span>⏱️</span> Abrir Metrônomo</button>
             <button class="btn-metronome" onclick="toggleMap()" style="background: #27ae60;"><span>🗺️</span> Mapa de Estudo</button>
-            <button class="btn-logout" id="btnLogout">🚪 Sair / Logout</button>
+            <button class="btn-logout" id="btnLogout">🚪 Sair</button>
         </div>
         <div id="menu-container"></div>
     </div>
@@ -155,24 +100,25 @@
 
             <div id="audio-container" class="audio-section" style="display:none;">
                 <div class="audio-row" id="row-bass">
-                    <span class="audio-label">🎸 Baixo Isolado (Referência):</span>
+                    <span class="audio-label">🎸 Baixo Isolado:</span>
                     <audio id="player-bass" controls controlsList="nodownload"><source src="" type="audio/mpeg"></audio>
                 </div>
                 <div class="audio-row" id="row-backing">
-                    <span class="audio-label">🥁 Backing Track (Para Praticar):</span>
+                    <span class="audio-label">🥁 Backing Track:</span>
                     <audio id="player-back" controls controlsList="nodownload"><source src="" type="audio/mpeg"></audio>
                 </div>
             </div>
 
             <div class="progress-box" id="progress-area" style="display:none;">
                 <label class="progress-label">
-                    SEU PROGRESSO NESTA AULA: <span id="progress-val" class="progress-value">0%</span>
+                    SEU PROGRESSO: <span id="progress-val" class="progress-value">0%</span>
                 </label>
                 <input type="range" id="progress-slider" class="progress-slider" min="0" max="100" value="0">
                 <p style="font-size:0.75rem; color:#7f8c8d; margin-top:12px; margin-bottom:0; font-style: italic;">
-                    Arraste para marcar. O progresso é salvo na sua conta.
+                    Arraste para marcar. Salvo automaticamente.
                 </p>
             </div>
+
             <div class="nav-buttons">
                 <button id="btn-prev" class="nav-btn" onclick="changeLesson(-1)">⬅ Anterior</button>
                 <button id="btn-next" class="nav-btn" onclick="changeLesson(1)">Próximo ➡</button>
@@ -183,184 +129,7 @@
 </div>
 
 <script src="script.js?v=2"></script>
-
 <script type="module" src="firebase.js?v=3"></script>
 
-</body>
-</html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-    // --- CONFIGURAÇÃO (MANTENHA A SUA) ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyCTJGH90GaYbdRChcjOtpff5o6ZYzlYA8k",
-        authDomain: "guia-baixo-app.firebaseapp.com",
-        projectId: "guia-baixo-app",
-        storageBucket: "guia-baixo-app.firebasestorage.app",
-        messagingSenderId: "1027874033890",
-        appId: "1:1027874033890:web:61de70c26e635811ab8ebb"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    let currentUser = null;
-    let currentModId = 0;
-    let currentLessId = 0;
-    let userProgressData = {}; 
-
-    const loginScreen = document.getElementById('login-screen');
-    const appContainer = document.getElementById('app-container');
-    const emailInput = document.getElementById('email');
-    const passInput = document.getElementById('senha');
-    const errorMsg = document.getElementById('error-msg');
-    const btnLogin = document.getElementById('btnLogin');
-    const btnLogout = document.getElementById('btnLogout');
-    const progressArea = document.getElementById('progress-area');
-    const progressSlider = document.getElementById('progress-slider');
-    const progressVal = document.getElementById('progress-val');
-
-    // Login
-    btnLogin.addEventListener('click', () => {
-        const email = emailInput.value;
-        const pass = passInput.value;
-        btnLogin.innerText = "Verificando...";
-        signInWithEmailAndPassword(auth, email, pass)
-            .then(() => { btnLogin.innerText = "ENTRAR"; })
-            .catch((error) => {
-                btnLogin.innerText = "ENTRAR";
-                errorMsg.style.display = 'block';
-                errorMsg.innerText = "Dados incorretos.";
-            });
-    });
-
-    if(btnLogout) {
-        btnLogout.addEventListener('click', () => {
-            if(confirm("Deseja realmente sair?")) signOut(auth);
-        });
-    }
-
-    // Monitoramento
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            currentUser = user;
-            loginScreen.style.opacity = '0';
-            setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
-            appContainer.style.opacity = '1';
-            appContainer.style.pointerEvents = 'all';
-            
-            // 1. Carrega dados
-            await fetchUserProgress();
-            
-            // 2. Tenta preencher agora
-            fillSidebarFromMemory();
-
-            // 3. ATIVA O MODO TEIMOSO: Tenta preencher a cada 1 segundo por 5 segundos
-            // (Isso garante que pega o menu mesmo que ele demore a carregar)
-            let attempts = 0;
-            const interval = setInterval(() => {
-                attempts++;
-                fillSidebarFromMemory();
-                if(attempts >= 5) clearInterval(interval); // Para depois de 5 tentativas
-            }, 1000);
-
-        } else {
-            currentUser = null;
-            userProgressData = {};
-            loginScreen.style.display = 'flex';
-            setTimeout(() => { loginScreen.style.opacity = '1'; }, 10);
-            appContainer.style.opacity = '0';
-            appContainer.style.pointerEvents = 'none';
-        }
-    });
-
-    // Slider change
-    progressSlider.addEventListener('change', async (e) => {
-        if(!currentUser) return;
-        const valor = e.target.value;
-        const lessonKey = `progresso_${currentModId}_${currentLessId}`;
-        const userRef = doc(db, "users", currentUser.uid);
-
-        progressVal.innerText = valor + "%";
-        
-        userProgressData[lessonKey] = valor;
-        const sidebarSpan = document.getElementById(`percent-${currentModId}-${currentLessId}`);
-        if(sidebarSpan) sidebarSpan.innerText = valor > 0 ? valor + "%" : "";
-
-        try {
-            await setDoc(userRef, { [lessonKey]: valor }, { merge: true });
-        } catch (error) { console.error("Erro ao salvar:", error); }
-    });
-
-    progressSlider.addEventListener('input', (e) => {
-        progressVal.innerText = e.target.value + "%";
-    });
-
-    // Funções Auxiliares
-    async function fetchUserProgress() {
-        if(!currentUser) return;
-        const userRef = doc(db, "users", currentUser.uid);
-        try {
-            const docSnap = await getDoc(userRef);
-            if (docSnap.exists()) userProgressData = docSnap.data();
-        } catch (error) { console.error("Erro ao buscar dados:", error); }
-    }
-
-    function fillSidebarFromMemory() {
-        // Tenta encontrar e preencher os spans
-        for (const [key, value] of Object.entries(userProgressData)) {
-            if (key.startsWith('progresso_')) {
-                const sidebarId = key.replace('progresso_', 'percent-');
-                const span = document.getElementById(sidebarId);
-                if(span && value > 0) {
-                    span.innerText = value + "%";
-                }
-            }
-        }
-    }
-
-    // Ponte com script.js
-    window.addEventListener('load', () => {
-        if(typeof loadLesson !== 'undefined') {
-            const originalLoad = window.loadLesson;
-            window.loadLesson = async function(modIdx, lessIdx) {
-                originalLoad(modIdx, lessIdx);
-                currentModId = modIdx;
-                currentLessId = lessIdx;
-                
-                if(!currentUser) { progressArea.style.display = 'none'; return; }
-
-                progressArea.style.display = 'block';
-                progressSlider.value = 0;
-                progressVal.innerText = "0%";
-                progressSlider.disabled = true;
-
-                const lessonKey = `progresso_${modIdx}_${lessIdx}`;
-                const savedValue = userProgressData[lessonKey] || 0;
-                
-                progressSlider.value = savedValue;
-                progressVal.innerText = savedValue + "%";
-                progressSlider.disabled = false;
-            }
-        }
-    });
-</script>
 </body>
 </html>
