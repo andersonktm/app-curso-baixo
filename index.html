@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lógica do Groove - Curso de Baixo</title>
+
+    <link rel="manifest" href="manifest.json">
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js');
+      }
+    </script>
+
+    <style>
+        /* === ESTILOS VISUAIS (CSS) === */
+        
+        /* Reset básico */
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; margin: 0; display: flex; height: 100vh; background: #f4f7f6; color: #333; }
+        
+        /* MENU LATERAL */
+        #sidebar { width: 280px; background: #2c3e50; color: white; display: flex; flex-direction: column; border-right: 1px solid #1a252f; flex-shrink: 0; }
+        .logo-area { padding: 20px; text-align: center; background: #1a252f; border-bottom: 1px solid #34495e; }
+        .logo-area h1 { margin: 0; font-size: 1.2rem; color: #e67e22; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* Botão do Metrônomo no Menu */
+        .tools-area { padding: 10px; border-bottom: 1px solid #34495e; }
+        .btn-metronome { width: 100%; padding: 10px; background: #c0392b; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .btn-metronome:hover { background: #e74c3c; }
+
+        /* Lista de Aulas (Scrollável) */
+        #menu-container { flex: 1; overflow-y: auto; }
+        
+        /* Estilo dos Módulos e Aulas no Menu */
+        .module-header { padding: 15px; background: #34495e; cursor: pointer; font-weight: bold; border-bottom: 1px solid #2c3e50; display: flex; justify-content: space-between; align-items: center; }
+        .module-header:hover { background: #3e5871; }
+        .lessons-list { display: none; /* Escondido por padrão, abre ao clicar */ background: #2c3e50; }
+        .lessons-list.open { display: block; }
+        .lesson-link { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid #34495e; font-size: 0.9rem; color: #bdc3c7; transition: 0.2s; border-left: 4px solid transparent; }
+        .lesson-link:hover { background: #34495e; color: white; padding-left: 25px; }
+        .lesson-link.active { background: #2980b9; color: white; border-left: 4px solid #e67e22; }
+
+        /* ÁREA DE CONTEÚDO PRINCIPAL */
+        #content { flex: 1; overflow-y: auto; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 800px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: fit-content; margin-bottom: 40px; }
+
+        /* Elementos da Aula */
+        .breadcrumb { font-size: 0.85rem; color: #7f8c8d; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
+        h2.lesson-title { margin-top: 0; color: #2c3e50; font-size: 1.8rem; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; margin-bottom: 20px; }
+        
+        .lesson-text { line-height: 1.6; font-size: 1.1rem; color: #444; margin-bottom: 20px; white-space: pre-line; /* Respeita quebras de linha do texto */ }
+
+        /* Caixa da Imagem (Figma/Tablatura) */
+        .image-container { text-align: center; margin: 25px 0; background: #fafafa; padding: 10px; border: 1px dashed #ccc; border-radius: 5px; }
+        .image-container img { max-width: 100%; height: auto; border-radius: 4px; }
+        .no-image { color: #999; font-style: italic; padding: 20px; }
+
+        /* Players de Áudio */
+        .audio-section { background: #f1f2f6; padding: 20px; border-radius: 8px; margin-top: 30px; }
+        .audio-row { margin-bottom: 15px; }
+        .audio-label { font-weight: bold; display: block; margin-bottom: 5px; color: #2c3e50; font-size: 0.9rem; }
+        audio { width: 100%; height: 40px; }
+
+        /* Botões de Navegação */
+        .nav-buttons { display: flex; justify-content: space-between; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; }
+        .nav-btn { padding: 12px 25px; background: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+        .nav-btn:hover { background: #34495e; }
+        .nav-btn:disabled { background: #bdc3c7; cursor: not-allowed; opacity: 0.7; }
+
+        /* MODAL DO METRÔNOMO */
+        #metronome-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 95%; max-width: 600px; padding: 10px; border-radius: 8px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .close-modal { position: absolute; right: -10px; top: -10px; background: #c0392b; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+        /* RESPONSIVIDADE (CELULAR) */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            #sidebar { width: 100%; height: auto; max-height: none; }
+            #menu-container { display: none; /* Esconde menu no celular inicialmente */ }
+            #menu-container.show-mobile { display: block; max-height: 300px; border-top: 1px solid #34495e; }
+            .logo-area { display: flex; justify-content: space-between; align-items: center; }
+            .mobile-menu-toggle { display: block; background: none; border: 1px solid #e67e22; color: #e67e22; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+            #content { padding: 10px; }
+            .container { padding: 15px; }
+        }
+        @media (min-width: 769px) {
+            .mobile-menu-toggle { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="metronome-modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="toggleMetronome()">X</button>
+            <iframe src="https://www.musicca.com/pt/metronomo?embed" width="100%" height="450" style="border:none; border-radius: 4px;"></iframe>
+        </div>
+    </div>
+
+    <div id="sidebar">
+        <div class="logo-area">
+            <h1>Lógica do Groove</h1>
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰ Menu</button>
+        </div>
+        
+        <div class="tools-area">
+            <button class="btn-metronome" onclick="toggleMetronome()">
+                <span>⏱️</span> Abrir Metrônomo
+            </button>
+        </div>
+
+        <div id="menu-container">
+            </div>
+    </div>
+
+    <div id="content">
+        <div class="container">
+            <div class="breadcrumb" id="display-module">Módulo...</div>
+            <h2 class="lesson-title" id="display-title">Título da Aula...</h2>
+            
+            <div class="lesson-text" id="display-text">
+                Selecione uma aula no menu para começar.
+            </div>
+
+            <div class="image-container">
+                <img id="display-img" src="" alt="Diagrama da aula" style="display:none;">
+                <div id="no-image-msg" class="no-image">Sem imagem para esta aula</div>
+            </div>
+
+            <div id="audio-container" class="audio-section" style="display:none;">
+                
+                <div class="audio-row" id="row-bass">
+                    <span class="audio-label">🎸 Baixo Isolado (Referência):</span>
+                    <audio id="player-bass" controls controlsList="nodownload">
+                        <source src="" type="audio/mpeg">
+                        Seu navegador não suporta áudio.
+                    </audio>
+                </div>
+
+                <div class="audio-row" id="row-backing">
+                    <span class="audio-label">🥁 Backing Track (Para Praticar):</span>
+                    <audio id="player-back" controls controlsList="nodownload">
+                        <source src="" type="audio/mpeg">
+                    </audio>
+                </div>
+
+            </div>
+
+            <div class="nav-buttons">
+                <button id="btn-prev" class="nav-btn" onclick="changeLesson(-1)">⬅ Anterior</button>
+                <button id="btn-next" class="nav-btn" onclick="changeLesson(1)">Próximo ➡</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* =================================================================
+           DADOS DO CURSO - AQUI VOCÊ ADICIONA SUAS 100 FOLHAS
+           =================================================================
+           Para adicionar arquivos:
+           1. Coloque a imagem na pasta 'imagens'
+           2. Coloque o mp3 na pasta 'audios'
+           3. Preencha os campos abaixo.
+        */
+        const courseData = [
+            {
+                module: "Módulo 1: Fundamentos",
+                lessons: [
+                    { 
+                        title: "Aula 01: Postura e Mão Direita", 
+                        text: "Bem-vindo ao curso.\n\nNesta primeira aula, vamos focar na posição do polegar (ancoragem) no captador. Mantenha o pulso reto para evitar lesões.\n\nObserve na imagem abaixo a posição correta dos dedos indicador e médio alternando.", 
+                        img: "imagens/aula01-postura.png", // Se não tiver imagem, deixe aspas vazias ""
+                        audioBass: "", 
+                        audioBack: ""
+                    },
+                    { 
+                        title: "Aula 02: Cordas Soltas (E A D G)", 
+                        text: "Vamos memorizar o som das 4 cordas soltas.\nToque cada corda 4 vezes mantendo o ritmo constante.", 
+                        img: "imagens/aula02-cordas.png", 
+                        audioBass: "audios/aula02-bass.mp3",
+                        audioBack: "audios/aula02-back.mp3"
+                    }
+                ]
+            },
+            {
+                module: "Módulo 2: O Groove Iniciante",
+                lessons: [
+                    { 
+                        title: "Aula 03: Usando a Tônica e Quinta", 
+                        text: "A relação mais forte no baixo é a Quinta Justa. Ela está sempre uma corda abaixo e duas casas à frente.", 
+                        img: "imagens/aula03-quinta.png", 
+                        audioBass: "audios/aula03-bass.mp3",
+                        audioBack: ""
+                    }
+                ]
+            }
+            // Copie e cole o bloco acima para criar Módulo 3, 4, etc.
+        ];
+
+        /* =================================================================
+           LÓGICA DO SISTEMA (NÃO PRECISA ALTERAR ABAIXO)
+           ================================================================= */
+        
+        let currentModule = 0;
+        let currentLesson = 0;
+
+        // Inicialização
+        window.onload = function() {
+            generateMenu();
+            loadLesson(0, 0); // Carrega a primeira aula ao abrir
+        };
+
+        // Gerar Menu Lateral
+        function generateMenu() {
+            const container = document.getElementById('menu-container');
+            container.innerHTML = '';
+
+            courseData.forEach((mod, modIdx) => {
+                // Cria cabeçalho do módulo
+                const modHeader = document.createElement('div');
+                modHeader.className = 'module-header';
+                modHeader.innerHTML = `${mod.module} <span style="font-size:0.8em">▼</span>`;
+                modHeader.onclick = () => toggleModule(modIdx);
+                
+                // Cria container das aulas
+                const lessonList = document.createElement('div');
+                lessonList.className = 'lessons-list';
+                lessonList.id = `mod-list-${modIdx}`;
+                
+                // Se for o primeiro módulo, deixa aberto
+                if(modIdx === 0) lessonList.classList.add('open');
+
+                mod.lessons.forEach((less, lessIdx) => {
+                    const btn = document.createElement('div');
+                    btn.className = 'lesson-link';
+                    btn.id = `link-${modIdx}-${lessIdx}`;
+                    btn.innerText = less.title;
+                    btn.onclick = () => {
+                        loadLesson(modIdx, lessIdx);
+                        if(window.innerWidth <= 768) toggleMobileMenu(); // Fecha menu no celular
+                    };
+                    lessonList.appendChild(btn);
+                });
+
+                container.appendChild(modHeader);
+                container.appendChild(lessonList);
+            });
+        }
+
+        // Abrir/Fechar Módulos no Menu
+        function toggleModule(modIdx) {
+            const list = document.getElementById(`mod-list-${modIdx}`);
+            list.classList.toggle('open');
+        }
+
+        // Carregar Conteúdo da Aula
+        function loadLesson(modIdx, lessIdx) {
+            currentModule = modIdx;
+            currentLesson = lessIdx;
+            const data = courseData[modIdx].lessons[lessIdx];
+
+            // Textos
+            document.getElementById('display-module').innerText = courseData[modIdx].module;
+            document.getElementById('display-title').innerText = data.title;
+            document.getElementById('display-text').innerText = data.text;
+
+            // Imagem
+            const imgEl = document.getElementById('display-img');
+            const noImgEl = document.getElementById('no-image-msg');
+            if (data.img && data.img !== "") {
+                imgEl.src = data.img;
+                imgEl.style.display = 'inline-block';
+                noImgEl.style.display = 'none';
+            } else {
+                imgEl.style.display = 'none';
+                noImgEl.style.display = 'block';
+            }
+
+            // Áudio
+            const audioContainer = document.getElementById('audio-container');
+            const playerBass = document.getElementById('player-bass');
+            const playerBack = document.getElementById('player-back');
+            const rowBass = document.getElementById('row-bass');
+            const rowBack = document.getElementById('row-backing');
+
+            // Reset players
+            playerBass.pause(); playerBack.pause();
+            
+            let hasAudio = false;
+
+            if (data.audioBass && data.audioBass !== "") {
+                playerBass.src = data.audioBass;
+                rowBass.style.display = 'block';
+                hasAudio = true;
+            } else {
+                rowBass.style.display = 'none';
+            }
+
+            if (data.audioBack && data.audioBack !== "") {
+                playerBack.src = data.audioBack;
+                rowBack.style.display = 'block';
+                hasAudio = true;
+            } else {
+                rowBack.style.display = 'none';
+            }
+
+            audioContainer.style.display = hasAudio ? 'block' : 'none';
+
+            updateActiveLink();
+            updateNavButtons();
+        }
+
+        // Navegação (Next/Prev)
+        function changeLesson(direction) {
+            let mod = currentModule;
+            let less = currentLesson + direction;
+            const maxLess = courseData[mod].lessons.length;
+
+            if (less < 0) {
+                if (mod > 0) {
+                    mod--;
+                    less = courseData[mod].lessons.length - 1;
+                    // Abre o módulo anterior no menu visualmente
+                    document.getElementById(`mod-list-${mod}`).classList.add('open');
+                } else return;
+            } else if (less >= maxLess) {
+                if (mod < courseData.length - 1) {
+                    mod++;
+                    less = 0;
+                    document.getElementById(`mod-list-${mod}`).classList.add('open');
+                } else return;
+            }
+
+            loadLesson(mod, less);
+        }
+
+        // Atualizar visual dos botões
+        function updateNavButtons() {
+            const prevBtn = document.getElementById('btn-prev');
+            const nextBtn = document.getElementById('btn-next');
+            
+            // Check Start
+            prevBtn.disabled = (currentModule === 0 && currentLesson === 0);
+
+            // Check End
+            const lastMod = courseData.length - 1;
+            const lastLess = courseData[lastMod].lessons.length - 1;
+            nextBtn.disabled = (currentModule === lastMod && currentLesson === lastLess);
+        }
+
+        // Destacar aula ativa no menu
+        function updateActiveLink() {
+            document.querySelectorAll('.lesson-link').forEach(el => el.classList.remove('active'));
+            const activeId = `link-${currentModule}-${currentLesson}`;
+            const activeEl = document.getElementById(activeId);
+            if(activeEl) activeEl.classList.add('active');
+        }
+
+        // Metrônomo Modal
+        function toggleMetronome() {
+            const modal = document.getElementById('metronome-modal');
+            modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        // Menu Mobile
+        function toggleMobileMenu() {
+            const menu = document.getElementById('menu-container');
+            menu.classList.toggle('show-mobile');
+        }
+    </script>
+</body>
+</html>
