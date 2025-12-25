@@ -316,7 +316,7 @@
                 ]
             }
         ];
-        
+
 
         /* =================================================================
            LÓGICA DO SISTEMA (NÃO PRECISA ALTERAR ABAIXO)
@@ -374,8 +374,15 @@
             list.classList.toggle('open');
         }
 
-        // Carregar Conteúdo da Aula
+        // Carregar Conteúdo da Aula (Versão Segura)
         function loadLesson(modIdx, lessIdx) {
+            // Verificação de Segurança
+            if (!courseData[modIdx] || !courseData[modIdx].lessons[lessIdx]) {
+                console.error("Erro: Aula não encontrada!", modIdx, lessIdx);
+                alert("Esta aula ainda não foi cadastrada no sistema.");
+                return;
+            }
+
             currentModule = modIdx;
             currentLesson = lessIdx;
             const data = courseData[modIdx].lessons[lessIdx];
@@ -687,8 +694,10 @@ function toggleMap() {
     
     if (modal.style.display === 'none') {
         modal.style.display = 'flex';
-        // Renderiza o gráfico apenas quando abre
-        mermaid.render('graphDiv', graphDefinition).then(({ svg }) => {
+        // Geramos um ID único para evitar erro de "id already exists"
+        const uniqueId = 'graphDiv' + Date.now();
+        
+        mermaid.render(uniqueId, graphDefinition).then(({ svg }) => {
             container.innerHTML = svg;
         });
     } else {
