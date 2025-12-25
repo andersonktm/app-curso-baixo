@@ -6,7 +6,6 @@
     <title>Lógica do Groove - Curso de Baixo</title>
 
     <link rel="manifest" href="manifest.json">
-    
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,24 +28,27 @@
         .login-btn:hover { background: #d35400; }
         .error-msg { color: #e74c3c; font-size: 14px; display: none; margin-top: 10px; font-weight: bold; }
 
-        /* --- CORREÇÃO DO LAYOUT (AQUI ESTAVA O ERRO) --- */
+        /* --- LAYOUT FIX --- */
         #app-container { 
-            opacity: 0; 
-            transition: opacity 1s; 
-            pointer-events: none;
-            
-            /* Estas 3 linhas consertam o site desconfigurado: */
-            width: 100%; 
-            height: 100vh; /* Garante altura total */
-            display: flex; /* Coloca Sidebar e Content lado a lado */
-            overflow: hidden; /* Evita barras de rolagem duplas */
+            opacity: 0; transition: opacity 1s; pointer-events: none;
+            width: 100%; height: 100vh; display: flex; overflow: hidden;
         }
 
-        /* Botão de Logout na Sidebar */
-        .btn-logout {
-            background: #c0392b; color: white; border: none; padding: 8px 15px;
-            border-radius: 4px; cursor: pointer; margin-top: 10px; width: 100%; font-size: 0.9rem;
+        .btn-logout { background: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; width: 100%; font-size: 0.9rem; }
+
+        /* --- ESTILO DA BARRA DE PROGRESSO (NOVO) --- */
+        .progress-box {
+            background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;
+            padding: 15px; margin: 20px 0; text-align: center;
         }
+        .progress-label { font-size: 0.9rem; color: #7f8c8d; font-weight: 600; margin-bottom: 10px; display: block; }
+        .progress-slider {
+            width: 100%; cursor: pointer; height: 8px; background: #ddd; border-radius: 5px; outline: none; -webkit-appearance: none;
+        }
+        .progress-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #27ae60; cursor: pointer;
+        }
+        .progress-value { color: #27ae60; font-weight: bold; font-size: 1.1rem; margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -55,10 +57,8 @@
     <div class="login-box">
         <h2 style="margin-top:0; color:#2c3e50;">🎸 Lógica do Groove</h2>
         <p style="color:#7f8c8d; font-size:0.9rem;">Área Restrita a Alunos</p>
-        
         <input type="email" id="email" placeholder="E-mail" class="login-input">
         <input type="password" id="senha" placeholder="Senha" class="login-input">
-        
         <button class="login-btn" id="btnLogin">ENTRAR</button>
         <p id="error-msg" class="error-msg">E-mail ou senha incorretos.</p>
     </div>
@@ -70,7 +70,6 @@
         <div class="modal-content" style="text-align: center; padding: 20px; max-width: 700px;">
             <button class="close-modal" onclick="toggleMetronome()">X</button>
             <h2 style="color:#2c3e50; margin-top:0;">Metrônomo Pro</h2>
-            
             <div class="metro-controls">
                 <div>
                     <label style="font-weight:bold; color:#7f8c8d;">Compasso:</label>
@@ -127,6 +126,13 @@
             
             <div class="lesson-text" id="display-text">Selecione uma aula no menu.</div>
 
+            <div class="progress-box" id="progress-area" style="display:none;">
+                <label class="progress-label">
+                    Nível de Conclusão desta aula: <span id="progress-val" class="progress-value">0%</span>
+                </label>
+                <input type="range" id="progress-slider" class="progress-slider" min="0" max="100" value="0">
+                <p style="font-size:0.7rem; color:#999; margin-top:5px;">O progresso é salvo automaticamente.</p>
+            </div>
             <div id="study-timer" class="timer-box" style="display:none;">
                 <div style="display:flex; flex-direction:column;">
                     <span style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; opacity:0.8;">Tempo de Prática</span>
@@ -158,13 +164,17 @@
         </div>
     </div>
 
-</div> <script src="script.js"></script>
+</div>
+
+<script src="script.js"></script>
 
 <script type="module">
+    // Importa Autenticação E Banco de Dados (Firestore)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- SEUS DADOS DO FIREBASE (NÃO APAGUE ISTO!) ---
+    // --- SEUS DADOS DO FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyCTJGH90GaYbdRChcjOtpff5o6ZYzlYA8k",
         authDomain: "guia-baixo-app.firebaseapp.com",
@@ -173,11 +183,12 @@
         messagingSenderId: "1027874033890",
         appId: "1:1027874033890:web:61de70c26e635811ab8ebb"
     };
-    // -------------------------------------------------
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app); // Inicializa o Banco
 
+    // Elementos UI
     const loginScreen = document.getElementById('login-screen');
     const appContainer = document.getElementById('app-container');
     const emailInput = document.getElementById('email');
@@ -185,52 +196,138 @@
     const errorMsg = document.getElementById('error-msg');
     const btnLogin = document.getElementById('btnLogin');
     const btnLogout = document.getElementById('btnLogout');
+    
+    // Elementos de Progresso
+    const progressArea = document.getElementById('progress-area');
+    const progressSlider = document.getElementById('progress-slider');
+    const progressVal = document.getElementById('progress-val');
 
+    // Variáveis globais de controle
+    let currentUser = null;
+    let currentModId = 0;
+    let currentLessId = 0;
+
+    // --- LOGIN ---
     btnLogin.addEventListener('click', () => {
         const email = emailInput.value;
         const pass = passInput.value;
         btnLogin.innerText = "Verificando...";
-        
         signInWithEmailAndPassword(auth, email, pass)
-            .then((userCredential) => {
-                btnLogin.innerText = "ENTRAR";
-            })
+            .then((userCredential) => { btnLogin.innerText = "ENTRAR"; })
             .catch((error) => {
                 btnLogin.innerText = "ENTRAR";
                 errorMsg.style.display = 'block';
-                if(error.code === 'auth/invalid-credential') {
-                    errorMsg.innerText = "E-mail ou senha incorretos.";
-                } else if(error.code === 'auth/too-many-requests') {
-                    errorMsg.innerText = "Muitas tentativas. Tente mais tarde.";
-                } else {
-                    errorMsg.innerText = "Erro: " + error.message;
-                }
+                if(error.code === 'auth/invalid-credential') errorMsg.innerText = "Credenciais inválidas.";
+                else errorMsg.innerText = "Erro: " + error.message;
             });
     });
 
     if(btnLogout) {
         btnLogout.addEventListener('click', () => {
-            if(confirm("Deseja realmente sair?")) {
-                signOut(auth);
-            }
+            if(confirm("Deseja sair?")) signOut(auth);
         });
     }
 
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // LOGADO
+            currentUser = user; // Salva o usuário atual
             loginScreen.style.opacity = '0';
             setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
-            
             appContainer.style.opacity = '1';
             appContainer.style.pointerEvents = 'all';
         } else {
-            // DESLOGADO
+            currentUser = null;
             loginScreen.style.display = 'flex';
             setTimeout(() => { loginScreen.style.opacity = '1'; }, 10);
-            
             appContainer.style.opacity = '0';
             appContainer.style.pointerEvents = 'none';
+        }
+    });
+
+    // --- LÓGICA DE PROGRESSO (SALVAR E CARREGAR) ---
+
+    // 1. Ouvir mudanças no Slider (Evento 'change' salva só quando solta o dedo)
+    progressSlider.addEventListener('change', async (e) => {
+        if(!currentUser) return;
+        const valor = e.target.value;
+        
+        // Cria uma ID única para a aula (ex: progresso_0_2 para Módulo 0 Aula 2)
+        const lessonKey = `progresso_${currentModId}_${currentLessId}`;
+        const userRef = doc(db, "users", currentUser.uid);
+
+        // Atualiza visualmente na hora
+        progressVal.innerText = valor + "%";
+
+        try {
+            // Salva no Firestore (merge: true para não apagar outras aulas)
+            await setDoc(userRef, {
+                [lessonKey]: valor
+            }, { merge: true });
+            console.log("Progresso salvo:", valor);
+        } catch (error) {
+            console.error("Erro ao salvar:", error);
+        }
+    });
+
+    // Atualização visual enquanto arrasta (sem salvar ainda)
+    progressSlider.addEventListener('input', (e) => {
+        progressVal.innerText = e.target.value + "%";
+    });
+
+    // 2. Função para Carregar do Banco
+    window.loadFirestoreProgress = async (modIdx, lessIdx) => {
+        currentModId = modIdx;
+        currentLessId = lessIdx;
+        
+        // Esconde barra se não tiver usuário logado
+        if(!currentUser) {
+            progressArea.style.display = 'none';
+            return;
+        }
+
+        progressArea.style.display = 'block';
+        progressSlider.value = 0; // Reseta visualmente
+        progressVal.innerText = "0%";
+        progressSlider.disabled = true; // Trava enquanto carrega
+
+        const lessonKey = `progresso_${modIdx}_${lessIdx}`;
+        const userRef = doc(db, "users", currentUser.uid);
+
+        try {
+            const docSnap = await getDoc(userRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                const savedValue = data[lessonKey] || 0;
+                progressSlider.value = savedValue;
+                progressVal.innerText = savedValue + "%";
+            }
+        } catch (error) {
+            console.error("Erro ao carregar:", error);
+        } finally {
+            progressSlider.disabled = false; // Destrava
+        }
+    };
+
+</script>
+
+<script>
+    // Sobrescrevemos a função original loadLesson para injetar o carregamento do progresso
+    // Precisamos esperar o script.js carregar primeiro
+    window.addEventListener('load', () => {
+        if(typeof originalLoadLesson === 'undefined' && typeof loadLesson !== 'undefined') {
+            // Salva a função original
+            window.originalLoadLesson = window.loadLesson;
+            
+            // Cria a nova versão que chama o Firebase
+            window.loadLesson = function(modIdx, lessIdx) {
+                // Chama a lógica antiga (mostrar texto, imagem, audio)
+                window.originalLoadLesson(modIdx, lessIdx);
+                
+                // Chama a lógica nova (carregar barra de progresso do banco)
+                if(window.loadFirestoreProgress) {
+                    window.loadFirestoreProgress(modIdx, lessIdx);
+                }
+            }
         }
     });
 </script>
