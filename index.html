@@ -87,32 +87,101 @@
         @media (min-width: 769px) {
             .mobile-menu-toggle { display: none; }
         }
+
+
+        /* === ESTILOS DO NOVO METRÔNOMO SEQUENCIADOR === */
+.sequencer-container {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin: 20px 0;
+    height: 120px;
+    background: #222;
+    padding: 10px;
+    border-radius: 8px;
+    overflow-x: auto; /* Permite rolar se tiver muitos passos */
+}
+
+.step-box {
+    width: 40px;
+    height: 100%;
+    background: #333;
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    transition: 0.1s;
+    border: 1px solid #444;
+}
+
+/* Estado: TOCANDO AGORA (Brilho Amarelo) */
+.step-box.playing {
+    border: 2px solid #f1c40f;
+    box-shadow: 0 0 10px #f1c40f;
+}
+
+/* NÍVEL 1: FRACO (Preenchimento Roxo em baixo) */
+.step-box.weak::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 40%; /* Menor altura */
+    background: #9b59b6; /* Roxo */
+    border-radius: 0 0 4px 4px;
+}
+
+/* NÍVEL 2: FORTE (Preenchimento Ciano total) */
+.step-box.strong::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 100%; /* Altura total */
+    background: #00d2d3; /* Ciano */
+    border-radius: 4px;
+}
+
+/* Controles do Metrônomo */
+.metro-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+.metro-select { padding: 10px; font-size: 1rem; border-radius: 5px; background: #ecf0f1; border: none; }
+
+
     </style>
 </head>
 <body>
 
 <div id="metronome-modal">
-        <div class="modal-content" style="text-align: center; padding: 40px;">
-            <button class="close-modal" onclick="toggleMetronome()">X</button>
+    <div class="modal-content" style="text-align: center; padding: 20px; max-width: 700px;">
+        <button class="close-modal" onclick="toggleMetronome()">X</button>
+        
+        <h2 style="color:#2c3e50; margin-top:0;">Metrônomo Pro</h2>
+        
+        <div class="metro-controls">
+            <div>
+                <label style="font-weight:bold; color:#7f8c8d;">Compasso:</label>
+                <select id="time-sig" class="metro-select" onchange="generateSteps()">
+                    <option value="4/4">4/4 (Rock/Pop)</option>
+                    <option value="2/4">2/4 (Samba/Polka)</option>
+                    <option value="3/4">3/4 (Valsa - "4/3")</option>
+                    <option value="2/2">2/2 (Cut Time)</option>
+                    <option value="6/8">6/8 (Blues/Jazz)</option>
+                    <option value="7/4">7/4 (Prog)</option>
+                </select>
+            </div>
             
-            <h2 style="color:#2c3e50; margin-top:0;">Metrônomo</h2>
-            
-            <div style="font-size: 3rem; font-weight: bold; color: #e67e22; margin: 20px 0;">
+            <div style="font-size: 2rem; font-weight: bold; color: #e67e22;">
                 <span id="bpm-val">100</span> <span style="font-size: 1rem; color: #7f8c8d;">BPM</span>
             </div>
-
-            <input type="range" id="bpm-range" min="40" max="220" value="100" 
-                   style="width: 100%; margin: 20px 0; cursor: pointer;"
-                   oninput="updateBpm(this.value)">
-
-            <button id="btn-play-metro" onclick="togglePlayMetronome()" 
-                    style="background: #2c3e50; color: white; border: none; padding: 15px 40px; font-size: 1.2rem; border-radius: 50px; cursor: pointer; margin-top: 20px;">
-                ▶ INICIAR
-            </button>
-            
-            <p style="color:#999; font-size:0.8rem; margin-top:20px;">Compasso simples (4/4)</p>
         </div>
+
+        <p style="font-size:0.8rem; color:#666; margin:0;">Toque nas barras para mudar: Mudo > Fraco (Roxo) > Forte (Azul)</p>
+        <div id="sequencer-track" class="sequencer-container">
+            </div>
+
+        <input type="range" id="bpm-range" min="40" max="220" value="100" 
+               style="width: 100%; margin: 20px 0; cursor: pointer;"
+               oninput="updateBpm(this.value)">
+
+        <button id="btn-play-metro" onclick="togglePlayMetronome()" 
+                style="background: #2c3e50; color: white; border: none; padding: 15px 50px; font-size: 1.2rem; border-radius: 50px; cursor: pointer; transition:0.2s;">
+            ▶ INICIAR
+        </button>
     </div>
+</div>
 
     <div id="sidebar">
         <div class="logo-area">
@@ -385,55 +454,153 @@
             menu.classList.toggle('show-mobile');
         }
 
+// --- CÓDIGO DO METRÔNOMO SEQUENCIADOR ---
+let metroInterval = null;
+let bpm = 100;
+let isPlaying = false;
+let currentStep = 0;
+let totalSteps = 8;
+let stepStates = []; // 0=Mute, 1=Weak, 2=Strong
 
-        // --- CÓDIGO DO METRÔNOMO PRÓPRIO ---
-        let metroInterval = null;
-        let bpm = 100;
-        let isPlaying = false;
-        
-        // Criar som de bip sintético (não precisa de arquivo mp3)
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        function playClick() {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            
-            osc.frequency.value = 1000; // Frequência do som (agudo)
-            gain.gain.value = 1;
-            
-            osc.start();
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-            osc.stop(audioCtx.currentTime + 0.1);
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+// 1. Gera as caixinhas baseado no compasso
+function generateSteps() {
+    const sig = document.getElementById('time-sig').value;
+    const track = document.getElementById('sequencer-track');
+    track.innerHTML = '';
+    
+    // Lógica de subdivisão: 
+    // Compassos simples (x/4, x/2) multiplicamos por 2 para ter o contratempo (&).
+    // Compassos compostos (x/8) usamos o número exato.
+    
+    switch(sig) {
+        case '4/4': totalSteps = 8; break; // 1 & 2 & 3 & 4 &
+        case '2/4': totalSteps = 4; break; // 1 & 2 &
+        case '3/4': totalSteps = 6; break; // 1 & 2 & 3 & (Corrigindo o "4/3" para 3/4 Valsa)
+        case '2/2': totalSteps = 4; break; 
+        case '7/4': totalSteps = 14; break;
+        case '6/8': totalSteps = 6; break; // 1 2 3 4 5 6 (Sem subdivisão extra)
+        default: totalSteps = 8;
+    }
+
+    stepStates = new Array(totalSteps).fill(0); // Reinicia tudo como "Mudo"
+    
+    // Configuração Padrão Inteligente (Acentua a cabeça do tempo)
+    for(let i=0; i<totalSteps; i++) {
+        // Se for compasso simples, acentua os pares (0, 2, 4...) como Forte, ímpares Mudo
+        if(sig.includes('/4') || sig.includes('/2')) {
+            if(i % 2 === 0) stepStates[i] = 2; // Forte na cabeça
+            else stepStates[i] = 0; // Mudo no contratempo (usuário ativa se quiser)
+        } 
+        // Se for 6/8, acentua o 1 e o 4
+        else if (sig === '6/8') {
+            if(i === 0 || i === 3) stepStates[i] = 2;
+            else stepStates[i] = 1; // Fraco nos outros
+        }
+    }
+
+    // Desenha as caixas no HTML
+    for (let i = 0; i < totalSteps; i++) {
+        const div = document.createElement('div');
+        div.className = 'step-box';
+        div.id = `step-${i}`;
+        div.onclick = () => cycleStepState(i);
+        updateStepVisual(div, stepStates[i]);
+        track.appendChild(div);
+    }
+}
+
+// 2. Muda a cor/som ao clicar na caixa (0 -> 1 -> 2 -> 0)
+function cycleStepState(index) {
+    stepStates[index] = (stepStates[index] + 1) % 3;
+    const div = document.getElementById(`step-${index}`);
+    updateStepVisual(div, stepStates[index]);
+}
+
+function updateStepVisual(div, state) {
+    div.classList.remove('weak', 'strong');
+    if (state === 1) div.classList.add('weak');
+    if (state === 2) div.classList.add('strong');
+}
+
+// 3. O Motor de Áudio
+function playStep() {
+    // Visual: Ilumina a caixa atual e apaga a anterior
+    const prevIndex = (currentStep - 1 + totalSteps) % totalSteps;
+    document.getElementById(`step-${prevIndex}`).classList.remove('playing');
+    const currDiv = document.getElementById(`step-${currentStep}`);
+    if(currDiv) currDiv.classList.add('playing');
+
+    // Áudio: Toca dependendo do estado
+    const state = stepStates[currentStep];
+    if (state > 0) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        // CONFIGURAÇÃO DOS DOIS SONS
+        if (state === 2) { // FORTE (Agudo)
+            osc.frequency.value = 1200; 
+            gain.gain.value = 1.0;
+        } else { // FRACO (Grave)
+            osc.frequency.value = 600; 
+            gain.gain.value = 0.4;
         }
 
-        function updateBpm(val) {
-            bpm = val;
-            document.getElementById('bpm-val').innerText = val;
-            if (isPlaying) {
-                clearInterval(metroInterval);
-                metroInterval = setInterval(playClick, (60000 / bpm));
-            }
-        }
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        osc.stop(audioCtx.currentTime + 0.1);
+    }
 
-        function togglePlayMetronome() {
-            const btn = document.getElementById('btn-play-metro');
-            
-            if (isPlaying) {
-                clearInterval(metroInterval);
-                btn.innerText = "▶ INICIAR";
-                btn.style.background = "#2c3e50";
-                isPlaying = false;
-            } else {
-                playClick(); // Toca o primeiro imediatamente
-                metroInterval = setInterval(playClick, (60000 / bpm));
-                btn.innerText = "⏹ PARAR";
-                btn.style.background = "#c0392b";
-                isPlaying = true;
-            }
-        }
+    // Avança para o próximo passo
+    currentStep = (currentStep + 1) % totalSteps;
+}
+
+function updateBpm(val) {
+    bpm = val;
+    document.getElementById('bpm-val').innerText = val;
+    if (isPlaying) {
+        restartInterval();
+    }
+}
+
+function restartInterval() {
+    clearInterval(metroInterval);
+    // Cálculo do tempo: Se estamos subdividindo (ex: 4/4 tem 8 passos), o tempo é metade
+    const sig = document.getElementById('time-sig').value;
+    let multiplier = 1;
+    if(sig.includes('/4') || sig.includes('/2')) multiplier = 0.5; // Colcheias
+    
+    // 60000ms / BPM = semínima. Multiplicamos por 0.5 para ter a colcheia.
+    const intervalTime = (60000 / bpm) * multiplier; 
+    
+    metroInterval = setInterval(playStep, intervalTime);
+}
+
+function togglePlayMetronome() {
+    const btn = document.getElementById('btn-play-metro');
+    
+    if (isPlaying) {
+        clearInterval(metroInterval);
+        btn.innerText = "▶ INICIAR";
+        btn.style.background = "#2c3e50";
+        // Limpa visual
+        document.querySelectorAll('.step-box').forEach(b => b.classList.remove('playing'));
+        isPlaying = false;
+    } else {
+        currentStep = 0;
+        restartInterval(); // Inicia o loop
+        btn.innerText = "⏹ PARAR";
+        btn.style.background = "#c0392b";
+        isPlaying = true;
+    }
+}
+
+// Inicia a grade na primeira vez
+generateSteps();
         
     </script>
 </body>
