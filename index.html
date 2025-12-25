@@ -91,10 +91,26 @@
 </head>
 <body>
 
-    <div id="metronome-modal">
-        <div class="modal-content">
+<div id="metronome-modal">
+        <div class="modal-content" style="text-align: center; padding: 40px;">
             <button class="close-modal" onclick="toggleMetronome()">X</button>
-            <iframe src="https://www.musicca.com/pt/metronomo?embed" width="100%" height="450" style="border:none; border-radius: 4px;"></iframe>
+            
+            <h2 style="color:#2c3e50; margin-top:0;">Metrônomo</h2>
+            
+            <div style="font-size: 3rem; font-weight: bold; color: #e67e22; margin: 20px 0;">
+                <span id="bpm-val">100</span> <span style="font-size: 1rem; color: #7f8c8d;">BPM</span>
+            </div>
+
+            <input type="range" id="bpm-range" min="40" max="220" value="100" 
+                   style="width: 100%; margin: 20px 0; cursor: pointer;"
+                   oninput="updateBpm(this.value)">
+
+            <button id="btn-play-metro" onclick="togglePlayMetronome()" 
+                    style="background: #2c3e50; color: white; border: none; padding: 15px 40px; font-size: 1.2rem; border-radius: 50px; cursor: pointer; margin-top: 20px;">
+                ▶ INICIAR
+            </button>
+            
+            <p style="color:#999; font-size:0.8rem; margin-top:20px;">Compasso simples (4/4)</p>
         </div>
     </div>
 
@@ -368,6 +384,57 @@
             const menu = document.getElementById('menu-container');
             menu.classList.toggle('show-mobile');
         }
+
+
+        // --- CÓDIGO DO METRÔNOMO PRÓPRIO ---
+        let metroInterval = null;
+        let bpm = 100;
+        let isPlaying = false;
+        
+        // Criar som de bip sintético (não precisa de arquivo mp3)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playClick() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.frequency.value = 1000; // Frequência do som (agudo)
+            gain.gain.value = 1;
+            
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function updateBpm(val) {
+            bpm = val;
+            document.getElementById('bpm-val').innerText = val;
+            if (isPlaying) {
+                clearInterval(metroInterval);
+                metroInterval = setInterval(playClick, (60000 / bpm));
+            }
+        }
+
+        function togglePlayMetronome() {
+            const btn = document.getElementById('btn-play-metro');
+            
+            if (isPlaying) {
+                clearInterval(metroInterval);
+                btn.innerText = "▶ INICIAR";
+                btn.style.background = "#2c3e50";
+                isPlaying = false;
+            } else {
+                playClick(); // Toca o primeiro imediatamente
+                metroInterval = setInterval(playClick, (60000 / bpm));
+                btn.innerText = "⏹ PARAR";
+                btn.style.background = "#c0392b";
+                isPlaying = true;
+            }
+        }
+        
     </script>
 </body>
 </html>
