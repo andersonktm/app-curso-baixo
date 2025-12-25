@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// --- CONFIGURAÇÃO ---
 const firebaseConfig = {
     apiKey: "AIzaSyCTJGH90GaYbdRChcjOtpff5o6ZYzlYA8k",
     authDomain: "guia-baixo-app.firebaseapp.com",
@@ -15,13 +16,13 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Variáveis de Estado
+// Variáveis
 let currentUser = null;
 let currentModId = 0;
 let currentLessId = 0;
 let userProgressData = {}; 
 
-// Referências DOM
+// Elementos UI
 const loginScreen = document.getElementById('login-screen');
 const appContainer = document.getElementById('app-container');
 const emailInput = document.getElementById('email');
@@ -34,50 +35,44 @@ const progressSlider = document.getElementById('progress-slider');
 const progressVal = document.getElementById('progress-val');
 const menuContainer = document.getElementById('menu-container');
 
-// --- 1. LOGIN ---
+// --- LOGIN ---
 btnLogin.addEventListener('click', () => {
     const email = emailInput.value;
     const pass = passInput.value;
-    btnLogin.innerText = "Aguarde...";
+    btnLogin.innerText = "Verificando...";
     signInWithEmailAndPassword(auth, email, pass)
         .then(() => { btnLogin.innerText = "ENTRAR"; })
         .catch((error) => {
             btnLogin.innerText = "ENTRAR";
             errorMsg.style.display = 'block';
-            errorMsg.innerText = "Login inválido.";
-            console.error(error);
+            errorMsg.innerText = "Dados incorretos.";
         });
 });
 
 if(btnLogout) {
     btnLogout.addEventListener('click', () => {
-        if(confirm("Sair da conta?")) signOut(auth);
+        if(confirm("Deseja realmente sair?")) signOut(auth);
     });
 }
 
-// --- 2. MONITORAMENTO (Auth State) ---
+// --- MONITORAMENTO DE ESTADO ---
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
         
-        // UI Transition
         loginScreen.style.opacity = '0';
         setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
         appContainer.style.opacity = '1';
         appContainer.style.pointerEvents = 'all';
         
-        // Passos Críticos para automação:
-        // A. Baixa dados do Firestore
+        // 1. Carrega os dados do banco
         await fetchUserProgress();
         
-        // B. Tenta preencher (caso menu já exista)
+        // 2. Preenche memória
         fillSidebarFromMemory();
 
-        // C. Ativa o "Vigia" para preencher assim que o menu for criado
+        // 3. Ativa o Observador para preencher assim que o menu for criado
         startMenuObserver();
-
-        // D. Atualiza o slider da aula atual
-        updateSliderUI(currentModId, currentLessId);
 
     } else {
         currentUser = null;
@@ -89,7 +84,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// --- 3. SLIDER DE PROGRESSO (Salvar) ---
+// --- SLIDER (SALVAR) ---
 progressSlider.addEventListener('change', async (e) => {
     if(!currentUser) return;
     const valor = e.target.value;
@@ -98,7 +93,7 @@ progressSlider.addEventListener('change', async (e) => {
 
     progressVal.innerText = valor + "%";
     
-    // Atualiza memória local e UI instantaneamente
+    // Atualiza memória local e menu visualmente
     userProgressData[lessonKey] = valor;
     updateSingleSidebarItem(currentModId, currentLessId, valor);
 
@@ -111,7 +106,7 @@ progressSlider.addEventListener('input', (e) => {
     progressVal.innerText = e.target.value + "%";
 });
 
-// --- 4. FUNÇÕES AUXILIARES ---
+// --- FUNÇÕES AUXILIARES ---
 
 async function fetchUserProgress() {
     if(!currentUser) return;
@@ -121,14 +116,12 @@ async function fetchUserProgress() {
         if (docSnap.exists()) {
             userProgressData = docSnap.data();
         }
-    } catch (error) { console.error("Erro busca:", error); }
+    } catch (error) { console.error("Erro ao buscar dados:", error); }
 }
 
-// Preenche todos os itens do menu com base na memória
 function fillSidebarFromMemory() {
     for (const [key, value] of Object.entries(userProgressData)) {
         if (key.startsWith('progresso_')) {
-            // Converte 'progresso_0_1' para 'percent-0-1'
             const sidebarId = key.replace('progresso_', 'percent-');
             const span = document.getElementById(sidebarId);
             if(span && value > 0) {
@@ -143,42 +136,41 @@ function updateSingleSidebarItem(mod, less, val) {
     if(span) span.innerText = val > 0 ? val + "%" : "";
 }
 
-function updateSliderUI(mod, less) {
-    if(!currentUser || !progressArea) return;
-    
-    progressArea.style.display = 'block';
-    const lessonKey = `progresso_${mod}_${less}`;
-    const savedValue = userProgressData[lessonKey] || 0;
-    
-    progressSlider.value = savedValue;
-    progressVal.innerText = savedValue + "%";
-}
-
-// O Observador: Garante que as porcentagens apareçam mesmo se o script.js demorar a criar o menu
+// O Observador garante que a porcentagem apareça mesmo se o menu demorar
 function startMenuObserver() {
-    if(!menuContainer) return;
-    
     const observer = new MutationObserver((mutations) => {
         fillSidebarFromMemory();
     });
 
-    observer.observe(menuContainer, { childList: true, subtree: true });
+    if(menuContainer) {
+        observer.observe(menuContainer, { childList: true, subtree: true });
+    }
 }
 
-// --- 5. INTERCEPTADOR (Hook no script.js) ---
-// Isso permite saber quando o usuário muda de aula para atualizar o slider
+// --- PONTE COM SCRIPT.JS ---
 window.addEventListener('load', () => {
     if(typeof loadLesson !== 'undefined') {
         const originalLoad = window.loadLesson;
         
-        window.loadLesson = function(modIdx, lessIdx) {
-            originalLoad(modIdx, lessIdx); // Chama a função original do script.js
+        window.loadLesson = async function(modIdx, lessIdx) {
+            originalLoad(modIdx, lessIdx);
             
             currentModId = modIdx;
             currentLessId = lessIdx;
             
-            // Atualiza o slider quando muda de aula
-            updateSliderUI(modIdx, lessIdx);
+            if(!currentUser) { progressArea.style.display = 'none'; return; }
+
+            progressArea.style.display = 'block';
+            progressSlider.value = 0;
+            progressVal.innerText = "0%";
+            progressSlider.disabled = true;
+
+            const lessonKey = `progresso_${modIdx}_${lessIdx}`;
+            const savedValue = userProgressData[lessonKey] || 0;
+            
+            progressSlider.value = savedValue;
+            progressVal.innerText = savedValue + "%";
+            progressSlider.disabled = false;
         }
     }
 });

@@ -1,74 +1,244 @@
-/* ... Mantenha o seu CSS atual até a parte de === RESPONSIVIDADE === ... */
-
-/* === ESTILOS DA TELA DE LOGIN (Fix para ficar centralizado e bonito) === */
-#login-screen {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: #2c3e50; z-index: 9999;
-    display: flex; align-items: center; justify-content: center; flex-direction: column;
-    color: white; transition: opacity 0.5s;
+/* === CONFIGURAÇÕES GERAIS (VARIÁVEIS) === */
+:root {
+    /* Paleta "Dark Studio" */
+    --bg-body: #121212;          /* Fundo quase preto */
+    --bg-sidebar: #0a0a0a;       /* Lateral preto profundo */
+    --bg-card: #1e1e1e;          /* Cinza chumbo para os cards */
+    --bg-hover: #2d2d2d;         /* Cinza mais claro ao passar mouse */
+    
+    --text-primary: #e0e0e0;     /* Branco gelo para leitura */
+    --text-secondary: #a0a0a0;   /* Cinza para detalhes */
+    
+    --accent-color: #ff9f43;     /* Laranja "Sunburst" (Destaque) */
+    
+    --border-radius: 12px;       
+    --shadow: 0 8px 24px rgba(0,0,0,0.5); 
 }
-.login-box { 
-    background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 320px; 
-    text-align: center; color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+
+/* === RESET E BASE === */
+* { box-sizing: border-box; }
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-body); }
+::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    margin: 0; 
+    display: flex; 
+    height: 100vh; 
+    background: var(--bg-body); 
+    color: var(--text-primary); 
 }
-.login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
-.login-btn { width: 100%; padding: 12px; background: #e67e22; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; font-size: 16px; transition: 0.3s; margin-top: 10px; }
-.login-btn:hover { background: #d35400; }
-.error-msg { color: #e74c3c; font-size: 14px; display: none; margin-top: 10px; font-weight: bold; }
 
-/* === BARRA DE PROGRESSO === */
-.progress-box {
-    background: #1e272e; color: #ecf0f1; border-radius: 8px;
-    padding: 20px; margin-top: 30px; margin-bottom: 20px;
-    text-align: center; border: 1px solid #34495e;
+/* === MENU LATERAL (SIDEBAR) === */
+#sidebar { 
+    width: 280px; 
+    background: var(--bg-sidebar); 
+    display: flex; 
+    flex-direction: column; 
+    border-right: 1px solid #333; 
+    flex-shrink: 0; 
+    z-index: 100; /* Garante que o menu fique acima do conteúdo */
 }
-.progress-slider { width: 100%; cursor: pointer; height: 8px; background: #34495e; border-radius: 4px; margin-top: 10px; }
-.menu-percent { font-size: 0.75rem; color: #2ecc71; font-weight: bold; float: right; background: rgba(46, 204, 113, 0.15); padding: 2px 6px; border-radius: 4px; }
 
+.logo-area { 
+    padding: 30px 20px; 
+    text-align: center; 
+    border-bottom: 1px solid #222; 
+}
 
-/* === RESPONSIVIDADE (CORREÇÃO DE CELULAR) === */
+.logo-area h1 { 
+    margin: 0; 
+    font-family: 'Poppins', sans-serif; 
+    font-size: 1.4rem; 
+    color: var(--accent-color); 
+    text-transform: uppercase; 
+    letter-spacing: 2px; 
+    text-shadow: 0 0 10px rgba(255, 159, 67, 0.3);
+}
+
+.mobile-menu-toggle {
+    display: none; /* Escondido no Desktop por padrão */
+    margin-top: 10px;
+    width: 100%;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Botões de Ferramentas */
+.tools-area { padding: 20px; }
+
+.btn-metronome { 
+    width: 100%; 
+    padding: 12px; 
+    background: linear-gradient(145deg, #2c3e50, #34495e); 
+    color: white; 
+    border: none; 
+    border-radius: var(--border-radius); 
+    cursor: pointer; 
+    font-family: 'Poppins', sans-serif; 
+    font-weight: 600; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 10px; 
+    transition: 0.3s; 
+    margin-bottom: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+.btn-metronome:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); filter: brightness(1.1); }
+
+/* Menu de Aulas */
+#menu-container { flex: 1; overflow-y: auto; padding: 10px; }
+
+.module-header { 
+    padding: 15px; 
+    margin-top: 5px;
+    border-radius: var(--border-radius);
+    cursor: pointer; 
+    font-weight: 600; 
+    color: var(--text-primary);
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    transition: 0.2s;
+}
+.module-header:hover { background: var(--bg-hover); }
+
+.lessons-list { 
+    display: none; 
+    padding-left: 10px; 
+    margin-bottom: 10px;
+}
+.lessons-list.open { display: block; animation: slideDown 0.3s ease; }
+
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+.lesson-link { 
+    padding: 10px 15px; 
+    cursor: pointer; 
+    font-size: 0.9rem; 
+    color: var(--text-secondary); 
+    border-left: 2px solid #333;
+    margin-left: 10px;
+    transition: 0.2s; 
+}
+
+.lesson-link:hover { color: white; border-left-color: var(--accent-color); padding-left: 20px; }
+.lesson-link.active { color: var(--accent-color); border-left-color: var(--accent-color); background: linear-gradient(90deg, rgba(255,159,67,0.1), transparent); font-weight: bold; }
+
+/* === ÁREA DE CONTEÚDO === */
+#content { flex: 1; overflow-y: auto; padding: 20px; display: flex; justify-content: center; }
+
+.container { 
+    width: 100%; 
+    max-width: 900px; 
+    background: var(--bg-card); 
+    padding: 40px; 
+    border-radius: 16px; 
+    box-shadow: var(--shadow); 
+    height: fit-content; 
+    margin-bottom: 40px; 
+    border: 1px solid #333;
+}
+
+/* Tipografia */
+.breadcrumb { font-size: 0.8rem; color: var(--accent-color); text-transform: uppercase; font-weight: bold; letter-spacing: 1px; margin-bottom: 10px; }
+
+h2.lesson-title { 
+    margin-top: 0; 
+    font-family: 'Poppins', sans-serif;
+    font-size: 2.2rem; 
+    color: white;
+    border-bottom: 1px solid #333; 
+    padding-bottom: 20px; 
+    margin-bottom: 30px; 
+}
+
+.lesson-text { line-height: 1.8; font-size: 1.1rem; color: #ccc; margin-bottom: 30px; }
+
+.link-interno { 
+    color: var(--accent-color); 
+    font-weight: 600; 
+    text-decoration: none; 
+    background: rgba(255, 159, 67, 0.1); 
+    padding: 2px 6px; 
+    border-radius: 4px; 
+    transition: 0.2s; 
+}
+.link-interno:hover { background: var(--accent-color); color: #000; }
+
+/* Imagens e Audio */
+.image-container { text-align: center; margin: 30px 0; background: #151515; padding: 20px; border: 1px solid #333; border-radius: var(--border-radius); }
+.image-container img { max-width: 100%; height: auto; border-radius: 8px; }
+.no-image { color: #555; font-style: italic; }
+
+.audio-section { background: #151515; padding: 25px; border-radius: var(--border-radius); margin-top: 40px; border: 1px solid #333; }
+.audio-row { margin-bottom: 20px; }
+.audio-label { color: var(--accent-color); font-size: 0.85rem; text-transform: uppercase; margin-bottom: 8px; display: block; }
+audio { width: 100%; height: 40px; filter: invert(0.9); }
+
+/* Navegação */
+.nav-buttons { display: flex; justify-content: space-between; margin-top: 50px; padding-top: 30px; border-top: 1px solid #333; }
+.nav-btn { padding: 12px 30px; background: transparent; color: var(--text-secondary); border: 1px solid #444; border-radius: 50px; cursor: pointer; font-size: 1rem; transition: 0.3s; font-family: 'Poppins', sans-serif; }
+.nav-btn:hover { background: var(--accent-color); color: #000; border-color: var(--accent-color); }
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Timer */
+.timer-box { background: linear-gradient(135deg, #1e3799, #0c2461); color: white; padding: 20px; border-radius: var(--border-radius); margin: 30px 0; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 8px 20px rgba(12, 36, 97, 0.4); border: 1px solid rgba(255,255,255,0.1); }
+.timer-display { font-family: 'Courier New', monospace; font-size: 2.5rem; font-weight: bold; color: #fff; }
+.timer-btn { background: white; color: #0c2461; border: none; padding: 12px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.timer-btn.running { background: #ff6b6b; color: white; }
+
+/* === MODAIS (Pop-ups) === */
+/* A CORREÇÃO PRINCIPAL ESTÁ AQUI EMBAIXO: display: none */
+#metronome-modal, #map-modal { 
+    display: none; /* <--- ISSO IMPEDE DE ABRIR SOZINHO */
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.95); 
+    backdrop-filter: blur(5px); 
+    z-index: 2000; /* Fica acima de tudo quando aberto */
+    justify-content: center; 
+    align-items: center; 
+}
+
+.modal-content { background: var(--bg-card); border: 1px solid #333; color: var(--text-primary); border-radius: 16px; position: relative; }
+.close-modal { position: absolute; right: -10px; top: -10px; background: #ff5252; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(255,82,82,0.4); }
+
+.sequencer-container { background: #000; border: 1px solid #333; display: flex; justify-content: center; gap: 5px; margin: 20px 0; height: 120px; padding: 10px; border-radius: 8px; overflow-x: auto; }
+.step-box { width: 40px; height: 100%; background: #222; border-radius: 4px; cursor: pointer; position: relative; border: 1px solid #444; }
+.step-box.playing { border-color: var(--accent-color); box-shadow: 0 0 15px var(--accent-color); }
+.step-box.weak::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40%; background: #9b59b6; border-radius: 0 0 4px 4px; }
+.step-box.strong::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 100%; background: #00d2d3; border-radius: 4px; }
+.metro-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+.metro-select { background: #333; color: white; border: 1px solid #444; padding: 10px; font-size: 1rem; border-radius: 5px; }
+
+/* === RESPONSIVIDADE === */
 @media (max-width: 768px) {
-    body { 
-        flex-direction: column; 
-        height: auto; 
-        min-height: 100vh; /* Evita corte em celulares */
-    }
+    body { flex-direction: column; }
     
     #sidebar { 
         width: 100%; 
         height: auto; 
         border-right: none; 
         border-bottom: 1px solid #333; 
-        position: relative; /* Ajuste para fluir com a página */
-        flex-shrink: 0;
     }
     
-    .logo-area { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; }
+    .mobile-menu-toggle { display: block; } /* Botão Menu aparece no celular */
     
-    .mobile-menu-toggle { display: block; margin-top: 0; width: auto; padding: 8px 15px; } 
-
-    #menu-container { display: none; } 
-    #menu-container.show-mobile { display: block; max-height: 400px; border-top: 1px solid #333; overflow-y: auto; }
+    #menu-container { display: none; } /* Lista some no celular */
+    #menu-container.show-mobile { display: block; max-height: 300px; border-top: 1px solid #333; }
     
-    /* Área de Conteúdo no Celular */
-    #content { 
-        padding: 15px; /* Reduzi de 20px para ganhar espaço */
-        display: block; /* Remove flex centralizado para usar width total */
-    }
-
-    .container { 
-        padding: 20px; /* Reduzi drasticamente de 40px para 20px */
-        width: 100%; 
-        border: none; /* Remove borda em telas pequenas para look mais limpo */
-        box-shadow: none;
-        background: transparent; /* Fundo se mescla no mobile */
-    }
-    
-    h2.lesson-title { font-size: 1.6rem; } /* Título menor */
-    
-    .lesson-text { font-size: 1rem; line-height: 1.6; }
-    
-    /* Botões de navegação empilhados se precisar, ou menores */
-    .nav-buttons { gap: 10px; }
-    .nav-btn { padding: 10px 15px; font-size: 0.9rem; }
+    .logo-area { display: flex; justify-content: space-between; align-items: center; }
+    .container { padding: 20px; }
 }
