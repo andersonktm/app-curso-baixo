@@ -185,12 +185,11 @@
 <script src="script.js"></script>
 
 <script type="module">
-    // Importa Autenticação E Banco de Dados (Firestore)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- SEUS DADOS DO FIREBASE ---
+    // --- CONFIGURAÇÃO (MANTENHA A SUA) ---
     const firebaseConfig = {
         apiKey: "AIzaSyCTJGH90GaYbdRChcjOtpff5o6ZYzlYA8k",
         authDomain: "guia-baixo-app.firebaseapp.com",
@@ -202,9 +201,13 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app); // Inicializa o Banco
+    const db = getFirestore(app);
 
-    // Elementos UI
+    // Variáveis e Elementos
+    let currentUser = null;
+    let currentModId = 0;
+    let currentLessId = 0;
+
     const loginScreen = document.getElementById('login-screen');
     const appContainer = document.getElementById('app-container');
     const emailInput = document.getElementById('email');
@@ -212,16 +215,9 @@
     const errorMsg = document.getElementById('error-msg');
     const btnLogin = document.getElementById('btnLogin');
     const btnLogout = document.getElementById('btnLogout');
-    
-    // Elementos de Progresso
     const progressArea = document.getElementById('progress-area');
     const progressSlider = document.getElementById('progress-slider');
     const progressVal = document.getElementById('progress-val');
-
-    // Variáveis globais de controle
-    let currentUser = null;
-    let currentModId = 0;
-    let currentLessId = 0;
 
     // --- LOGIN ---
     btnLogin.addEventListener('click', () => {
@@ -229,11 +225,11 @@
         const pass = passInput.value;
         btnLogin.innerText = "Verificando...";
         signInWithEmailAndPassword(auth, email, pass)
-            .then((userCredential) => { btnLogin.innerText = "ENTRAR"; })
+            .then(() => { btnLogin.innerText = "ENTRAR"; })
             .catch((error) => {
                 btnLogin.innerText = "ENTRAR";
                 errorMsg.style.display = 'block';
-                if(error.code === 'auth/invalid-credential') errorMsg.innerText = "Credenciais inválidas.";
+                if(error.code === 'auth/invalid-credential') errorMsg.innerText = "Dados incorretos.";
                 else errorMsg.innerText = "Erro: " + error.message;
             });
     });
@@ -244,16 +240,24 @@
         });
     }
 
+    // --- MONITORAMENTO DE ESTADO (AUTH) ---
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
+            
+            // Esconde login / Mostra App
             loginScreen.style.opacity = '0';
             setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
             appContainer.style.opacity = '1';
             appContainer.style.pointerEvents = 'all';
             
-            // Ao logar, atualiza as porcentagens do menu
-            setTimeout(updateSidebarPercentages, 1000); 
+            // --- CORREÇÃO AQUI: Tenta atualizar o menu várias vezes ---
+            // Tenta imediatamente
+            updateSidebarPercentages();
+            // Tenta depois de 1 segundo (garante que o script.js rodou)
+            setTimeout(updateSidebarPercentages, 1000);
+            // Tenta depois de 3 segundos (garantia final para conexões lentas)
+            setTimeout(updateSidebarPercentages, 3000);
             
         } else {
             currentUser = null;
@@ -264,17 +268,16 @@
         }
     });
 
-    // --- LÓGICA DO SLIDER (Salvar Progresso) ---
+    // --- SLIDER (SALVAR) ---
     progressSlider.addEventListener('change', async (e) => {
         if(!currentUser) return;
         const valor = e.target.value;
         const lessonKey = `progresso_${currentModId}_${currentLessId}`;
         const userRef = doc(db, "users", currentUser.uid);
 
-        // Atualiza visualmente na hora
         progressVal.innerText = valor + "%";
         
-        // Atualiza o menu lateral na hora também
+        // Atualiza o menu lateral na hora
         const sidebarSpan = document.getElementById(`percent-${currentModId}-${currentLessId}`);
         if(sidebarSpan) {
             sidebarSpan.innerText = valor > 0 ? valor + "%" : "";
@@ -282,27 +285,52 @@
 
         try {
             await setDoc(userRef, { [lessonKey]: valor }, { merge: true });
-            console.log("Progresso salvo.");
         } catch (error) { console.error("Erro ao salvar:", error); }
     });
 
-    // Atualização visual enquanto arrasta (sem salvar ainda)
     progressSlider.addEventListener('input', (e) => {
         progressVal.innerText = e.target.value + "%";
     });
 
-    // --- FUNÇÃO PARA CARREGAR AULA (Ponte com script.js) ---
+    // --- FUNÇÃO DE UPDATE VISUAL DO MENU ---
+    async function updateSidebarPercentages() {
+        if(!currentUser) return;
+        
+        const userRef = doc(db, "users", currentUser.uid);
+        try {
+            const docSnap = await getDoc(userRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                // Percorre todos os dados salvos
+                for (const [key, value] of Object.entries(data)) {
+                    if (key.startsWith('progresso_')) {
+                        // Converte chave do banco ("progresso_0_1") para ID do HTML ("percent-0-1")
+                        const sidebarId = key.replace('progresso_', 'percent-');
+                        const span = document.getElementById(sidebarId);
+                        
+                        // Se encontrou o span (significa que o menu já existe), preenche
+                        if(span && value > 0) {
+                            span.innerText = value + "%";
+                        }
+                    }
+                }
+            }
+        } catch (error) { console.error("Erro ao atualizar menu:", error); }
+    }
+
+    // --- PONTE COM O SCRIPT.JS ---
     window.addEventListener('load', () => {
+        // Se já estiver logado quando a página terminar de carregar, força atualização do menu
+        if(currentUser) {
+            setTimeout(updateSidebarPercentages, 500);
+        }
+
         if(typeof loadLesson !== 'undefined') {
-            // Salva a função original do script.js
             const originalLoad = window.loadLesson;
             
-            // Sobrescreve com a nossa versão "turbinada"
             window.loadLesson = async function(modIdx, lessIdx) {
-                // 1. Roda a função original (mostra texto, audio, img)
                 originalLoad(modIdx, lessIdx);
                 
-                // 2. Roda a lógica do Firebase (carrega a barra de progresso)
                 currentModId = modIdx;
                 currentLessId = lessIdx;
                 
@@ -311,7 +339,7 @@
                 progressArea.style.display = 'block';
                 progressSlider.value = 0;
                 progressVal.innerText = "0%";
-                progressSlider.disabled = true; // Trava enquanto carrega
+                progressSlider.disabled = true;
 
                 const lessonKey = `progresso_${modIdx}_${lessIdx}`;
                 const userRef = doc(db, "users", currentUser.uid);
@@ -324,36 +352,12 @@
                         progressSlider.value = savedValue;
                         progressVal.innerText = savedValue + "%";
                     }
-                } catch (error) { console.error("Erro ao ler banco:", error); } 
+                } catch (error) { console.error("Erro:", error); } 
                 finally { progressSlider.disabled = false; }
             }
         }
     });
-
-    // --- FUNÇÃO PARA PREENCHER O MENU LATERAL ---
-    async function updateSidebarPercentages() {
-        if(!currentUser) return;
-        const userRef = doc(db, "users", currentUser.uid);
-        
-        try {
-            const docSnap = await getDoc(userRef);
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                // Varre todos os dados salvos e preenche os spans do menu
-                for (const [key, value] of Object.entries(data)) {
-                    if (key.startsWith('progresso_')) {
-                        // Converte chave do banco ("progresso_0_1") para ID do HTML ("percent-0-1")
-                        const sidebarId = key.replace('progresso_', 'percent-');
-                        const span = document.getElementById(sidebarId);
-                        if(span && value > 0) {
-                            span.innerText = value + "%";
-                        }
-                    }
-                }
-            }
-        } catch (error) { console.error("Erro ao atualizar menu:", error); }
-    }
-
 </script>
+
 </body>
 </html>
