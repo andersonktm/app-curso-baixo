@@ -226,16 +226,18 @@
     let currentLessId = 0;
     let userProgressData = {}; 
 
-    const loginScreen = document.getElementById('login-screen');
-    const appContainer = document.getElementById('app-container');
-    const emailInput = document.getElementById('email');
-    const passInput = document.getElementById('senha');
-    const errorMsg = document.getElementById('error-msg');
-    const btnLogin = document.getElementById('btnLogin');
-    const btnLogout = document.getElementById('btnLogout');
-    const progressArea = document.getElementById('progress-area');
-    const progressSlider = document.getElementById('progress-slider');
-    const progressVal = document.getElementById('progress-val');
+// Referências DOM
+const loginScreen = document.getElementById('login-screen');
+const appContainer = document.getElementById('app-container');
+const emailInput = document.getElementById('email');
+const passInput = document.getElementById('senha');
+const errorMsg = document.getElementById('error-msg');
+const btnLogin = document.getElementById('btnLogin');
+const btnLogout = document.getElementById('btnLogout');
+const progressArea = document.getElementById('progress-area');
+const progressSlider = document.getElementById('progress-slider');
+const progressVal = document.getElementById('progress-val');
+const menuContainer = document.getElementById('menu-container');
 
     // Login
     btnLogin.addEventListener('click', () => {
@@ -272,14 +274,11 @@
             // 2. Tenta preencher agora
             fillSidebarFromMemory();
 
-            // 3. ATIVA O MODO TEIMOSO: Tenta preencher a cada 1 segundo por 5 segundos
-            // (Isso garante que pega o menu mesmo que ele demore a carregar)
-            let attempts = 0;
-            const interval = setInterval(() => {
-                attempts++;
-                fillSidebarFromMemory();
-                if(attempts >= 5) clearInterval(interval); // Para depois de 5 tentativas
-            }, 1000);
+            // C. Ativa o "Vigia" para preencher assim que o menu for criado
+        startMenuObserver();
+
+  // D. Atualiza o slider da aula atual
+        updateSliderUI(currentModId, currentLessId);
 
         } else {
             currentUser = null;
@@ -300,14 +299,14 @@
 
         progressVal.innerText = valor + "%";
         
-        userProgressData[lessonKey] = valor;
-        const sidebarSpan = document.getElementById(`percent-${currentModId}-${currentLessId}`);
-        if(sidebarSpan) sidebarSpan.innerText = valor > 0 ? valor + "%" : "";
+// Atualiza memória local e UI instantaneamente
+    userProgressData[lessonKey] = valor;
+    updateSingleSidebarItem(currentModId, currentLessId, valor);
 
-        try {
-            await setDoc(userRef, { [lessonKey]: valor }, { merge: true });
-        } catch (error) { console.error("Erro ao salvar:", error); }
-    });
+    try {
+        await setDoc(userRef, { [lessonKey]: valor }, { merge: true });
+    } catch (error) { console.error("Erro ao salvar:", error); }
+});
 
     progressSlider.addEventListener('input', (e) => {
         progressVal.innerText = e.target.value + "%";
@@ -336,31 +335,50 @@
         }
     }
 
-    // Ponte com script.js
-    window.addEventListener('load', () => {
-        if(typeof loadLesson !== 'undefined') {
-            const originalLoad = window.loadLesson;
-            window.loadLesson = async function(modIdx, lessIdx) {
-                originalLoad(modIdx, lessIdx);
-                currentModId = modIdx;
-                currentLessId = lessIdx;
-                
-                if(!currentUser) { progressArea.style.display = 'none'; return; }
+    function updateSingleSidebarItem(mod, less, val) {
+    const span = document.getElementById(`percent-${mod}-${less}`);
+    if(span) span.innerText = val > 0 ? val + "%" : "";
+}
 
-                progressArea.style.display = 'block';
-                progressSlider.value = 0;
-                progressVal.innerText = "0%";
-                progressSlider.disabled = true;
+function updateSliderUI(mod, less) {
+    if(!currentUser || !progressArea) return;
+    
+    progressArea.style.display = 'block';
+    const lessonKey = `progresso_${mod}_${less}`;
+    const savedValue = userProgressData[lessonKey] || 0;
+    
+    progressSlider.value = savedValue;
+    progressVal.innerText = savedValue + "%";
+}
 
-                const lessonKey = `progresso_${modIdx}_${lessIdx}`;
-                const savedValue = userProgressData[lessonKey] || 0;
-                
-                progressSlider.value = savedValue;
-                progressVal.innerText = savedValue + "%";
-                progressSlider.disabled = false;
-            }
-        }
+// O Observador: Garante que as porcentagens apareçam mesmo se o script.js demorar a criar o menu
+function startMenuObserver() {
+    if(!menuContainer) return;
+    
+    const observer = new MutationObserver((mutations) => {
+        fillSidebarFromMemory();
     });
+
+    observer.observe(menuContainer, { childList: true, subtree: true });
+}
+
+// --- 5. INTERCEPTADOR (Hook no script.js) ---
+// Isso permite saber quando o usuário muda de aula para atualizar o slider
+window.addEventListener('load', () => {
+    if(typeof loadLesson !== 'undefined') {
+        const originalLoad = window.loadLesson;
+        
+        window.loadLesson = function(modIdx, lessIdx) {
+            originalLoad(modIdx, lessIdx); // Chama a função original do script.js
+            
+            currentModId = modIdx;
+            currentLessId = lessIdx;
+            
+            // Atualiza o slider quando muda de aula
+            updateSliderUI(modIdx, lessIdx);
+        }
+    }
+});
 </script>
 </body>
 </html>
