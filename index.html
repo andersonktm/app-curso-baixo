@@ -650,6 +650,16 @@ generateSteps();
 
 // 1. Definição do Gráfico (Aqui você desenha as setas!)
 // Sintaxe: ID[Texto da Caixa] --> ID_Destino[Texto]
+// 1. O "Mapa do Tesouro": Relaciona o ID do desenho com a Aula real
+// Sintaxe: "ID_DO_NO": [Modulo, Aula]
+const lessonMap = {
+    "A0": [0, 0], // Postura
+    "A1": [0, 1], // Cordas Soltas
+    "A2": [0, 2], // Mão Direita
+    "B0": [1, 0], // Tônica e Quinta
+    "B1": [1, 1]  // Ritmo Básico
+};
+
 // Importante: Os IDs (A0, A1...) usamos para linkar com as aulas.
 // 2. Definição do Gráfico
 const graphDefinition = `
