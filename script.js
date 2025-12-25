@@ -85,7 +85,12 @@ function generateMenu() {
             const btn = document.createElement('div');
             btn.className = 'lesson-link';
             btn.id = `link-${modIdx}-${lessIdx}`;
+            
+            // --- AQUI ESTAVA O PROBLEMA ---
+            // Agora adicionamos o SPAN para receber a porcentagem
             btn.innerHTML = `${less.title} <span id="percent-${modIdx}-${lessIdx}" class="menu-percent"></span>`;
+            // ------------------------------
+
             btn.onclick = () => {
                 loadLesson(modIdx, lessIdx);
                 if(window.innerWidth <= 768) toggleMobileMenu();
@@ -492,6 +497,3 @@ function goToLesson(mod, less) {
     loadLesson(mod, less);
     document.getElementById('map-modal').style.display = 'none';
 }
-
-
-window.courseData = courseData;
