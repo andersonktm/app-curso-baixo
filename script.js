@@ -165,6 +165,12 @@ function loadLesson(modIdx, lessIdx) {
     updateActiveLink();
     updateNavButtons();
     initTimer(data.duration);
+
+    // NOVO: Fecha o menu se estiver no celular
+    const sidebar = document.getElementById('sidebar');
+    if (window.innerWidth <= 768 && sidebar.classList.contains('mobile-open')) {
+        toggleMobileMenu();
+    }
 }
 
 function changeLesson(direction) {
@@ -206,9 +212,29 @@ function updateActiveLink() {
 }
 
 function toggleMobileMenu() {
-    const menu = document.getElementById('menu-container');
-    menu.classList.toggle('show-mobile');
+    // Pega o elemento PAI (a barra lateral inteira)
+    const sidebar = document.getElementById('sidebar');
+    
+    // Alterna a classe que criamos no CSS
+    sidebar.classList.toggle('mobile-open');
+    
+    // Opcional: Muda o texto do botão se quiser
+    const btn = document.querySelector('.mobile-menu-toggle');
+    if (sidebar.classList.contains('mobile-open')) {
+        btn.innerText = "✕ Fechar";
+        btn.style.background = "#c0392b";
+        btn.style.color = "white";
+        btn.style.border = "none";
+    } else {
+        btn.innerText = "☰ Menu";
+        btn.style.background = "transparent";
+        btn.style.color = "var(--accent-color)";
+        btn.style.border = "1px solid var(--accent-color)";
+    }
 }
+
+
+
 
 /* =================================================================
    4. METRÔNOMO SEQUENCIADOR
