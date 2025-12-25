@@ -6,7 +6,7 @@ if ('serviceWorker' in navigator) {
 }
 
 /* =================================================================
-   2. DADOS DO CURSO (AQUI VOCÊ ADICIONA AS AULAS)
+   2. DADOS DO CURSO
    ================================================================= */
 const courseData = [
     {
@@ -62,7 +62,7 @@ let currentLesson = 0;
 window.onload = function() {
     generateMenu();
     loadLesson(0, 0); 
-    generateSteps(); // Inicia o metrônomo visualmente
+    generateSteps(); 
 };
 
 function generateMenu() {
@@ -86,10 +86,9 @@ function generateMenu() {
             btn.className = 'lesson-link';
             btn.id = `link-${modIdx}-${lessIdx}`;
             
-            // --- AQUI ESTAVA O PROBLEMA ---
-            // Agora adicionamos o SPAN para receber a porcentagem
+            // --- AQUI ESTÁ A CORREÇÃO CRUCIAL PARA A PORCENTAGEM ---
             btn.innerHTML = `${less.title} <span id="percent-${modIdx}-${lessIdx}" class="menu-percent"></span>`;
-            // ------------------------------
+            // -------------------------------------------------------
 
             btn.onclick = () => {
                 loadLesson(modIdx, lessIdx);
@@ -110,8 +109,6 @@ function toggleModule(modIdx) {
 
 function loadLesson(modIdx, lessIdx) {
     if (!courseData[modIdx] || !courseData[modIdx].lessons[lessIdx]) {
-        console.error("Erro: Aula não encontrada!", modIdx, lessIdx);
-        alert("Esta aula ainda não foi cadastrada no sistema.");
         return;
     }
 
@@ -210,9 +207,7 @@ function toggleMobileMenu() {
     menu.classList.toggle('show-mobile');
 }
 
-/* =================================================================
-   4. METRÔNOMO SEQUENCIADOR
-   ================================================================= */
+/* 4. METRÔNOMO SEQUENCIADOR */
 let metroInterval = null;
 let bpm = 100;
 let isPlaying = false;
@@ -337,9 +332,7 @@ function togglePlayMetronome() {
     }
 }
 
-/* =================================================================
-   5. TIMER DE ESTUDO
-   ================================================================= */
+/* 5. TIMER DE ESTUDO */
 let studyTimerInterval = null;
 let studyTimeRemaining = 0;
 let isStudyTimerRunning = false;
@@ -422,16 +415,8 @@ function playAlarmSound() {
     }
 }
 
-/* =================================================================
-   6. MAPA DE ESTUDO (MERMAID)
-   ================================================================= */
-const lessonMap = {
-    "A0": [0, 0], 
-    "A1": [0, 1], 
-    "A2": [0, 2], 
-    "B0": [1, 0], 
-    "B1": [1, 1]  
-};
+/* 6. MAPA DE ESTUDO (MERMAID) */
+const lessonMap = { "A0": [0, 0], "A1": [0, 1], "A2": [0, 2], "B0": [1, 0], "B1": [1, 1] };
 
 const graphDefinition = `
 graph TD
