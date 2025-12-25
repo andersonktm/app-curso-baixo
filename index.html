@@ -36,7 +36,7 @@
 
         .btn-logout { background: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; width: 100%; font-size: 0.9rem; }
 
-     /* --- ESTILO DA BARRA DE PROGRESSO ESCURA --- */
+        /* --- ESTILO DA BARRA DE PROGRESSO ESCURA --- */
         .progress-box {
             background: #1e272e; /* Fundo bem escuro */
             color: #ecf0f1;
@@ -244,7 +244,7 @@
         });
     }
 
-onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
             loginScreen.style.opacity = '0';
@@ -253,7 +253,7 @@ onAuthStateChanged(auth, async (user) => {
             appContainer.style.pointerEvents = 'all';
             
             // Ao logar, atualiza as porcentagens do menu
-            setTimeout(updateSidebarPercentages, 1000); // Espera 1s pro menu ser gerado
+            setTimeout(updateSidebarPercentages, 1000); 
             
         } else {
             currentUser = null;
@@ -264,9 +264,7 @@ onAuthStateChanged(auth, async (user) => {
         }
     });
 
-    // --- LÓGICA DE PROGRESSO (SALVAR E CARREGAR) ---
-
-// --- LÓGICA DO SLIDER (Salvar Progresso) ---
+    // --- LÓGICA DO SLIDER (Salvar Progresso) ---
     progressSlider.addEventListener('change', async (e) => {
         if(!currentUser) return;
         const valor = e.target.value;
@@ -276,7 +274,7 @@ onAuthStateChanged(auth, async (user) => {
         // Atualiza visualmente na hora
         progressVal.innerText = valor + "%";
         
-        // Atualiza o menu lateral na hora também (sem precisar recarregar)
+        // Atualiza o menu lateral na hora também
         const sidebarSpan = document.getElementById(`percent-${currentModId}-${currentLessId}`);
         if(sidebarSpan) {
             sidebarSpan.innerText = valor > 0 ? valor + "%" : "";
@@ -288,15 +286,12 @@ onAuthStateChanged(auth, async (user) => {
         } catch (error) { console.error("Erro ao salvar:", error); }
     });
 
-
-
     // Atualização visual enquanto arrasta (sem salvar ainda)
     progressSlider.addEventListener('input', (e) => {
         progressVal.innerText = e.target.value + "%";
     });
 
-    // 2. Função para Carregar do Banco
-/ Aqui fazemos a "ponte" entre o script separado e o Firebase
+    // --- FUNÇÃO PARA CARREGAR AULA (Ponte com script.js) ---
     window.addEventListener('load', () => {
         if(typeof loadLesson !== 'undefined') {
             // Salva a função original do script.js
@@ -334,9 +329,6 @@ onAuthStateChanged(auth, async (user) => {
             }
         }
     });
-
-
-
 
     // --- FUNÇÃO PARA PREENCHER O MENU LATERAL ---
     async function updateSidebarPercentages() {
