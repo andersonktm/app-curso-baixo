@@ -46,6 +46,7 @@ btnLogin.addEventListener('click', () => {
             btnLogin.innerText = "ENTRAR";
             errorMsg.style.display = 'block';
             errorMsg.innerText = "Dados incorretos.";
+            console.error(error);
         });
 });
 
@@ -65,14 +66,17 @@ onAuthStateChanged(auth, async (user) => {
         appContainer.style.opacity = '1';
         appContainer.style.pointerEvents = 'all';
         
-        // 1. Carrega os dados do banco
+        // 1. Carrega dados do banco
         await fetchUserProgress();
         
-        // 2. Preenche memória
+        // 2. Tenta preencher a memória visualmente
         fillSidebarFromMemory();
 
-        // 3. Ativa o Observador para preencher assim que o menu for criado
+        // 3. Ativa o vigia do menu (Isso garante que apareça assim que o menu carregar)
         startMenuObserver();
+
+        // 4. Atualiza o slider da aula atual
+        if(progressArea) updateSliderUI(currentModId, currentLessId);
 
     } else {
         currentUser = null;
@@ -85,26 +89,28 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 // --- SLIDER (SALVAR) ---
-progressSlider.addEventListener('change', async (e) => {
-    if(!currentUser) return;
-    const valor = e.target.value;
-    const lessonKey = `progresso_${currentModId}_${currentLessId}`;
-    const userRef = doc(db, "users", currentUser.uid);
+if(progressSlider) {
+    progressSlider.addEventListener('change', async (e) => {
+        if(!currentUser) return;
+        const valor = e.target.value;
+        const lessonKey = `progresso_${currentModId}_${currentLessId}`;
+        const userRef = doc(db, "users", currentUser.uid);
 
-    progressVal.innerText = valor + "%";
-    
-    // Atualiza memória local e menu visualmente
-    userProgressData[lessonKey] = valor;
-    updateSingleSidebarItem(currentModId, currentLessId, valor);
+        progressVal.innerText = valor + "%";
+        
+        // Atualiza memória e menu visualmente
+        userProgressData[lessonKey] = valor;
+        updateSingleSidebarItem(currentModId, currentLessId, valor);
 
-    try {
-        await setDoc(userRef, { [lessonKey]: valor }, { merge: true });
-    } catch (error) { console.error("Erro ao salvar:", error); }
-});
+        try {
+            await setDoc(userRef, { [lessonKey]: valor }, { merge: true });
+        } catch (error) { console.error("Erro ao salvar:", error); }
+    });
 
-progressSlider.addEventListener('input', (e) => {
-    progressVal.innerText = e.target.value + "%";
-});
+    progressSlider.addEventListener('input', (e) => {
+        progressVal.innerText = e.target.value + "%";
+    });
+}
 
 // --- FUNÇÕES AUXILIARES ---
 
@@ -122,7 +128,11 @@ async function fetchUserProgress() {
 function fillSidebarFromMemory() {
     for (const [key, value] of Object.entries(userProgressData)) {
         if (key.startsWith('progresso_')) {
-            const sidebarId = key.replace('progresso_', 'percent-');
+            // AQUI ESTAVA O ERRO: Precisamos trocar TODOS os underlines por traços
+            // progresso_0_1 vira percent-0-1
+            let sidebarId = key.replace('progresso_', 'percent-');
+            sidebarId = sidebarId.replace(/_/g, '-'); 
+
             const span = document.getElementById(sidebarId);
             if(span && value > 0) {
                 span.innerText = value + "%";
@@ -136,15 +146,26 @@ function updateSingleSidebarItem(mod, less, val) {
     if(span) span.innerText = val > 0 ? val + "%" : "";
 }
 
-// O Observador garante que a porcentagem apareça mesmo se o menu demorar
+function updateSliderUI(mod, less) {
+    if(!currentUser || !progressArea) return;
+    
+    progressArea.style.display = 'block';
+    const lessonKey = `progresso_${mod}_${less}`;
+    const savedValue = userProgressData[lessonKey] || 0;
+    
+    progressSlider.value = savedValue;
+    progressVal.innerText = savedValue + "%";
+}
+
+// Observador: Assim que o script.js criar o menu, nós colocamos as porcentagens
 function startMenuObserver() {
+    if(!menuContainer) return;
+    
     const observer = new MutationObserver((mutations) => {
         fillSidebarFromMemory();
     });
 
-    if(menuContainer) {
-        observer.observe(menuContainer, { childList: true, subtree: true });
-    }
+    observer.observe(menuContainer, { childList: true, subtree: true });
 }
 
 // --- PONTE COM SCRIPT.JS ---
@@ -152,25 +173,13 @@ window.addEventListener('load', () => {
     if(typeof loadLesson !== 'undefined') {
         const originalLoad = window.loadLesson;
         
-        window.loadLesson = async function(modIdx, lessIdx) {
+        window.loadLesson = function(modIdx, lessIdx) {
             originalLoad(modIdx, lessIdx);
             
             currentModId = modIdx;
             currentLessId = lessIdx;
             
-            if(!currentUser) { progressArea.style.display = 'none'; return; }
-
-            progressArea.style.display = 'block';
-            progressSlider.value = 0;
-            progressVal.innerText = "0%";
-            progressSlider.disabled = true;
-
-            const lessonKey = `progresso_${modIdx}_${lessIdx}`;
-            const savedValue = userProgressData[lessonKey] || 0;
-            
-            progressSlider.value = savedValue;
-            progressVal.innerText = savedValue + "%";
-            progressSlider.disabled = false;
+            updateSliderUI(modIdx, lessIdx);
         }
     }
 });
