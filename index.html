@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
-        /* Tela de Login (Cobre tudo) */
+        /* --- TELA DE LOGIN --- */
         #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #2c3e50; z-index: 9999;
@@ -29,12 +29,17 @@
         .login-btn:hover { background: #d35400; }
         .error-msg { color: #e74c3c; font-size: 14px; display: none; margin-top: 10px; font-weight: bold; }
 
-        /* Container do App (Começa invisível) */
+        /* --- CORREÇÃO DO LAYOUT (AQUI ESTAVA O ERRO) --- */
         #app-container { 
             opacity: 0; 
             transition: opacity 1s; 
-            pointer-events: none; /* Impede cliques enquanto não logar */
-            width: 100%; height: 100%;
+            pointer-events: none;
+            
+            /* Estas 3 linhas consertam o site desconfigurado: */
+            width: 100%; 
+            height: 100vh; /* Garante altura total */
+            display: flex; /* Coloca Sidebar e Content lado a lado */
+            overflow: hidden; /* Evita barras de rolagem duplas */
         }
 
         /* Botão de Logout na Sidebar */
@@ -82,18 +87,10 @@
                     <span id="bpm-val">100</span> <span style="font-size: 1rem; color: #7f8c8d;">BPM</span>
                 </div>
             </div>
-
             <p style="font-size:0.8rem; color:#666; margin:0;">Toque nas barras: Mudo > Fraco (Roxo) > Forte (Azul)</p>
             <div id="sequencer-track" class="sequencer-container"></div>
-
-            <input type="range" id="bpm-range" min="40" max="220" value="100" 
-                   style="width: 100%; margin: 20px 0; cursor: pointer;"
-                   oninput="updateBpm(this.value)">
-
-            <button id="btn-play-metro" onclick="togglePlayMetronome()" 
-                    style="background: #2c3e50; color: white; border: none; padding: 15px 50px; font-size: 1.2rem; border-radius: 50px; cursor: pointer; transition:0.2s;">
-                ▶ INICIAR
-            </button>
+            <input type="range" id="bpm-range" min="40" max="220" value="100" style="width: 100%; margin: 20px 0; cursor: pointer;" oninput="updateBpm(this.value)">
+            <button id="btn-play-metro" onclick="togglePlayMetronome()" style="background: #2c3e50; color: white; border: none; padding: 15px 50px; font-size: 1.2rem; border-radius: 50px; cursor: pointer; transition:0.2s;">▶ INICIAR</button>
         </div>
     </div>
 
@@ -118,7 +115,6 @@
         <div class="tools-area">
             <button class="btn-metronome" onclick="toggleMetronome()"><span>⏱️</span> Abrir Metrônomo</button>
             <button class="btn-metronome" onclick="toggleMap()" style="background: #27ae60;"><span>🗺️</span> Mapa de Estudo</button>
-            
             <button class="btn-logout" id="btnLogout">🚪 Sair / Logout</button>
         </div>
         <div id="menu-container"></div>
@@ -161,29 +157,27 @@
             </div>
         </div>
     </div>
-    </div> <script src="script.js"></script>
+
+</div> <script src="script.js"></script>
 
 <script type="module">
-    // Importa as funções necessárias do Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    // --- IMPORTANTE: Substitua isso pelos dados do seu Console Firebase ---
-const firebaseConfig = {
-  apiKey: "AIzaSyCTJGH90GaYbdRChcjOtpff5o6ZYzlYA8k",
-  authDomain: "guia-baixo-app.firebaseapp.com",
-  projectId: "guia-baixo-app",
-    storageBucket: "guia-baixo-app.firebasestorage.app",
-    messagingSenderId: "1027874033890",
-       appId: "1:1027874033890:web:61de70c26e635811ab8ebb"
+    // --- SEUS DADOS DO FIREBASE (NÃO APAGUE ISTO!) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyCTJGH90GaYbdRChcjOtpff5o6ZYzlYA8k",
+        authDomain: "guia-baixo-app.firebaseapp.com",
+        projectId: "guia-baixo-app",
+        storageBucket: "guia-baixo-app.firebasestorage.app",
+        messagingSenderId: "1027874033890",
+        appId: "1:1027874033890:web:61de70c26e635811ab8ebb"
     };
-    // ------------------------------------------------------------------------
+    // -------------------------------------------------
 
-    // Inicializa
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // Elementos da DOM
     const loginScreen = document.getElementById('login-screen');
     const appContainer = document.getElementById('app-container');
     const emailInput = document.getElementById('email');
@@ -192,23 +186,18 @@ const firebaseConfig = {
     const btnLogin = document.getElementById('btnLogin');
     const btnLogout = document.getElementById('btnLogout');
 
-    // Função de Login
     btnLogin.addEventListener('click', () => {
         const email = emailInput.value;
         const pass = passInput.value;
-        
-        // Texto de "Carregando..."
         btnLogin.innerText = "Verificando...";
         
         signInWithEmailAndPassword(auth, email, pass)
             .then((userCredential) => {
-                // Sucesso: O onAuthStateChanged vai lidar com a tela
                 btnLogin.innerText = "ENTRAR";
             })
             .catch((error) => {
                 btnLogin.innerText = "ENTRAR";
                 errorMsg.style.display = 'block';
-                // Traduzindo erros comuns para PT-BR
                 if(error.code === 'auth/invalid-credential') {
                     errorMsg.innerText = "E-mail ou senha incorretos.";
                 } else if(error.code === 'auth/too-many-requests') {
@@ -219,7 +208,6 @@ const firebaseConfig = {
             });
     });
 
-    // Função de Logout
     if(btnLogout) {
         btnLogout.addEventListener('click', () => {
             if(confirm("Deseja realmente sair?")) {
@@ -228,31 +216,19 @@ const firebaseConfig = {
         });
     }
 
-    // O "Vigia" - Monitora se está logado ou não
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            // --- USUÁRIO LOGADO ---
-            console.log("Usuário conectado:", user.email);
-            
-            // Some o Login
+            // LOGADO
             loginScreen.style.opacity = '0';
-            setTimeout(() => { 
-                loginScreen.style.display = 'none'; 
-            }, 500);
+            setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
             
-            // Aparece o App
             appContainer.style.opacity = '1';
             appContainer.style.pointerEvents = 'all';
-
         } else {
-            // --- USUÁRIO DESLOGADO ---
-            console.log("Nenhum usuário conectado.");
-            
-            // Mostra o Login
+            // DESLOGADO
             loginScreen.style.display = 'flex';
             setTimeout(() => { loginScreen.style.opacity = '1'; }, 10);
             
-            // Esconde o App
             appContainer.style.opacity = '0';
             appContainer.style.pointerEvents = 'none';
         }
