@@ -36,19 +36,33 @@
 
         .btn-logout { background: #c0392b; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; width: 100%; font-size: 0.9rem; }
 
-        /* --- ESTILO DA BARRA DE PROGRESSO (NOVO) --- */
+     /* --- ESTILO DA BARRA DE PROGRESSO ESCURA --- */
         .progress-box {
-            background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px;
-            padding: 15px; margin: 20px 0; text-align: center;
+            background: #1e272e; /* Fundo bem escuro */
+            color: #ecf0f1;
+            border-radius: 8px;
+            padding: 25px; 
+            margin-top: 40px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #34495e;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        .progress-label { font-size: 0.9rem; color: #7f8c8d; font-weight: 600; margin-bottom: 10px; display: block; }
+        .progress-label { font-size: 0.9rem; color: #bdc3c7; font-weight: 600; margin-bottom: 15px; display: block; letter-spacing: 1px; }
+        
         .progress-slider {
-            width: 100%; cursor: pointer; height: 8px; background: #ddd; border-radius: 5px; outline: none; -webkit-appearance: none;
+            width: 100%; cursor: pointer; height: 12px; background: #34495e; border-radius: 6px; outline: none; -webkit-appearance: none;
         }
         .progress-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #27ae60; cursor: pointer;
+            -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #27ae60; cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
         }
-        .progress-value { color: #27ae60; font-weight: bold; font-size: 1.1rem; margin-left: 5px; }
+        .progress-value { color: #2ecc71; font-weight: bold; font-size: 1.2rem; margin-left: 8px; }
+
+        /* --- ESTILO DA PORCENTAGEM NO MENU LATERAL --- */
+        .menu-percent {
+            font-size: 0.75rem; color: #2ecc71; font-weight: bold; float: right;
+            background: rgba(46, 204, 113, 0.15); padding: 2px 6px; border-radius: 4px; margin-top: 2px;
+        }
     </style>
 </head>
 <body>
@@ -126,13 +140,6 @@
             
             <div class="lesson-text" id="display-text">Selecione uma aula no menu.</div>
 
-            <div class="progress-box" id="progress-area" style="display:none;">
-                <label class="progress-label">
-                    Nível de Conclusão desta aula: <span id="progress-val" class="progress-value">0%</span>
-                </label>
-                <input type="range" id="progress-slider" class="progress-slider" min="0" max="100" value="0">
-                <p style="font-size:0.7rem; color:#999; margin-top:5px;">O progresso é salvo automaticamente.</p>
-            </div>
             <div id="study-timer" class="timer-box" style="display:none;">
                 <div style="display:flex; flex-direction:column;">
                     <span style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; opacity:0.8;">Tempo de Prática</span>
@@ -157,6 +164,15 @@
                 </div>
             </div>
 
+            <div class="progress-box" id="progress-area" style="display:none;">
+                <label class="progress-label">
+                    SEU PROGRESSO NESTA AULA: <span id="progress-val" class="progress-value">0%</span>
+                </label>
+                <input type="range" id="progress-slider" class="progress-slider" min="0" max="100" value="0">
+                <p style="font-size:0.75rem; color:#7f8c8d; margin-top:12px; margin-bottom:0; font-style: italic;">
+                    Arraste para marcar. O progresso é salvo na sua conta.
+                </p>
+            </div>
             <div class="nav-buttons">
                 <button id="btn-prev" class="nav-btn" onclick="changeLesson(-1)">⬅ Anterior</button>
                 <button id="btn-next" class="nav-btn" onclick="changeLesson(1)">Próximo ➡</button>
@@ -224,17 +240,21 @@
 
     if(btnLogout) {
         btnLogout.addEventListener('click', () => {
-            if(confirm("Deseja sair?")) signOut(auth);
+            if(confirm("Deseja realmente sair?")) signOut(auth);
         });
     }
 
-    onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
         if (user) {
-            currentUser = user; // Salva o usuário atual
+            currentUser = user;
             loginScreen.style.opacity = '0';
             setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
             appContainer.style.opacity = '1';
             appContainer.style.pointerEvents = 'all';
+            
+            // Ao logar, atualiza as porcentagens do menu
+            setTimeout(updateSidebarPercentages, 1000); // Espera 1s pro menu ser gerado
+            
         } else {
             currentUser = null;
             loginScreen.style.display = 'flex';
@@ -246,28 +266,29 @@
 
     // --- LÓGICA DE PROGRESSO (SALVAR E CARREGAR) ---
 
-    // 1. Ouvir mudanças no Slider (Evento 'change' salva só quando solta o dedo)
+// --- LÓGICA DO SLIDER (Salvar Progresso) ---
     progressSlider.addEventListener('change', async (e) => {
         if(!currentUser) return;
         const valor = e.target.value;
-        
-        // Cria uma ID única para a aula (ex: progresso_0_2 para Módulo 0 Aula 2)
         const lessonKey = `progresso_${currentModId}_${currentLessId}`;
         const userRef = doc(db, "users", currentUser.uid);
 
         // Atualiza visualmente na hora
         progressVal.innerText = valor + "%";
+        
+        // Atualiza o menu lateral na hora também (sem precisar recarregar)
+        const sidebarSpan = document.getElementById(`percent-${currentModId}-${currentLessId}`);
+        if(sidebarSpan) {
+            sidebarSpan.innerText = valor > 0 ? valor + "%" : "";
+        }
 
         try {
-            // Salva no Firestore (merge: true para não apagar outras aulas)
-            await setDoc(userRef, {
-                [lessonKey]: valor
-            }, { merge: true });
-            console.log("Progresso salvo:", valor);
-        } catch (error) {
-            console.error("Erro ao salvar:", error);
-        }
+            await setDoc(userRef, { [lessonKey]: valor }, { merge: true });
+            console.log("Progresso salvo.");
+        } catch (error) { console.error("Erro ao salvar:", error); }
     });
+
+
 
     // Atualização visual enquanto arrasta (sem salvar ainda)
     progressSlider.addEventListener('input', (e) => {
@@ -275,62 +296,72 @@
     });
 
     // 2. Função para Carregar do Banco
-    window.loadFirestoreProgress = async (modIdx, lessIdx) => {
-        currentModId = modIdx;
-        currentLessId = lessIdx;
-        
-        // Esconde barra se não tiver usuário logado
-        if(!currentUser) {
-            progressArea.style.display = 'none';
-            return;
+/ Aqui fazemos a "ponte" entre o script separado e o Firebase
+    window.addEventListener('load', () => {
+        if(typeof loadLesson !== 'undefined') {
+            // Salva a função original do script.js
+            const originalLoad = window.loadLesson;
+            
+            // Sobrescreve com a nossa versão "turbinada"
+            window.loadLesson = async function(modIdx, lessIdx) {
+                // 1. Roda a função original (mostra texto, audio, img)
+                originalLoad(modIdx, lessIdx);
+                
+                // 2. Roda a lógica do Firebase (carrega a barra de progresso)
+                currentModId = modIdx;
+                currentLessId = lessIdx;
+                
+                if(!currentUser) { progressArea.style.display = 'none'; return; }
+
+                progressArea.style.display = 'block';
+                progressSlider.value = 0;
+                progressVal.innerText = "0%";
+                progressSlider.disabled = true; // Trava enquanto carrega
+
+                const lessonKey = `progresso_${modIdx}_${lessIdx}`;
+                const userRef = doc(db, "users", currentUser.uid);
+
+                try {
+                    const docSnap = await getDoc(userRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        const savedValue = data[lessonKey] || 0;
+                        progressSlider.value = savedValue;
+                        progressVal.innerText = savedValue + "%";
+                    }
+                } catch (error) { console.error("Erro ao ler banco:", error); } 
+                finally { progressSlider.disabled = false; }
+            }
         }
+    });
 
-        progressArea.style.display = 'block';
-        progressSlider.value = 0; // Reseta visualmente
-        progressVal.innerText = "0%";
-        progressSlider.disabled = true; // Trava enquanto carrega
 
-        const lessonKey = `progresso_${modIdx}_${lessIdx}`;
+
+
+    // --- FUNÇÃO PARA PREENCHER O MENU LATERAL ---
+    async function updateSidebarPercentages() {
+        if(!currentUser) return;
         const userRef = doc(db, "users", currentUser.uid);
-
+        
         try {
             const docSnap = await getDoc(userRef);
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                const savedValue = data[lessonKey] || 0;
-                progressSlider.value = savedValue;
-                progressVal.innerText = savedValue + "%";
-            }
-        } catch (error) {
-            console.error("Erro ao carregar:", error);
-        } finally {
-            progressSlider.disabled = false; // Destrava
-        }
-    };
-
-</script>
-
-<script>
-    // Sobrescrevemos a função original loadLesson para injetar o carregamento do progresso
-    // Precisamos esperar o script.js carregar primeiro
-    window.addEventListener('load', () => {
-        if(typeof originalLoadLesson === 'undefined' && typeof loadLesson !== 'undefined') {
-            // Salva a função original
-            window.originalLoadLesson = window.loadLesson;
-            
-            // Cria a nova versão que chama o Firebase
-            window.loadLesson = function(modIdx, lessIdx) {
-                // Chama a lógica antiga (mostrar texto, imagem, audio)
-                window.originalLoadLesson(modIdx, lessIdx);
-                
-                // Chama a lógica nova (carregar barra de progresso do banco)
-                if(window.loadFirestoreProgress) {
-                    window.loadFirestoreProgress(modIdx, lessIdx);
+                // Varre todos os dados salvos e preenche os spans do menu
+                for (const [key, value] of Object.entries(data)) {
+                    if (key.startsWith('progresso_')) {
+                        // Converte chave do banco ("progresso_0_1") para ID do HTML ("percent-0-1")
+                        const sidebarId = key.replace('progresso_', 'percent-');
+                        const span = document.getElementById(sidebarId);
+                        if(span && value > 0) {
+                            span.innerText = value + "%";
+                        }
+                    }
                 }
             }
-        }
-    });
-</script>
+        } catch (error) { console.error("Erro ao atualizar menu:", error); }
+    }
 
+</script>
 </body>
 </html>

@@ -85,7 +85,7 @@ function generateMenu() {
             const btn = document.createElement('div');
             btn.className = 'lesson-link';
             btn.id = `link-${modIdx}-${lessIdx}`;
-            btn.innerText = less.title;
+            btn.innerHTML = `${less.title} <span id="percent-${modIdx}-${lessIdx}" class="menu-percent"></span>`;
             btn.onclick = () => {
                 loadLesson(modIdx, lessIdx);
                 if(window.innerWidth <= 768) toggleMobileMenu();
@@ -492,3 +492,6 @@ function goToLesson(mod, less) {
     loadLesson(mod, less);
     document.getElementById('map-modal').style.display = 'none';
 }
+
+
+window.courseData = courseData;
