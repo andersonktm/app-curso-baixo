@@ -83,18 +83,21 @@ function generateMenu() {
 
         mod.lessons.forEach((less, lessIdx) => {
             const btn = document.createElement('div');
-            btn.className = 'lesson-link';
+            
+            // Note que mantivemos as classes que ajustamos no CSS
+            btn.className = 'lesson-link'; 
             btn.id = `link-${modIdx}-${lessIdx}`;
             
-            // --- AQUI ESTAVA O PROBLEMA ---
-            // Agora adicionamos o SPAN para receber a porcentagem
+            // Mantém o espaço para a porcentagem
             btn.innerHTML = `${less.title} <span id="percent-${modIdx}-${lessIdx}" class="menu-percent"></span>`;
-            // ------------------------------
 
+            // --- AQUI ESTÁ A CORREÇÃO ---
             btn.onclick = () => {
-                loadLesson(modIdx, lessIdx);
-                if(window.innerWidth <= 768) toggleMobileMenu();
+                loadLesson(modIdx, lessIdx); 
+                // REMOVIDO: if(window.innerWidth <= 768) toggleMobileMenu();
+                // Agora deixamos apenas o loadLesson cuidar de fechar o menu.
             };
+            
             lessonList.appendChild(btn);
         });
 
@@ -111,7 +114,6 @@ function toggleModule(modIdx) {
 function loadLesson(modIdx, lessIdx) {
     if (!courseData[modIdx] || !courseData[modIdx].lessons[lessIdx]) {
         console.error("Erro: Aula não encontrada!", modIdx, lessIdx);
-        alert("Esta aula ainda não foi cadastrada no sistema.");
         return;
     }
 
@@ -119,10 +121,12 @@ function loadLesson(modIdx, lessIdx) {
     currentLesson = lessIdx;
     const data = courseData[modIdx].lessons[lessIdx];
 
+    // Atualiza os textos na tela
     document.getElementById('display-module').innerText = courseData[modIdx].module;
     document.getElementById('display-title').innerText = data.title;
     document.getElementById('display-text').innerHTML = data.text.replace(/\n/g, "<br>");
 
+    // Lógica da Imagem
     const imgEl = document.getElementById('display-img');
     const noImgEl = document.getElementById('no-image-msg');
     if (data.img && data.img !== "") {
@@ -134,6 +138,7 @@ function loadLesson(modIdx, lessIdx) {
         noImgEl.style.display = 'block';
     }
 
+    // Lógica de Áudio
     const audioContainer = document.getElementById('audio-container');
     const playerBass = document.getElementById('player-bass');
     const playerBack = document.getElementById('player-back');
@@ -166,10 +171,11 @@ function loadLesson(modIdx, lessIdx) {
     updateNavButtons();
     initTimer(data.duration);
 
-    // NOVO: Fecha o menu se estiver no celular
+    // --- A CORREÇÃO MÁGICA PARA O CELULAR ESTÁ AQUI ---
     const sidebar = document.getElementById('sidebar');
+    // Se a largura for de celular (<= 768px) E o menu estiver com a classe de aberto
     if (window.innerWidth <= 768 && sidebar.classList.contains('mobile-open')) {
-        toggleMobileMenu();
+        toggleMobileMenu(); // Força o fechamento do menu
     }
 }
 
@@ -212,27 +218,24 @@ function updateActiveLink() {
 }
 
 function toggleMobileMenu() {
-    // Pega o elemento PAI (a barra lateral inteira)
     const sidebar = document.getElementById('sidebar');
-    
-    // Alterna a classe que criamos no CSS
     sidebar.classList.toggle('mobile-open');
     
-    // Opcional: Muda o texto do botão se quiser
     const btn = document.querySelector('.mobile-menu-toggle');
+    
+    // Altera o visual do botão dependendo se está aberto ou fechado
     if (sidebar.classList.contains('mobile-open')) {
         btn.innerText = "✕ Fechar";
-        btn.style.background = "#c0392b";
+        btn.style.background = "#c0392b"; // Vermelho
         btn.style.color = "white";
         btn.style.border = "none";
     } else {
         btn.innerText = "☰ Menu";
         btn.style.background = "transparent";
-        btn.style.color = "var(--accent-color)";
+        btn.style.color = "var(--accent-color)"; // Cor Laranja original
         btn.style.border = "1px solid var(--accent-color)";
     }
 }
-
 
 
 

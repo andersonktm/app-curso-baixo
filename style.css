@@ -231,18 +231,25 @@ audio { width: 100%; height: 40px; filter: invert(0.9); }
 .metro-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
 .metro-select { background: #333; color: white; border: 1px solid #444; padding: 10px; font-size: 1rem; border-radius: 5px; }
 
-/* === RESPONSIVIDADE === */
+
+
+
+/* === RESPONSIVIDADE (CELULAR) === */
 @media (max-width: 768px) {
-    body { 
-        flex-direction: column; 
-        height: auto; 
-        min-height: 100vh;
+    
+    /* 1. O PULO DO GATO: Mudar a direção do container principal */
+    #app-container {
+        flex-direction: column; /* Coloca Menu em cima, Conteúdo embaixo */
+        height: auto;           /* Altura automática para permitir rolagem */
+        min-height: 100vh;      /* Garante que o fundo cubra tudo */
+        overflow-x: hidden;     /* Evita rolagem lateral */
+        overflow-y: auto;       /* Permite rolar a página para baixo */
     }
     
-    /* --- CORREÇÃO DO MENU LATERAL --- */
+    /* 2. Menu Lateral "Recolhido" */
     #sidebar { 
         width: 100%; 
-        height: auto; /* Altura automática (não cobre a tela toda) */
+        height: auto; 
         min-height: auto;
         border-right: none; 
         border-bottom: 1px solid #333; 
@@ -258,83 +265,76 @@ audio { width: 100%; height: 40px; filter: invert(0.9); }
         padding: 15px 20px;
     }
 
+    .mobile-menu-toggle { 
+        display: block; 
+        margin-top: 0; 
+        width: auto; 
+        
+        /* AJUSTES DE TAMANHO AQUI: */
+        padding: 5px 10px;    /* Reduzi de 8px 15px para 5px 10px */
+        font-size: 0.8rem;    /* Letra um pouco menor */
+        height: fit-content;  /* Garante que o botão não estique na altura */
+        align-self: center;   /* Centraliza verticalmente ao lado do logo */
+    }
 
-    
-    .mobile-menu-toggle { display: block; margin-top: 0; width: auto; padding: 8px 15px; }
-
-    /* Esconde as partes internas do menu por padrão no celular */
+    /* Esconde as ferramentas e menu para economizar espaço quando fechado */
     .tools-area, 
     #menu-container, 
     .sidebar-footer { 
         display: none; 
     }
 
-    /* Quando a classe 'mobile-open' for adicionada pelo JS, mostra tudo */
+    /* 3. Quando o Menu Abre (Tela Cheia) */
     #sidebar.mobile-open {
-        height: 100vh; /* Ocupa a tela toda só quando aberto */
+        height: 100vh;
         position: fixed; /* Fixa na frente de tudo */
         top: 0; left: 0;
+        background: var(--bg-sidebar); 
         overflow-y: auto;
+        display: flex;
+        flex-direction: column;
     }
-
+    
     #sidebar.mobile-open .tools-area,
     #sidebar.mobile-open #menu-container,
     #sidebar.mobile-open .sidebar-footer {
         display: block;
     }
-
-    /* --- CORREÇÃO DO CONTEÚDO (Para não sumir) --- */
+    
+    /* 4. Conteúdo da Aula (Aparece embaixo do menu) */
     #content { 
+        width: 100%;
+        height: auto;
         padding: 15px; 
         display: block;
         margin-top: 0;
-        overflow: visible; /* Permite rolar a página */
-        height: auto;
+        overflow: visible;
     }
 
+    /* Remove sombras e bordas do cartão no celular para ficar mais limpo */
     .container { 
-        padding: 20px; 
+        padding: 10px; 
         width: 100%; 
         border: none; 
         box-shadow: none;
         background: transparent; 
     }
+    
+    h2.lesson-title { font-size: 1.5rem; }
 
-
-
-    h2.lesson-title { font-size: 1.6rem; }
-
-    /* --- CORREÇÃO DO MODAL (Metrônomo) --- */
+    /* 5. Ajustes do Modal (Metrônomo) */
     .modal-content {
-        width: 90%;
-        max-height: 90vh; /* Evita que estoure a altura */
-        overflow-y: auto; /* Barra de rolagem interna se precisar */
-        padding-top: 40px; /* Abre espaço para o botão X */
-        position: relative;
+        width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding-top: 50px; 
     }
 
     .close-modal {
-        /* Traz o botão para DENTRO da caixa branca */
         top: 10px; 
         right: 10px;
-        width: 35px;
-        height: 35px;
-        background: #c0392b; /* Vermelho mais visível */
+        background: #c0392b;
         z-index: 10;
-    }
-
-
-
-    /* Ajuste no sequenciador do metrônomo para não vazar a tela */
-    .sequencer-container {
-        justify-content: flex-start; /* Alinha no começo */
-        overflow-x: auto; /* Permite rolar para o lado se não couber */
-        white-space: nowrap;
-    }
-    
-    .step-box {
-        flex-shrink: 0; /* Impede que os quadradinhos esmaguem */
-        width: 35px;
     }
 }
 
