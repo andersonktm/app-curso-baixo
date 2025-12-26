@@ -9,48 +9,53 @@
    2. DADOS DO CURSO (AQUI VOCÊ ADICIONA AS AULAS)
    ================================================================= */
 const courseData = [
-    {
-        module: "Módulo 1: Fundamentos",
-        lessons: [
-            { 
-                title: "Aula 01: Postura", 
-                text: "Texto da aula de postura...", 
-                img: "imagens/aula01-postura.png", 
-                audioBass: "", audioBack: ""
-            },
-            { 
-                title: "Aula 02: Cordas Soltas", 
-                text: "Texto da aula de cordas...", 
-                img: "imagens/aula02-cordas.png", 
-                audioBass: "audios/aula02-bass.mp3", audioBack: "audios/aula02-back.mp3",
-                duration: 10
-            },
-            { 
-                title: "Aula 03: Mão Direita", 
-                text: "Exercícios de alternância de dedos (I e M).", 
-                img: "", 
-                audioBass: "", audioBack: "",
-                duration: 200
-            }
-        ]
-    },
-    {
-        module: "Módulo 2: O Groove",
-        lessons: [
-            { 
-                title: "Aula 04: Tônica e Quinta", 
-                text: "Para entender esta aula, você precisa lembrar das cordas soltas.\n\nSe não lembra, revise a <span class='link-interno' onclick='loadLesson(0, 1)'>Aula 02: Cordas Soltas</span> antes de continuar.\n\nTambém é importante estar com a técnica em dia. Veja a <span class='link-interno' onclick='loadLesson(0, 2)'>Aula 03: Mão Direita</span>.",
-                img: "imagens/aula03-quinta.png", 
-                audioBass: "audios/aula03-bass.mp3", audioBack: ""
-            },
-            { 
-                title: "Aula 05: Ritmo Básico", 
-                text: "Introdução às semínimas e colcheias.", 
-                img: "", 
-                audioBass: "", audioBack: ""
-            }
-        ]
-    }
+  {
+    module: "Módulo 1: Fundamentos",
+    lessons: [
+      {
+        title: "Aula 01: Postura",
+        text: "Texto da aula de postura...",
+        img: "imagens/aula01-postura.png",
+        audioBass: "",
+        audioBack: "",
+      },
+      {
+        title: "Aula 02: Cordas Soltas",
+        text: "Texto da aula de cordas...",
+        img: "imagens/aula02-cordas.png",
+        audioBass: "audios/aula02-bass.mp3",
+        audioBack: "audios/aula02-back.mp3",
+        duration: 10,
+      },
+      {
+        title: "Aula 03: Mão Direita",
+        text: "Exercícios de alternância de dedos (I e M).",
+        img: "",
+        audioBass: "",
+        audioBack: "",
+        duration: 200,
+      },
+    ],
+  },
+  {
+    module: "Módulo 2: O Groove",
+    lessons: [
+      {
+        title: "Aula 04: Tônica e Quinta",
+        text: "Para entender esta aula, você precisa lembrar das cordas soltas.\n\nSe não lembra, revise a <span class='link-interno' onclick='loadLesson(0, 1)'>Aula 02: Cordas Soltas</span> antes de continuar.\n\nTambém é importante estar com a técnica em dia. Veja a <span class='link-interno' onclick='loadLesson(0, 2)'>Aula 03: Mão Direita</span>.",
+        img: "imagens/aula03-quinta.png",
+        audioBass: "audios/aula03-bass.mp3",
+        audioBack: "",
+      },
+      {
+        title: "Aula 05: Ritmo Básico",
+        text: "Introdução às semínimas e colcheias.",
+        img: "",
+        audioBass: "",
+        audioBack: "",
+      },
+    ],
+  },
 ];
 
 /* =================================================================
@@ -59,185 +64,190 @@ const courseData = [
 let currentModule = 0;
 let currentLesson = 0;
 
-window.onload = function() {
-    generateMenu();
-    loadLesson(0, 0); 
-    generateSteps(); // Inicia o metrônomo visualmente
+window.onload = function () {
+  generateMenu();
+  loadLesson(0, 0);
+  generateSteps(); // Inicia o metrônomo visualmente
 };
 
 function generateMenu() {
-    const container = document.getElementById('menu-container');
-    container.innerHTML = '';
+  const container = document.getElementById("menu-container");
+  container.innerHTML = "";
 
-    courseData.forEach((mod, modIdx) => {
-        const modHeader = document.createElement('div');
-        modHeader.className = 'module-header';
-        modHeader.innerHTML = `${mod.module} <span style="font-size:0.8em">▼</span>`;
-        modHeader.onclick = () => toggleModule(modIdx);
-        
-        const lessonList = document.createElement('div');
-        lessonList.className = 'lessons-list';
-        lessonList.id = `mod-list-${modIdx}`;
-        
-        if(modIdx === 0) lessonList.classList.add('open');
+  courseData.forEach((mod, modIdx) => {
+    const modHeader = document.createElement("div");
+    modHeader.className = "module-header";
+    modHeader.innerHTML = `${mod.module} <span style="font-size:0.8em">▼</span>`;
+    modHeader.onclick = () => toggleModule(modIdx);
 
-        mod.lessons.forEach((less, lessIdx) => {
-            const btn = document.createElement('div');
-            
-            // Note que mantivemos as classes que ajustamos no CSS
-            btn.className = 'lesson-link'; 
-            btn.id = `link-${modIdx}-${lessIdx}`;
-            
-            // Mantém o espaço para a porcentagem
-            btn.innerHTML = `${less.title} <span id="percent-${modIdx}-${lessIdx}" class="menu-percent"></span>`;
+    const lessonList = document.createElement("div");
+    lessonList.className = "lessons-list";
+    lessonList.id = `mod-list-${modIdx}`;
 
-            // --- AQUI ESTÁ A CORREÇÃO ---
-            btn.onclick = () => {
-                loadLesson(modIdx, lessIdx); 
-                // REMOVIDO: if(window.innerWidth <= 768) toggleMobileMenu();
-                // Agora deixamos apenas o loadLesson cuidar de fechar o menu.
-            };
-            
-            lessonList.appendChild(btn);
-        });
+    if (modIdx === 0) lessonList.classList.add("open");
 
-        container.appendChild(modHeader);
-        container.appendChild(lessonList);
+    mod.lessons.forEach((less, lessIdx) => {
+      const btn = document.createElement("div");
+
+      // Note que mantivemos as classes que ajustamos no CSS
+      btn.className = "lesson-link";
+      btn.id = `link-${modIdx}-${lessIdx}`;
+
+      // Mantém o espaço para a porcentagem
+      btn.innerHTML = `${less.title} <span id="percent-${modIdx}-${lessIdx}" class="menu-percent"></span>`;
+
+      // --- AQUI ESTÁ A CORREÇÃO ---
+      btn.onclick = () => {
+        loadLesson(modIdx, lessIdx);
+        // REMOVIDO: if(window.innerWidth <= 768) toggleMobileMenu();
+        // Agora deixamos apenas o loadLesson cuidar de fechar o menu.
+      };
+
+      lessonList.appendChild(btn);
     });
+
+    container.appendChild(modHeader);
+    container.appendChild(lessonList);
+  });
 }
 
 function toggleModule(modIdx) {
-    const list = document.getElementById(`mod-list-${modIdx}`);
-    list.classList.toggle('open');
+  const list = document.getElementById(`mod-list-${modIdx}`);
+  list.classList.toggle("open");
 }
 
 function loadLesson(modIdx, lessIdx) {
-    if (!courseData[modIdx] || !courseData[modIdx].lessons[lessIdx]) {
-        console.error("Erro: Aula não encontrada!", modIdx, lessIdx);
-        return;
-    }
+  if (!courseData[modIdx] || !courseData[modIdx].lessons[lessIdx]) {
+    console.error("Erro: Aula não encontrada!", modIdx, lessIdx);
+    return;
+  }
 
-    currentModule = modIdx;
-    currentLesson = lessIdx;
-    const data = courseData[modIdx].lessons[lessIdx];
+  currentModule = modIdx;
+  currentLesson = lessIdx;
+  const data = courseData[modIdx].lessons[lessIdx];
 
-    // Atualiza os textos na tela
-    document.getElementById('display-module').innerText = courseData[modIdx].module;
-    document.getElementById('display-title').innerText = data.title;
-    document.getElementById('display-text').innerHTML = data.text.replace(/\n/g, "<br>");
+  // Atualiza os textos na tela
+  document.getElementById("display-module").innerText =
+    courseData[modIdx].module;
+  document.getElementById("display-title").innerText = data.title;
+  document.getElementById("display-text").innerHTML = data.text.replace(
+    /\n/g,
+    "<br>"
+  );
 
-    // Lógica da Imagem
-    const imgEl = document.getElementById('display-img');
-    const noImgEl = document.getElementById('no-image-msg');
-    if (data.img && data.img !== "") {
-        imgEl.src = data.img;
-        imgEl.style.display = 'inline-block';
-        noImgEl.style.display = 'none';
-    } else {
-        imgEl.style.display = 'none';
-        noImgEl.style.display = 'block';
-    }
+  // Lógica da Imagem
+  const imgEl = document.getElementById("display-img");
+  const noImgEl = document.getElementById("no-image-msg");
+  if (data.img && data.img !== "") {
+    imgEl.src = data.img;
+    imgEl.style.display = "inline-block";
+    noImgEl.style.display = "none";
+  } else {
+    imgEl.style.display = "none";
+    noImgEl.style.display = "block";
+  }
 
-    // Lógica de Áudio
-    const audioContainer = document.getElementById('audio-container');
-    const playerBass = document.getElementById('player-bass');
-    const playerBack = document.getElementById('player-back');
-    const rowBass = document.getElementById('row-bass');
-    const rowBack = document.getElementById('row-backing');
+  // Lógica de Áudio
+  const audioContainer = document.getElementById("audio-container");
+  const playerBass = document.getElementById("player-bass");
+  const playerBack = document.getElementById("player-back");
+  const rowBass = document.getElementById("row-bass");
+  const rowBack = document.getElementById("row-backing");
 
-    playerBass.pause(); playerBack.pause();
-    
-    let hasAudio = false;
+  playerBass.pause();
+  playerBack.pause();
 
-    if (data.audioBass && data.audioBass !== "") {
-        playerBass.src = data.audioBass;
-        rowBass.style.display = 'block';
-        hasAudio = true;
-    } else {
-        rowBass.style.display = 'none';
-    }
+  let hasAudio = false;
 
-    if (data.audioBack && data.audioBack !== "") {
-        playerBack.src = data.audioBack;
-        rowBack.style.display = 'block';
-        hasAudio = true;
-    } else {
-        rowBack.style.display = 'none';
-    }
+  if (data.audioBass && data.audioBass !== "") {
+    playerBass.src = data.audioBass;
+    rowBass.style.display = "block";
+    hasAudio = true;
+  } else {
+    rowBass.style.display = "none";
+  }
 
-    audioContainer.style.display = hasAudio ? 'block' : 'none';
+  if (data.audioBack && data.audioBack !== "") {
+    playerBack.src = data.audioBack;
+    rowBack.style.display = "block";
+    hasAudio = true;
+  } else {
+    rowBack.style.display = "none";
+  }
 
-    updateActiveLink();
-    updateNavButtons();
-    initTimer(data.duration);
+  audioContainer.style.display = hasAudio ? "block" : "none";
 
-    // --- A CORREÇÃO MÁGICA PARA O CELULAR ESTÁ AQUI ---
-    const sidebar = document.getElementById('sidebar');
-    // Se a largura for de celular (<= 768px) E o menu estiver com a classe de aberto
-    if (window.innerWidth <= 768 && sidebar.classList.contains('mobile-open')) {
-        toggleMobileMenu(); // Força o fechamento do menu
-    }
+  updateActiveLink();
+  updateNavButtons();
+  initTimer(data.duration);
+
+  // --- A CORREÇÃO MÁGICA PARA O CELULAR ESTÁ AQUI ---
+  const sidebar = document.getElementById("sidebar");
+  // Se a largura for de celular (<= 768px) E o menu estiver com a classe de aberto
+  if (window.innerWidth <= 768 && sidebar.classList.contains("mobile-open")) {
+    toggleMobileMenu(); // Força o fechamento do menu
+  }
 }
 
 function changeLesson(direction) {
-    let mod = currentModule;
-    let less = currentLesson + direction;
-    const maxLess = courseData[mod].lessons.length;
+  let mod = currentModule;
+  let less = currentLesson + direction;
+  const maxLess = courseData[mod].lessons.length;
 
-    if (less < 0) {
-        if (mod > 0) {
-            mod--;
-            less = courseData[mod].lessons.length - 1;
-            document.getElementById(`mod-list-${mod}`).classList.add('open');
-        } else return;
-    } else if (less >= maxLess) {
-        if (mod < courseData.length - 1) {
-            mod++;
-            less = 0;
-            document.getElementById(`mod-list-${mod}`).classList.add('open');
-        } else return;
-    }
+  if (less < 0) {
+    if (mod > 0) {
+      mod--;
+      less = courseData[mod].lessons.length - 1;
+      document.getElementById(`mod-list-${mod}`).classList.add("open");
+    } else return;
+  } else if (less >= maxLess) {
+    if (mod < courseData.length - 1) {
+      mod++;
+      less = 0;
+      document.getElementById(`mod-list-${mod}`).classList.add("open");
+    } else return;
+  }
 
-    loadLesson(mod, less);
+  loadLesson(mod, less);
 }
 
 function updateNavButtons() {
-    const prevBtn = document.getElementById('btn-prev');
-    const nextBtn = document.getElementById('btn-next');
-    prevBtn.disabled = (currentModule === 0 && currentLesson === 0);
-    const lastMod = courseData.length - 1;
-    const lastLess = courseData[lastMod].lessons.length - 1;
-    nextBtn.disabled = (currentModule === lastMod && currentLesson === lastLess);
+  const prevBtn = document.getElementById("btn-prev");
+  const nextBtn = document.getElementById("btn-next");
+  prevBtn.disabled = currentModule === 0 && currentLesson === 0;
+  const lastMod = courseData.length - 1;
+  const lastLess = courseData[lastMod].lessons.length - 1;
+  nextBtn.disabled = currentModule === lastMod && currentLesson === lastLess;
 }
 
 function updateActiveLink() {
-    document.querySelectorAll('.lesson-link').forEach(el => el.classList.remove('active'));
-    const activeId = `link-${currentModule}-${currentLesson}`;
-    const activeEl = document.getElementById(activeId);
-    if(activeEl) activeEl.classList.add('active');
+  document
+    .querySelectorAll(".lesson-link")
+    .forEach((el) => el.classList.remove("active"));
+  const activeId = `link-${currentModule}-${currentLesson}`;
+  const activeEl = document.getElementById(activeId);
+  if (activeEl) activeEl.classList.add("active");
 }
 
 function toggleMobileMenu() {
-    const sidebar = document.getElementById('sidebar');
-    sidebar.classList.toggle('mobile-open');
-    
-    const btn = document.querySelector('.mobile-menu-toggle');
-    
-    // Altera o visual do botão dependendo se está aberto ou fechado
-    if (sidebar.classList.contains('mobile-open')) {
-        btn.innerText = "✕ Fechar";
-        btn.style.background = "#c0392b"; // Vermelho
-        btn.style.color = "white";
-        btn.style.border = "none";
-    } else {
-        btn.innerText = "☰ Menu";
-        btn.style.background = "transparent";
-        btn.style.color = "var(--accent-color)"; // Cor Laranja original
-        btn.style.border = "1px solid var(--accent-color)";
-    }
+  const sidebar = document.getElementById("sidebar");
+  sidebar.classList.toggle("mobile-open");
+
+  const btn = document.querySelector(".mobile-menu-toggle");
+
+  // Altera o visual do botão dependendo se está aberto ou fechado
+  if (sidebar.classList.contains("mobile-open")) {
+    btn.innerText = "✕ Fechar";
+    btn.style.background = "#c0392b"; // Vermelho
+    btn.style.color = "white";
+    btn.style.border = "none";
+  } else {
+    btn.innerText = "☰ Menu";
+    btn.style.background = "transparent";
+    btn.style.color = "var(--accent-color)"; // Cor Laranja original
+    btn.style.border = "1px solid var(--accent-color)";
+  }
 }
-
-
 
 /* =================================================================
    4. METRÔNOMO SEQUENCIADOR
@@ -247,153 +257,167 @@ let bpm = 100;
 let isPlaying = false;
 let currentStep = 0;
 let totalSteps = 8;
-let stepStates = []; 
+let stepStates = [];
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function toggleMetronome() {
-    const modal = document.getElementById('metronome-modal');
-    modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+  const modal = document.getElementById("metronome-modal");
+  modal.style.display = modal.style.display === "flex" ? "none" : "flex";
 }
 
 function generateSteps() {
-    const sig = document.getElementById('time-sig').value;
-    const track = document.getElementById('sequencer-track');
-    track.innerHTML = '';
-    
-    switch(sig) {
-        case '4/4': totalSteps = 8; break;
-        case '2/4': totalSteps = 4; break;
-        case '3/4': totalSteps = 6; break;
-        case '2/2': totalSteps = 4; break; 
-        case '7/4': totalSteps = 14; break;
-        case '6/8': totalSteps = 6; break;
-        default: totalSteps = 8;
+  const sig = document.getElementById("time-sig").value;
+  const track = document.getElementById("sequencer-track");
+  track.innerHTML = "";
+
+  switch (sig) {
+    case "4/4":
+      totalSteps = 8;
+      break;
+    case "2/4":
+      totalSteps = 4;
+      break;
+    case "3/4":
+      totalSteps = 6;
+      break;
+    case "2/2":
+      totalSteps = 4;
+      break;
+    case "7/4":
+      totalSteps = 14;
+      break;
+    case "6/8":
+      totalSteps = 6;
+      break;
+    default:
+      totalSteps = 8;
+  }
+
+  stepStates = new Array(totalSteps).fill(0);
+
+  for (let i = 0; i < totalSteps; i++) {
+    if (sig.includes("/4") || sig.includes("/2")) {
+      if (i % 2 === 0) stepStates[i] = 2; // Cabeça do tempo (Forte)
+      else stepStates[i] = 0; // Contracorrente (Mudo por padrão)
+    } else if (sig === "6/8") {
+      if (i === 0 || i === 3) stepStates[i] = 2;
+      else stepStates[i] = 1;
+    }
+  }
+
+  // GERAÇÃO VISUAL (Barras + Texto)
+  for (let i = 0; i < totalSteps; i++) {
+    // 1. Cria o Wrapper (coluna)
+    const wrapper = document.createElement("div");
+    wrapper.className = "step-wrapper";
+
+    // 2. Cria a Barra (Box)
+    const div = document.createElement("div");
+    div.className = "step-box";
+    div.id = `step-${i}`; // O ID continua na barra para o playStep funcionar
+    div.onclick = () => cycleStepState(i);
+    updateStepVisual(div, stepStates[i]);
+
+    // 3. Cria o Texto (Label)
+    const label = document.createElement("div");
+    label.className = "step-label";
+
+    // Lógica para definir o texto (1 e 2 e...)
+    if (sig === "6/8") {
+      // Em 6/8 contamos 1 2 3 4 5 6
+      label.innerText = i + 1;
+    } else {
+      // Em compassos simples (4/4, 3/4) contamos números e "e"
+      if (i % 2 === 0) {
+        // É par (0, 2, 4): vira 1, 2, 3...
+        label.innerText = i / 2 + 1;
+        label.style.color = "#e0e0e0"; // Destaca os números
+      } else {
+        // É ímpar (1, 3, 5): vira "e"
+        label.innerText = "e";
+      }
     }
 
-    stepStates = new Array(totalSteps).fill(0);
-    
-    for(let i=0; i<totalSteps; i++) {
-        if(sig.includes('/4') || sig.includes('/2')) {
-            if(i % 2 === 0) stepStates[i] = 2; // Cabeça do tempo (Forte)
-            else stepStates[i] = 0; // Contracorrente (Mudo por padrão)
-        } 
-        else if (sig === '6/8') {
-            if(i === 0 || i === 3) stepStates[i] = 2;
-            else stepStates[i] = 1;
-        }
-    }
-
-    // GERAÇÃO VISUAL (Barras + Texto)
-for (let i = 0; i < totalSteps; i++) {
-        // 1. Cria o Wrapper (coluna)
-        const wrapper = document.createElement('div');
-        wrapper.className = 'step-wrapper';
-
-        // 2. Cria a Barra (Box)
-        const div = document.createElement('div');
-        div.className = 'step-box';
-        div.id = `step-${i}`; // O ID continua na barra para o playStep funcionar
-        div.onclick = () => cycleStepState(i);
-        updateStepVisual(div, stepStates[i]);
-
-        // 3. Cria o Texto (Label)
-        const label = document.createElement('div');
-        label.className = 'step-label';
-        
-        // Lógica para definir o texto (1 e 2 e...)
-        if (sig === '6/8') {
-            // Em 6/8 contamos 1 2 3 4 5 6
-            label.innerText = i + 1;
-        } else {
-            // Em compassos simples (4/4, 3/4) contamos números e "e"
-            if (i % 2 === 0) {
-                // É par (0, 2, 4): vira 1, 2, 3...
-                label.innerText = (i / 2) + 1;
-                label.style.color = "#e0e0e0"; // Destaca os números
-            } else {
-                // É ímpar (1, 3, 5): vira "e"
-                label.innerText = "e";
-            }
-        }
-
-        // Monta a estrutura
-        wrapper.appendChild(div);
-        wrapper.appendChild(label);
-        track.appendChild(wrapper);
-    }
+    // Monta a estrutura
+    wrapper.appendChild(div);
+    wrapper.appendChild(label);
+    track.appendChild(wrapper);
+  }
 }
 
 function cycleStepState(index) {
-    stepStates[index] = (stepStates[index] + 1) % 3;
-    const div = document.getElementById(`step-${index}`);
-    updateStepVisual(div, stepStates[index]);
+  stepStates[index] = (stepStates[index] + 1) % 3;
+  const div = document.getElementById(`step-${index}`);
+  updateStepVisual(div, stepStates[index]);
 }
 
 function updateStepVisual(div, state) {
-    div.classList.remove('weak', 'strong');
-    if (state === 1) div.classList.add('weak');
-    if (state === 2) div.classList.add('strong');
+  div.classList.remove("weak", "strong");
+  if (state === 1) div.classList.add("weak");
+  if (state === 2) div.classList.add("strong");
 }
 
 function playStep() {
-    const prevIndex = (currentStep - 1 + totalSteps) % totalSteps;
-    document.getElementById(`step-${prevIndex}`).classList.remove('playing');
-    const currDiv = document.getElementById(`step-${currentStep}`);
-    if(currDiv) currDiv.classList.add('playing');
+  const prevIndex = (currentStep - 1 + totalSteps) % totalSteps;
+  document.getElementById(`step-${prevIndex}`).classList.remove("playing");
+  const currDiv = document.getElementById(`step-${currentStep}`);
+  if (currDiv) currDiv.classList.add("playing");
 
-    const state = stepStates[currentStep];
-    if (state > 0) {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
+  const state = stepStates[currentStep];
+  if (state > 0) {
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
 
-        if (state === 2) { 
-            osc.frequency.value = 1200; 
-            gain.gain.value = 1.0;
-        } else { 
-            osc.frequency.value = 600; 
-            gain.gain.value = 0.4;
-        }
-
-        osc.start();
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-        osc.stop(audioCtx.currentTime + 0.1);
+    if (state === 2) {
+      osc.frequency.value = 1200;
+      gain.gain.value = 1.0;
+    } else {
+      osc.frequency.value = 600;
+      gain.gain.value = 0.4;
     }
-    currentStep = (currentStep + 1) % totalSteps;
+
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+    osc.stop(audioCtx.currentTime + 0.1);
+  }
+  currentStep = (currentStep + 1) % totalSteps;
 }
 
 function updateBpm(val) {
-    bpm = val;
-    document.getElementById('bpm-val').innerText = val;
-    if (isPlaying) restartInterval();
+  bpm = val;
+  document.getElementById("bpm-val").innerText = val;
+  if (isPlaying) restartInterval();
 }
 
 function restartInterval() {
-    clearInterval(metroInterval);
-    const sig = document.getElementById('time-sig').value;
-    let multiplier = 1;
-    if(sig.includes('/4') || sig.includes('/2')) multiplier = 0.5;
-    const intervalTime = (60000 / bpm) * multiplier; 
-    metroInterval = setInterval(playStep, intervalTime);
+  clearInterval(metroInterval);
+  const sig = document.getElementById("time-sig").value;
+  let multiplier = 1;
+  if (sig.includes("/4") || sig.includes("/2")) multiplier = 0.5;
+  const intervalTime = (60000 / bpm) * multiplier;
+  metroInterval = setInterval(playStep, intervalTime);
 }
 
 function togglePlayMetronome() {
-    const btn = document.getElementById('btn-play-metro');
-    if (isPlaying) {
-        clearInterval(metroInterval);
-        btn.innerText = "▶ INICIAR";
-        btn.style.background = "#2c3e50";
-        document.querySelectorAll('.step-box').forEach(b => b.classList.remove('playing'));
-        isPlaying = false;
-    } else {
-        currentStep = 0;
-        restartInterval();
-        btn.innerText = "⏹ PARAR";
-        btn.style.background = "#c0392b";
-        isPlaying = true;
-    }
+  const btn = document.getElementById("btn-play-metro");
+  if (isPlaying) {
+    clearInterval(metroInterval);
+    btn.innerText = "▶ INICIAR";
+    btn.style.background = "#2c3e50";
+    document
+      .querySelectorAll(".step-box")
+      .forEach((b) => b.classList.remove("playing"));
+    isPlaying = false;
+  } else {
+    currentStep = 0;
+    restartInterval();
+    btn.innerText = "⏹ PARAR";
+    btn.style.background = "#c0392b";
+    isPlaying = true;
+  }
 }
 
 /* =================================================================
@@ -405,91 +429,93 @@ let isStudyTimerRunning = false;
 let initialDuration = 0;
 
 function initTimer(seconds) {
-    clearInterval(studyTimerInterval);
-    isStudyTimerRunning = false;
-    const timerBox = document.getElementById('study-timer');
-    const btn = document.getElementById('btn-timer');
-    
-    if (!seconds || seconds <= 0) {
-        timerBox.style.display = 'none';
-        return;
-    }
+  clearInterval(studyTimerInterval);
+  isStudyTimerRunning = false;
+  const timerBox = document.getElementById("study-timer");
+  const btn = document.getElementById("btn-timer");
 
-    timerBox.style.display = 'flex';
-    initialDuration = seconds;
-    studyTimeRemaining = seconds;
-    updateTimerDisplay();
-    btn.innerText = "▶ INICIAR";
-    btn.classList.remove('running');
-    btn.disabled = false;
+  if (!seconds || seconds <= 0) {
+    timerBox.style.display = "none";
+    return;
+  }
+
+  timerBox.style.display = "flex";
+  initialDuration = seconds;
+  studyTimeRemaining = seconds;
+  updateTimerDisplay();
+  btn.innerText = "▶ INICIAR";
+  btn.classList.remove("running");
+  btn.disabled = false;
 }
 
 function toggleStudyTimer() {
-    const btn = document.getElementById('btn-timer');
-    if (isStudyTimerRunning) {
-        clearInterval(studyTimerInterval);
-        isStudyTimerRunning = false;
-        btn.innerText = "▶ CONTINUAR";
-        btn.classList.remove('running');
-    } else {
-        if (studyTimeRemaining <= 0) studyTimeRemaining = initialDuration;
-        isStudyTimerRunning = true;
-        btn.innerText = "⏸ PAUSAR";
-        btn.classList.add('running');
-        
-        studyTimerInterval = setInterval(() => {
-            studyTimeRemaining--;
-            updateTimerDisplay();
-            if (studyTimeRemaining <= 0) finishTimer();
-        }, 1000);
-    }
+  const btn = document.getElementById("btn-timer");
+  if (isStudyTimerRunning) {
+    clearInterval(studyTimerInterval);
+    isStudyTimerRunning = false;
+    btn.innerText = "▶ CONTINUAR";
+    btn.classList.remove("running");
+  } else {
+    if (studyTimeRemaining <= 0) studyTimeRemaining = initialDuration;
+    isStudyTimerRunning = true;
+    btn.innerText = "⏸ PAUSAR";
+    btn.classList.add("running");
+
+    studyTimerInterval = setInterval(() => {
+      studyTimeRemaining--;
+      updateTimerDisplay();
+      if (studyTimeRemaining <= 0) finishTimer();
+    }, 1000);
+  }
 }
 
 function updateTimerDisplay() {
-    const minutes = Math.floor(studyTimeRemaining / 60);
-    const seconds = studyTimeRemaining % 60;
-    const fmt = (n) => n.toString().padStart(2, '0');
-    document.getElementById('timer-display').innerText = `${fmt(minutes)}:${fmt(seconds)}`;
+  const minutes = Math.floor(studyTimeRemaining / 60);
+  const seconds = studyTimeRemaining % 60;
+  const fmt = (n) => n.toString().padStart(2, "0");
+  document.getElementById("timer-display").innerText = `${fmt(minutes)}:${fmt(
+    seconds
+  )}`;
 }
 
 function finishTimer() {
-    clearInterval(studyTimerInterval);
-    isStudyTimerRunning = false;
-    const btn = document.getElementById('btn-timer');
-    btn.innerText = "✅ CONCLUÍDO";
-    btn.disabled = true;
-    btn.classList.remove('running');
-    playAlarmSound();
+  clearInterval(studyTimerInterval);
+  isStudyTimerRunning = false;
+  const btn = document.getElementById("btn-timer");
+  btn.innerText = "✅ CONCLUÍDO";
+  btn.disabled = true;
+  btn.classList.remove("running");
+  playAlarmSound();
 }
 
 function playAlarmSound() {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const now = audioCtx.currentTime;
-    for (let i = 0; i < 3; i++) {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.type = 'sine';
-        osc.frequency.value = 880; 
-        const startTime = now + (i * 0.4);
-        gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(0.5, startTime + 0.05);
-        gain.gain.linearRampToValueAtTime(0, startTime + 0.2);
-        osc.start(startTime);
-        osc.stop(startTime + 0.3);
-    }
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  const now = audioCtx.currentTime;
+  for (let i = 0; i < 3; i++) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.type = "sine";
+    osc.frequency.value = 880;
+    const startTime = now + i * 0.4;
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(0.5, startTime + 0.05);
+    gain.gain.linearRampToValueAtTime(0, startTime + 0.2);
+    osc.start(startTime);
+    osc.stop(startTime + 0.3);
+  }
 }
 
 /* =================================================================
    6. MAPA DE ESTUDO (MERMAID)
    ================================================================= */
 const lessonMap = {
-    "A0": [0, 0], 
-    "A1": [0, 1], 
-    "A2": [0, 2], 
-    "B0": [1, 0], 
-    "B1": [1, 1]  
+  A0: [0, 0],
+  A1: [0, 1],
+  A2: [0, 2],
+  B0: [1, 0],
+  B1: [1, 1],
 };
 
 const graphDefinition = `
@@ -514,45 +540,51 @@ graph TD
 `;
 
 try {
-    mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
-} catch (e) { console.log("Aviso Mermaid:", e); }
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: "neutral",
+    securityLevel: "loose",
+  });
+} catch (e) {
+  console.log("Aviso Mermaid:", e);
+}
 
 async function toggleMap() {
-    const modal = document.getElementById('map-modal');
-    const container = document.getElementById('mermaid-graph');
-    
-    if (modal.style.display === 'none' || modal.style.display === '') {
-        modal.style.display = 'flex';
-        container.innerHTML = '<p style="margin-top:20px;">Carregando mapa...</p>';
-        try {
-            const uniqueId = 'graph-' + Date.now();
-            const { svg } = await mermaid.render(uniqueId, graphDefinition);
-            container.innerHTML = svg;
-            container.onclick = function(event) {
-                let target = event.target;
-                while (target && target !== container) {
-                    if (target.id) {
-                        for (const key of Object.keys(lessonMap)) {
-                            if (target.id.indexOf(key) !== -1) {
-                                const [mod, less] = lessonMap[key];
-                                goToLesson(mod, less);
-                                return;
-                            }
-                        }
-                    }
-                    target = target.parentNode;
-                }
-            };
-        } catch (error) {
-            console.error('Erro Mapa:', error);
-            container.innerHTML = `<div style="padding:20px; color:red;">Erro ao desenhar mapa. Use o menu lateral.</div>`;
+  const modal = document.getElementById("map-modal");
+  const container = document.getElementById("mermaid-graph");
+
+  if (modal.style.display === "none" || modal.style.display === "") {
+    modal.style.display = "flex";
+    container.innerHTML = '<p style="margin-top:20px;">Carregando mapa...</p>';
+    try {
+      const uniqueId = "graph-" + Date.now();
+      const { svg } = await mermaid.render(uniqueId, graphDefinition);
+      container.innerHTML = svg;
+      container.onclick = function (event) {
+        let target = event.target;
+        while (target && target !== container) {
+          if (target.id) {
+            for (const key of Object.keys(lessonMap)) {
+              if (target.id.indexOf(key) !== -1) {
+                const [mod, less] = lessonMap[key];
+                goToLesson(mod, less);
+                return;
+              }
+            }
+          }
+          target = target.parentNode;
         }
-    } else {
-        modal.style.display = 'none';
+      };
+    } catch (error) {
+      console.error("Erro Mapa:", error);
+      container.innerHTML = `<div style="padding:20px; color:red;">Erro ao desenhar mapa. Use o menu lateral.</div>`;
     }
+  } else {
+    modal.style.display = "none";
+  }
 }
 
 function goToLesson(mod, less) {
-    loadLesson(mod, less);
-    document.getElementById('map-modal').style.display = 'none';
+  loadLesson(mod, less);
+  document.getElementById("map-modal").style.display = "none";
 }

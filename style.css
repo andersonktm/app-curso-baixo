@@ -1,508 +1,702 @@
 /* === CONFIGURAÇÕES GERAIS (VARIÁVEIS) === */
 :root {
-    /* Paleta "Dark Studio" */
-    --bg-body: #121212;          /* Fundo quase preto */
-    --bg-sidebar: #0a0a0a;       /* Lateral preto profundo */
-    --bg-card: #1e1e1e;          /* Cinza chumbo para os cards */
-    --bg-hover: #2d2d2d;         /* Cinza mais claro ao passar mouse */
-    
-    --text-primary: #e0e0e0;     /* Branco gelo para leitura */
-    --text-secondary: #a0a0a0;   /* Cinza para detalhes */
-    
-    --accent-color: #ff9f43;     /* Laranja "Sunburst" (Destaque) */
-    
-    --border-radius: 12px;       
-    --shadow: 0 8px 24px rgba(0,0,0,0.5); 
+  --bg-body: #121212;
+  --bg-sidebar: #0a0a0a;
+  --bg-card: #1e1e1e;
+  --bg-hover: #2d2d2d;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --accent-color: #ff9f43;
+  --border-radius: 12px;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 /* === RESET E BASE === */
-* { box-sizing: border-box; }
-
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--bg-body); }
-::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
-
-body { 
-    font-family: 'Inter', sans-serif; 
-    margin: 0; 
-    display: flex; 
-    height: 100vh; 
-    background: var(--bg-body); 
-    color: var(--text-primary); 
+* {
+  box-sizing: border-box;
 }
 
-/* === MENU LATERAL (SIDEBAR) === */
-#sidebar { 
-    width: 280px; 
-    background: var(--bg-sidebar); 
-    display: flex; 
-    flex-direction: column; 
-    border-right: 1px solid #333; 
-    flex-shrink: 0; 
-    z-index: 100; /* Garante que o menu fique acima do conteúdo */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-body);
+}
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-color);
 }
 
-.logo-area { 
-    padding: 30px 20px; 
-    text-align: center; 
-    border-bottom: 1px solid #222; 
+body {
+  font-family: "Inter", sans-serif;
+  margin: 0;
+  display: flex;
+  height: 100vh;
+  background: var(--bg-body);
+  color: var(--text-primary);
 }
 
-.logo-area h1 { 
-    margin: 0; 
-    font-family: 'Poppins', sans-serif; 
-    font-size: 1.4rem; 
-    color: var(--accent-color); 
-    text-transform: uppercase; 
-    letter-spacing: 2px; 
-    text-shadow: 0 0 10px rgba(255, 159, 67, 0.3);
+/* === TELA DE LOGIN === */
+#login-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #2c3e50;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: white;
+  transition: opacity 0.5s;
+}
+.login-box {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 320px;
+  text-align: center;
+  color: #333;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+.login-input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+}
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  background: #e67e22;
+  color: white;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: 0.3s;
+  margin-top: 10px;
+}
+.login-btn:hover {
+  background: #d35400;
+}
+.error-msg {
+  color: #e74c3c;
+  font-size: 14px;
+  display: none;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+/* === LAYOUT FIXO (DESKTOP) === */
+#app-container {
+  opacity: 0;
+  transition: opacity 1s;
+  pointer-events: none;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+/* === MENU LATERAL === */
+#sidebar {
+  width: 280px;
+  background: var(--bg-sidebar);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #333;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.logo-area {
+  padding: 30px 20px;
+  text-align: center;
+  border-bottom: 1px solid #222;
+}
+.logo-area h1 {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  font-size: 1.4rem;
+  color: var(--accent-color);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(255, 159, 67, 0.3);
 }
 
 .mobile-menu-toggle {
-    display: none; /* Escondido no Desktop por padrão */
-    margin-top: 10px;
-    width: 100%;
-    padding: 8px;
-    background: transparent;
-    border: 1px solid var(--accent-color);
-    color: var(--accent-color);
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
+  display: none;
+  margin-top: 10px;
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
-/* Botões de Ferramentas */
-.tools-area { padding: 20px; }
-
-.btn-metronome { 
-    width: 100%; 
-    padding: 12px; 
-    background: linear-gradient(145deg, #2c3e50, #34495e); 
-    color: white; 
-    border: none; 
-    border-radius: var(--border-radius); 
-    cursor: pointer; 
-    font-family: 'Poppins', sans-serif; 
-    font-weight: 600; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    gap: 10px; 
-    transition: 0.3s; 
-    margin-bottom: 10px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+.tools-area {
+  padding: 20px;
+}
+.btn-metronome {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(145deg, #2c3e50, #34495e);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: 0.3s;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+.btn-metronome:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.1);
 }
 
-.btn-metronome:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); filter: brightness(1.1); }
-
-/* Menu de Aulas */
-#menu-container { flex: 1; overflow-y: auto; padding: 10px; }
-
-.module-header { 
-    padding: 15px; 
-    margin-top: 5px;
-    border-radius: var(--border-radius);
-    cursor: pointer; 
-    font-weight: 600; 
-    color: var(--text-primary);
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    transition: 0.2s;
-}
-.module-header:hover { background: var(--bg-hover); }
-
-.lessons-list { 
-    display: none; 
-    padding-left: 10px; 
-    margin-bottom: 10px;
-}
-.lessons-list.open { display: block; animation: slideDown 0.3s ease; }
-
-@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-.lesson-link { 
-    /* --- O QUE MUDOU: FLEXBOX ROBUSTO --- */
-    display: flex;                  /* Ativa o modo flexível */
-    justify-content: space-between; /* Empurra texto p/ esquerda e % p/ direita */
-    align-items: center;            /* Centraliza verticalmente */
-    flex-wrap: nowrap;              /* IMPEDE que a % caia para a linha de baixo */
-    gap: 10px;                      /* Garante um espaço mínimo entre texto e % */
-    
-    /* --- SEUS ESTILOS ORIGINAIS (MANTIDOS) --- */
-    padding: 10px 15px; 
-    cursor: pointer; 
-    font-size: 0.9rem; 
-    color: var(--text-secondary); 
-    border-left: 2px solid #333;
-    margin-left: 10px;
-    transition: 0.2s; 
+.btn-logout {
+  background: #c0392b;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0;
+  width: 100%;
+  font-size: 0.95rem;
+  font-weight: bold;
 }
 
-.lesson-link:hover { color: white; border-left-color: var(--accent-color); padding-left: 20px; }
-.lesson-link.active { color: var(--accent-color); border-left-color: var(--accent-color); background: linear-gradient(90deg, rgba(255,159,67,0.1), transparent); font-weight: bold; }
+#menu-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.module-header {
+  padding: 15px;
+  margin-top: 5px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.2s;
+}
+.module-header:hover {
+  background: var(--bg-hover);
+}
+
+.lessons-list {
+  display: none;
+  padding-left: 10px;
+  margin-bottom: 10px;
+}
+.lessons-list.open {
+  display: block;
+  animation: slideDown 0.3s ease;
+}
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lesson-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 10px;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  border-left: 2px solid #333;
+  margin-left: 10px;
+  transition: 0.2s;
+}
+.lesson-link:hover {
+  color: white;
+  border-left-color: var(--accent-color);
+  padding-left: 20px;
+}
+.lesson-link.active {
+  color: var(--accent-color);
+  border-left-color: var(--accent-color);
+  background: linear-gradient(90deg, rgba(255, 159, 67, 0.1), transparent);
+  font-weight: bold;
+}
+
+.menu-percent {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  color: #2ecc71;
+  font-weight: bold;
+  background: rgba(46, 204, 113, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid #333;
+  background: var(--bg-sidebar);
+  margin-top: auto;
+}
 
 /* === ÁREA DE CONTEÚDO === */
-#content { flex: 1; overflow-y: auto; padding: 20px; display: flex; justify-content: center; }
-
-.container { 
-    width: 100%; 
-    max-width: 900px; 
-    background: var(--bg-card); 
-    padding: 40px; 
-    border-radius: 16px; 
-    box-shadow: var(--shadow); 
-    height: fit-content; 
-    margin-bottom: 40px; 
-    border: 1px solid #333;
+#content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
 }
 
-/* Tipografia */
-.breadcrumb { font-size: 0.8rem; color: var(--accent-color); text-transform: uppercase; font-weight: bold; letter-spacing: 1px; margin-bottom: 10px; }
-
-h2.lesson-title { 
-    margin-top: 0; 
-    font-family: 'Poppins', sans-serif;
-    font-size: 2.2rem; 
-    color: white;
-    border-bottom: 1px solid #333; 
-    padding-bottom: 20px; 
-    margin-bottom: 30px; 
+.container {
+  width: 100%;
+  max-width: 900px;
+  background: var(--bg-card);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  height: fit-content;
+  margin-bottom: 40px;
+  border: 1px solid #333;
 }
 
-.lesson-text { line-height: 1.8; font-size: 1.1rem; color: #ccc; margin-bottom: 30px; }
-
-.link-interno { 
-    color: var(--accent-color); 
-    font-weight: 600; 
-    text-decoration: none; 
-    background: rgba(255, 159, 67, 0.1); 
-    padding: 2px 6px; 
-    border-radius: 4px; 
-    transition: 0.2s; 
+.breadcrumb {
+  font-size: 0.8rem;
+  color: var(--accent-color);
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
 }
-.link-interno:hover { background: var(--accent-color); color: #000; }
-
-/* Imagens e Audio */
-.image-container { text-align: center; margin: 30px 0; background: #151515; padding: 20px; border: 1px solid #333; border-radius: var(--border-radius); }
-.image-container img { max-width: 100%; height: auto; border-radius: 8px; }
-.no-image { color: #555; font-style: italic; }
-
-.audio-section { background: #151515; padding: 25px; border-radius: var(--border-radius); margin-top: 40px; border: 1px solid #333; }
-.audio-row { margin-bottom: 20px; }
-.audio-label { color: var(--accent-color); font-size: 0.85rem; text-transform: uppercase; margin-bottom: 8px; display: block; }
-audio { width: 100%; height: 40px; filter: invert(0.9); }
-
-/* Navegação */
-.nav-buttons { display: flex; justify-content: space-between; margin-top: 50px; padding-top: 30px; border-top: 1px solid #333; }
-.nav-btn { padding: 12px 30px; background: transparent; color: var(--text-secondary); border: 1px solid #444; border-radius: 50px; cursor: pointer; font-size: 1rem; transition: 0.3s; font-family: 'Poppins', sans-serif; }
-.nav-btn:hover { background: var(--accent-color); color: #000; border-color: var(--accent-color); }
-.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-/* Timer */
-.timer-box { background: linear-gradient(135deg, #1e3799, #0c2461); color: white; padding: 20px; border-radius: var(--border-radius); margin: 30px 0; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 8px 20px rgba(12, 36, 97, 0.4); border: 1px solid rgba(255,255,255,0.1); }
-.timer-display { font-family: 'Courier New', monospace; font-size: 2.5rem; font-weight: bold; color: #fff; }
-.timer-btn { background: white; color: #0c2461; border: none; padding: 12px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-.timer-btn.running { background: #ff6b6b; color: white; }
-
-/* === MODAIS (Pop-ups) === */
-/* A CORREÇÃO PRINCIPAL ESTÁ AQUI EMBAIXO: display: none */
-#metronome-modal, #map-modal { 
-    display: none; /* <--- ISSO IMPEDE DE ABRIR SOZINHO */
-    position: fixed; 
-    top: 0; left: 0; 
-    width: 100%; height: 100%; 
-    background: rgba(0,0,0,0.95); 
-    backdrop-filter: blur(5px); 
-    z-index: 2000; /* Fica acima de tudo quando aberto */
-    justify-content: center; 
-    align-items: center; 
+h2.lesson-title {
+  margin-top: 0;
+  font-family: "Poppins", sans-serif;
+  font-size: 2.2rem;
+  color: white;
+  border-bottom: 1px solid #333;
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+}
+.lesson-text {
+  line-height: 1.8;
+  font-size: 1.1rem;
+  color: #ccc;
+  margin-bottom: 30px;
+}
+.link-interno {
+  color: var(--accent-color);
+  font-weight: 600;
+  text-decoration: none;
+  background: rgba(255, 159, 67, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: 0.2s;
 }
 
-.modal-content { background: var(--bg-card); border: 1px solid #333; color: var(--text-primary); border-radius: 16px; position: relative; }
-.close-modal { position: absolute; right: -10px; top: -10px; background: #ff5252; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(255,82,82,0.4); }
+.image-container {
+  text-align: center;
+  margin: 30px 0;
+  background: #151515;
+  padding: 20px;
+  border: 1px solid #333;
+  border-radius: var(--border-radius);
+}
+.image-container img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+.no-image {
+  color: #555;
+  font-style: italic;
+}
 
-/*.sequencer-container { background: #000; border: 1px solid #333; display: flex; justify-content: center; gap: 5px; margin: 20px 0; height: 120px; padding: 10px; border-radius: 8px; overflow-x: auto; }*/
+.audio-section {
+  background: #151515;
+  padding: 25px;
+  border-radius: var(--border-radius);
+  margin-top: 40px;
+  border: 1px solid #333;
+}
+.audio-row {
+  margin-bottom: 20px;
+}
+.audio-label {
+  color: var(--accent-color);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: block;
+}
+audio {
+  width: 100%;
+  height: 40px;
+  filter: invert(0.9);
+}
 
-/* Ajuste no container para alinhar os itens (Barra + Texto) */
+.nav-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 50px;
+  padding-top: 30px;
+  border-top: 1px solid #333;
+}
+.nav-btn {
+  padding: 12px 30px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid #444;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: 0.3s;
+  font-family: "Poppins", sans-serif;
+}
+.nav-btn:hover {
+  background: var(--accent-color);
+  color: #000;
+  border-color: var(--accent-color);
+}
+.nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* === PROGRESSO E TIMER === */
+.progress-box {
+  background: #1e272e;
+  color: #ecf0f1;
+  border-radius: 8px;
+  padding: 25px;
+  margin-top: 40px;
+  margin-bottom: 20px;
+  text-align: center;
+  border: 1px solid #34495e;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+.progress-label {
+  font-size: 0.9rem;
+  color: #bdc3c7;
+  font-weight: 600;
+  margin-bottom: 15px;
+  display: block;
+  letter-spacing: 1px;
+}
+.progress-slider {
+  width: 100%;
+  cursor: pointer;
+  height: 12px;
+  background: #34495e;
+  border-radius: 6px;
+  outline: none;
+  -webkit-appearance: none;
+}
+.progress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #27ae60;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+}
+.progress-value {
+  color: #2ecc71;
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-left: 8px;
+}
+
+.timer-box {
+  background: linear-gradient(135deg, #1e3799, #0c2461);
+  color: white;
+  padding: 20px;
+  border-radius: var(--border-radius);
+  margin: 30px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 8px 20px rgba(12, 36, 97, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.timer-display {
+  font-family: "Courier New", monospace;
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #fff;
+}
+.timer-btn {
+  background: white;
+  color: #0c2461;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 50px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.timer-btn.running {
+  background: #ff6b6b;
+  color: white;
+}
+
+/* === METRÔNOMO E MODAIS === */
+#metronome-modal,
+#map-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(5px);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid #333;
+  color: var(--text-primary);
+  border-radius: 16px;
+  position: relative;
+}
+.close-modal {
+  position: absolute;
+  right: -10px;
+  top: -10px;
+  background: #ff5252;
+  color: white;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(255, 82, 82, 0.4);
+}
+
 .sequencer-container {
-    /* Flexbox para alinhar as colunas */
-    display: flex;
-    justify-content: flex-start;
-    align-items: flex-start; /* Alinha no topo */
-    gap: 8px; /* Espaço entre as colunas */
-    
-    /* --- AQUI ESTÁ A CORREÇÃO DE TAMANHO --- */
-    height: auto; /* Deixa a altura livre para crescer conforme o conteúdo */
-    min-height: 150px; /* Garante uma altura mínima para não ficar espremido */
-    
-    /* Aumentamos o padding (espaçamento interno) */
-    /* 20px em cima/baixo (resolve o corte dos números) */
-    /* 10px nas laterais (dá o respiro que você pediu) */
-    padding: 20px 15px; 
-
-    /* Configurações visuais do container preto */
-    background: #000;
-    border: 1px solid #333;
-    border-radius: 8px;
-    
-    /* Removemos a rolagem vertical que estava cortando */
-    /*overflow: hidden; */
-
-    /* HABILITA O SCROLL LATERAL */
-    overflow-x: auto; 
-    overflow-y: hidden;
-
-    /* Rolagem suave no celular */
-    -webkit-overflow-scrolling: touch;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 8px;
+  height: auto;
+  min-height: 150px;
+  padding: 20px 15px;
+  background: #000;
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.step-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 40px;
+  flex-shrink: 0;
+}
+.step-box {
+  width: 100%;
+  height: 80px;
+  background: #222;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid #444;
+  transition: all 0.1s ease;
+  position: relative;
+}
+.step-label {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  font-weight: bold;
+  font-family: monospace;
+}
+.step-box.playing {
+  border-color: #fff;
+  box-shadow: 0 0 10px #03d7d7, 0 0 20px #03d7d7,
+    inset 0 0 10px rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+  z-index: 10;
+}
+.step-box.weak.playing {
+  box-shadow: 0 0 15px #7b4292, 0 0 30px #7b4292;
+}
+.step-box.weak::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: #7b4292;
+  border-radius: 0 0 4px 4px;
+}
+.step-box.strong::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: #03d7d7;
+  border-radius: 4px;
+}
+.metro-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+.metro-select {
+  background: #333;
+  color: white;
+  border: 1px solid #444;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 5px;
 }
 
-/* Mantemos o Wrapper igual */
-.step-wrapper {
+/* === RESPONSIVIDADE (CORREÇÃO DEFINITIVA MOBILE) === */
+@media (max-width: 768px) {
+  /* Destrava o corpo do site */
+  body {
+    flex-direction: column;
+    height: auto !important;
+    min-height: 100vh;
+    overflow-y: auto !important;
+  }
+
+  /* Destrava o container principal */
+  #app-container {
+    flex-direction: column;
+    height: auto !important;
+    min-height: 100vh;
+    overflow: visible !important;
+    overflow-x: hidden;
+  }
+
+  #sidebar {
+    width: 100%;
+    height: auto;
+    min-height: auto;
+    border-right: none;
+    border-bottom: 1px solid #333;
+    position: relative;
+    z-index: 1000;
+    flex-shrink: 0;
+  }
+
+  .logo-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+  }
+  .mobile-menu-toggle {
+    display: block;
+    margin-top: 0;
+    width: auto;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    height: fit-content;
+    align-self: center;
+  }
+
+  .tools-area,
+  #menu-container,
+  .sidebar-footer {
+    display: none;
+  }
+
+  #sidebar.mobile-open {
+    height: 100vh !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: var(--bg-sidebar);
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    width: 40px;
-    flex-shrink: 0; /* Impede que esmague no celular */
-}
+  }
+  #sidebar.mobile-open .tools-area,
+  #sidebar.mobile-open #menu-container,
+  #sidebar.mobile-open .sidebar-footer {
+    display: block;
+  }
 
+  /* Conteúdo com margem extra para rolagem */
+  #content {
+    width: 100%;
+    height: auto !important;
+    padding: 15px 15px 150px 15px !important;
+    display: block;
+    margin-top: 0;
+    overflow: visible !important;
+  }
 
+  .container {
+    padding: 15px;
+    width: 100%;
+    border: none;
+    box-shadow: none;
+    height: auto;
+  }
 
-/*.step-box { width: 40px; height: 100%; background: #222; border-radius: 4px; cursor: pointer; position: relative; border: 1px solid #444; }*/
-/* A barra colorida */
-.step-box {
-    width: 100%; /* Ocupa a largura do wrapper */
-    height: 80px; /* Altura da barra */
-    background: #222;
-    border-radius: 4px;
-    cursor: pointer;
-    border: 1px solid #444;
-    transition: all 0.1s ease; /* Transição rápida para o brilho */
-
-    position: relative; /* Isso impede o quadrado azul de explodir na tela */
-}
-
-/* Mantemos o Texto igual */
-.step-label {
-    margin-top: 10px; /* Um pouco mais de espaço entre a barra e o número */
-    font-size: 0.9rem;
-    color: #7f8c8d;
-    font-weight: bold;
-    font-family: monospace;
-}
-
-
-/*.step-box.playing { border-color: var(--accent-color); box-shadow: 0 0 15px var(--accent-color); }*/
-/* --- EFEITO DE BRILHO (GLOW) --- */
-/* Mantemos o Efeito Neon igual */
-.step-box.playing {
-    border-color: #fff;
-    box-shadow: 
-        0 0 10px #03d7d7, 
-        0 0 20px #03d7d7, 
-        inset 0 0 10px rgba(255,255,255,0.5);
-    transform: scale(1.05);
+  h2.lesson-title {
+    font-size: 1.5rem;
+  }
+  .modal-content {
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding-top: 50px;
+  }
+  .close-modal {
+    top: 10px;
+    right: 10px;
+    background: #c0392b;
     z-index: 10;
+  }
 }
-
-/* Ajuste cores específicas se quiser diferenciar batida forte/fraca no brilho */
-.step-box.strong.playing {
-    box-shadow: 0 0 15px #03d7d7, 0 0 30px #03d7d7;
-}
-
-.step-box.weak.playing {
-    box-shadow: 0 0 15px #7b4292, 0 0 30px #7b4292;
-}
-
-.step-box.weak::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40%; background: #7b4292; border-radius: 0 0 4px 4px; }
-.step-box.strong::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 100%; background: #03d7d7; border-radius: 4px; }
-.metro-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
-.metro-select { background: #333; color: white; border: 1px solid #444; padding: 10px; font-size: 1rem; border-radius: 5px; }
-
-
-
-
-/* === RESPONSIVIDADE (CELULAR) === */
-@media (max-width: 768px) {
-    
-    /* 1. O PULO DO GATO: Mudar a direção do container principal */
-    #app-container {
-        flex-direction: column; /* Coloca Menu em cima, Conteúdo embaixo */
-        height: auto;           /* Altura automática para permitir rolagem */
-        min-height: 100vh;      /* Garante que o fundo cubra tudo */
-        overflow-x: hidden;     /* Evita rolagem lateral */
-        overflow-y: auto;       /* Permite rolar a página para baixo */
-    }
-    
-    /* 2. Menu Lateral "Recolhido" */
-    #sidebar { 
-        width: 100%; 
-        height: auto; 
-        min-height: auto;
-        border-right: none; 
-        border-bottom: 1px solid #333; 
-        position: relative; 
-        z-index: 1000;
-        flex-shrink: 0;
-    }
-
-    .logo-area {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px 20px;
-    }
-
-    .mobile-menu-toggle { 
-        display: block; 
-        margin-top: 0; 
-        width: auto; 
-        
-        /* AJUSTES DE TAMANHO AQUI: */
-        padding: 5px 10px;    /* Reduzi de 8px 15px para 5px 10px */
-        font-size: 0.8rem;    /* Letra um pouco menor */
-        height: fit-content;  /* Garante que o botão não estique na altura */
-        align-self: center;   /* Centraliza verticalmente ao lado do logo */
-    }
-
-    /* Esconde as ferramentas e menu para economizar espaço quando fechado */
-    .tools-area, 
-    #menu-container, 
-    .sidebar-footer { 
-        display: none; 
-    }
-
-    /* 3. Quando o Menu Abre (Tela Cheia) */
-    #sidebar.mobile-open {
-        height: 100vh;
-        position: fixed; /* Fixa na frente de tudo */
-        top: 0; left: 0;
-        background: var(--bg-sidebar); 
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    #sidebar.mobile-open .tools-area,
-    #sidebar.mobile-open #menu-container,
-    #sidebar.mobile-open .sidebar-footer {
-        display: block;
-    }
-    
-    /* 4. Conteúdo da Aula (Aparece embaixo do menu) */
-    #content { 
-        width: 100%;
-        height: auto;
-        padding: 15px; 
-        display: block;
-        margin-top: 0;
-        overflow: visible;
-    }
-
-    /* Remove sombras e bordas do cartão no celular para ficar mais limpo */
-    .container { 
-        padding: 10px; 
-        width: 100%; 
-        border: none; 
-        box-shadow: none;
-        background: transparent; 
-    }
-    
-    h2.lesson-title { font-size: 1.5rem; }
-
-    /* 5. Ajustes do Modal (Metrônomo) */
-    .modal-content {
-        width: 95%;
-        max-height: 90vh;
-        overflow-y: auto;
-        padding-top: 50px; 
-    }
-
-    .close-modal {
-        top: 10px; 
-        right: 10px;
-        background: #c0392b;
-        z-index: 10;
-    }
-}
-
-
-  /* --- TELA DE LOGIN --- */
-        #login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #2c3e50; z-index: 9999;
-            display: flex; align-items: center; justify-content: center; flex-direction: column;
-            color: white; transition: opacity 0.5s;
-        }
-        .login-box { background: white; padding: 30px; border-radius: 10px; width: 300px; text-align: center; color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .login-input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
-        .login-btn { width: 100%; padding: 12px; background: #e67e22; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; font-size: 16px; transition: 0.3s; }
-        .login-btn:hover { background: #d35400; }
-        .error-msg { color: #e74c3c; font-size: 14px; display: none; margin-top: 10px; font-weight: bold; }
-
-        /* --- LAYOUT FIX --- */
-        #app-container { 
-            opacity: 0; transition: opacity 1s; pointer-events: none;
-            width: 100%; height: 100vh; display: flex; overflow: hidden;
-        }
-
-        .btn-logout {
-            background: #c0392b;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 0;
-            width: 100%;
-            font-size: 0.95rem;
-            font-weight: bold;
-        }
-
-        /* --- ESTILO DA BARRA DE PROGRESSO ESCURA --- */
-        .progress-box {
-            background: #1e272e; /* Fundo bem escuro */
-            color: #ecf0f1;
-            border-radius: 8px;
-            padding: 25px; 
-            margin-top: 40px;
-            margin-bottom: 20px;
-            text-align: center;
-            border: 1px solid #34495e;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        .progress-label { font-size: 0.9rem; color: #bdc3c7; font-weight: 600; margin-bottom: 15px; display: block; letter-spacing: 1px; }
-        
-        .progress-slider {
-            width: 100%; cursor: pointer; height: 12px; background: #34495e; border-radius: 6px; outline: none; -webkit-appearance: none;
-        }
-        .progress-slider::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #27ae60; cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
-        }
-        .progress-value { color: #2ecc71; font-weight: bold; font-size: 1.2rem; margin-left: 8px; }
-
-        /* --- ESTILO DA PORCENTAGEM NO MENU LATERAL --- */
-.menu-percent {
-    /* --- AJUSTE PARA NÃO QUEBRAR --- */
-    flex-shrink: 0;    /* Impede que a bolinha da porcentagem seja esmagada */
-    white-space: nowrap; /* Garante que o texto da % não quebre */
-    
-    font-size: 0.75rem; 
-    color: #2ecc71; 
-    font-weight: bold; 
-    background: rgba(46, 204, 113, 0.15); 
-    padding: 2px 6px; 
-    border-radius: 4px; 
-}
-
-
-/* === RODAPÉ DO MENU LATERAL === */
-.sidebar-footer {
-    padding: 20px;
-    border-top: 1px solid #333; /* Linha separadora sutil */
-    background: var(--bg-sidebar); /* Garante que o fundo seja o mesmo */
-    margin-top: auto; /* Segurança extra para forçar para baixo */
-}
-
-
