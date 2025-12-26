@@ -274,8 +274,8 @@ function generateSteps() {
     
     for(let i=0; i<totalSteps; i++) {
         if(sig.includes('/4') || sig.includes('/2')) {
-            if(i % 2 === 0) stepStates[i] = 2; 
-            else stepStates[i] = 0; 
+            if(i % 2 === 0) stepStates[i] = 2; // Cabeça do tempo (Forte)
+            else stepStates[i] = 0; // Contracorrente (Mudo por padrão)
         } 
         else if (sig === '6/8') {
             if(i === 0 || i === 3) stepStates[i] = 2;
@@ -283,13 +283,43 @@ function generateSteps() {
         }
     }
 
-    for (let i = 0; i < totalSteps; i++) {
+    // GERAÇÃO VISUAL (Barras + Texto)
+for (let i = 0; i < totalSteps; i++) {
+        // 1. Cria o Wrapper (coluna)
+        const wrapper = document.createElement('div');
+        wrapper.className = 'step-wrapper';
+
+        // 2. Cria a Barra (Box)
         const div = document.createElement('div');
         div.className = 'step-box';
-        div.id = `step-${i}`;
+        div.id = `step-${i}`; // O ID continua na barra para o playStep funcionar
         div.onclick = () => cycleStepState(i);
         updateStepVisual(div, stepStates[i]);
-        track.appendChild(div);
+
+        // 3. Cria o Texto (Label)
+        const label = document.createElement('div');
+        label.className = 'step-label';
+        
+        // Lógica para definir o texto (1 e 2 e...)
+        if (sig === '6/8') {
+            // Em 6/8 contamos 1 2 3 4 5 6
+            label.innerText = i + 1;
+        } else {
+            // Em compassos simples (4/4, 3/4) contamos números e "e"
+            if (i % 2 === 0) {
+                // É par (0, 2, 4): vira 1, 2, 3...
+                label.innerText = (i / 2) + 1;
+                label.style.color = "#e0e0e0"; // Destaca os números
+            } else {
+                // É ímpar (1, 3, 5): vira "e"
+                label.innerText = "e";
+            }
+        }
+
+        // Monta a estrutura
+        wrapper.appendChild(div);
+        wrapper.appendChild(label);
+        track.appendChild(wrapper);
     }
 }
 

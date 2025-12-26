@@ -223,11 +223,100 @@ audio { width: 100%; height: 40px; filter: invert(0.9); }
 .modal-content { background: var(--bg-card); border: 1px solid #333; color: var(--text-primary); border-radius: 16px; position: relative; }
 .close-modal { position: absolute; right: -10px; top: -10px; background: #ff5252; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(255,82,82,0.4); }
 
-.sequencer-container { background: #000; border: 1px solid #333; display: flex; justify-content: center; gap: 5px; margin: 20px 0; height: 120px; padding: 10px; border-radius: 8px; overflow-x: auto; }
-.step-box { width: 40px; height: 100%; background: #222; border-radius: 4px; cursor: pointer; position: relative; border: 1px solid #444; }
-.step-box.playing { border-color: var(--accent-color); box-shadow: 0 0 15px var(--accent-color); }
-.step-box.weak::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40%; background: #9b59b6; border-radius: 0 0 4px 4px; }
-.step-box.strong::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 100%; background: #00d2d3; border-radius: 4px; }
+/*.sequencer-container { background: #000; border: 1px solid #333; display: flex; justify-content: center; gap: 5px; margin: 20px 0; height: 120px; padding: 10px; border-radius: 8px; overflow-x: auto; }*/
+
+/* Ajuste no container para alinhar os itens (Barra + Texto) */
+.sequencer-container {
+    /* Flexbox para alinhar as colunas */
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start; /* Alinha no topo */
+    gap: 8px; /* Espaço entre as colunas */
+    
+    /* --- AQUI ESTÁ A CORREÇÃO DE TAMANHO --- */
+    height: auto; /* Deixa a altura livre para crescer conforme o conteúdo */
+    min-height: 150px; /* Garante uma altura mínima para não ficar espremido */
+    
+    /* Aumentamos o padding (espaçamento interno) */
+    /* 20px em cima/baixo (resolve o corte dos números) */
+    /* 10px nas laterais (dá o respiro que você pediu) */
+    padding: 20px 15px; 
+
+    /* Configurações visuais do container preto */
+    background: #000;
+    border: 1px solid #333;
+    border-radius: 8px;
+    
+    /* Removemos a rolagem vertical que estava cortando */
+    /*overflow: hidden; */
+
+    /* HABILITA O SCROLL LATERAL */
+    overflow-x: auto; 
+    overflow-y: hidden;
+
+    /* Rolagem suave no celular */
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Mantemos o Wrapper igual */
+.step-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 40px;
+    flex-shrink: 0; /* Impede que esmague no celular */
+}
+
+
+
+/*.step-box { width: 40px; height: 100%; background: #222; border-radius: 4px; cursor: pointer; position: relative; border: 1px solid #444; }*/
+/* A barra colorida */
+.step-box {
+    width: 100%; /* Ocupa a largura do wrapper */
+    height: 80px; /* Altura da barra */
+    background: #222;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid #444;
+    transition: all 0.1s ease; /* Transição rápida para o brilho */
+
+    position: relative; /* Isso impede o quadrado azul de explodir na tela */
+}
+
+/* Mantemos o Texto igual */
+.step-label {
+    margin-top: 10px; /* Um pouco mais de espaço entre a barra e o número */
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    font-weight: bold;
+    font-family: monospace;
+}
+
+
+/*.step-box.playing { border-color: var(--accent-color); box-shadow: 0 0 15px var(--accent-color); }*/
+/* --- EFEITO DE BRILHO (GLOW) --- */
+/* Mantemos o Efeito Neon igual */
+.step-box.playing {
+    border-color: #fff;
+    box-shadow: 
+        0 0 10px #03d7d7, 
+        0 0 20px #03d7d7, 
+        inset 0 0 10px rgba(255,255,255,0.5);
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+/* Ajuste cores específicas se quiser diferenciar batida forte/fraca no brilho */
+.step-box.strong.playing {
+    box-shadow: 0 0 15px #03d7d7, 0 0 30px #03d7d7;
+}
+
+.step-box.weak.playing {
+    box-shadow: 0 0 15px #7b4292, 0 0 30px #7b4292;
+}
+
+.step-box.weak::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40%; background: #7b4292; border-radius: 0 0 4px 4px; }
+.step-box.strong::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 100%; background: #03d7d7; border-radius: 4px; }
 .metro-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
 .metro-select { background: #333; color: white; border: 1px solid #444; padding: 10px; font-size: 1rem; border-radius: 5px; }
 
