@@ -1,9 +1,9 @@
 /* =================================================================
    1. CONFIGURAÇÃO PWA E INICIALIZAÇÃO
    ================================================================= */
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js');
-}
+//if ('serviceWorker' in navigator) {
+//    navigator.serviceWorker.register('./sw.js');
+//}
 
 /* =================================================================
    2. DADOS DO CURSO (AQUI VOCÊ ADICIONA AS AULAS)
