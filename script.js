@@ -3,6 +3,7 @@
    ================================================================= */
 let courseData = [];
 let graphDefinition = "";
+const lessonCache = {}; // Cache local para evitar downloads repetidos
 
 // Link Mágico para carregar aula via clique no mapa
 window.carregarAula = function (mod, less) {
@@ -34,7 +35,7 @@ window.onload = function () {
 };
 
 /* =================================================================
-   3. LÓGICA DO SISTEMA DE AULAS
+   3. LÓGICA DO SISTEMA DE AULAS (AGORA COM LAZY LOADING)
    ================================================================= */
 function generateMenu() {
   const container = document.getElementById("menu-container");
@@ -73,41 +74,81 @@ function toggleModule(modIdx) {
 let currentModule = 0;
 let currentLesson = 0;
 
-function loadLesson(modIdx, lessIdx) {
+// === NOVA FUNÇÃO ASSÍNCRONA DE CARREGAMENTO ===
+async function loadLesson(modIdx, lessIdx) {
+  // 1. Validação básica
   if (!courseData[modIdx] || !courseData[modIdx].lessons[lessIdx]) return;
+  
   currentModule = modIdx;
   currentLesson = lessIdx;
-  const data = courseData[modIdx].lessons[lessIdx];
+  
+  // Pega os dados básicos (Título) que já estão na memória (do Índice Leve)
+  const basicData = courseData[modIdx].lessons[lessIdx];
 
-  document.getElementById("display-module").innerText =
-    courseData[modIdx].module;
-  document.getElementById("display-title").innerText = data.title;
+  // 2. Atualiza UI IMEDIATAMENTE (Feedback rápido de navegação)
+  document.getElementById("display-module").innerText = courseData[modIdx].module;
+  document.getElementById("display-title").innerText = basicData.title;
+  
+  // Mostra um "Carregando..." na área de texto
   const textContainer = document.getElementById("display-text");
-  // LÓGICA ANTIGA (Insegura):
-  //textContainer.innerHTML = data.text ? data.text.replace(/\n/g, "<br>") : "";
+  textContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#f39c12">⏳ Carregando conteúdo...</div>';
+  
+  // Esconde elementos pesados e reseta rows de áudio para não mostrar lixo anterior
+  document.getElementById("audio-container").style.display = "none";
+  document.getElementById("display-img").style.display = "none";
+  document.getElementById("no-image-msg").style.display = "none";
+  
+  const rBass = document.getElementById("row-bass");
+  const rBack = document.getElementById("row-backing");
+  if(rBass) rBass.style.display = "none";
+  if(rBack) rBack.style.display = "none";
 
+  // 3. Busca o Conteúdo Pesado (Cache ou Nuvem)
+  let fullData = null;
+  const cacheKey = `m${modIdx}l${lessIdx}`;
 
-  // LÓGICA NOVA (Blindada):
-  if (data.text) {
-      // 1. Converte quebras de linha (\n) do banco de dados para <br>
-      let rawText = data.text.replace(/\n/g, "<br>");
-
-      // 2. O DOMPurify remove scripts maliciosos, mas mantém <b>, <i>, <br>, etc.
-      // Ele limpa a sujeira antes de o navegador tentar ler.
-      let cleanText = DOMPurify.sanitize(rawText, {
-          ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'li', 'h3', 'h4'], // Lista branca do que é permitido
-          ALLOWED_ATTR: ['href', 'target', 'style'] // Permite links e estilos básicos
-      });
-
-      textContainer.innerHTML = cleanText;
+  if (lessonCache[cacheKey]) {
+      console.log("Usando cache local para aula:", cacheKey);
+      fullData = lessonCache[cacheKey];
   } else {
-      textContainer.innerHTML = "";
+      console.log("Baixando aula da nuvem:", cacheKey);
+      
+      // Chama a função global definida no firebase.js
+      if (window.fetchLessonContent) {
+          const content = await window.fetchLessonContent(modIdx, lessIdx);
+          if (content) {
+              // Mescla os dados básicos (título) com o conteúdo baixado (texto, audio)
+              fullData = { ...basicData, ...content };
+              lessonCache[cacheKey] = fullData; // Salva no cache
+          }
+      }
   }
 
+  // Fallback: Se não achou na nuvem (ainda não migrou DB), usa o que tem na memória local
+  if (!fullData) fullData = basicData;
+
+  // 4. Renderiza o Conteúdo Texto (Com Proteção DOMPurify)
+  if (fullData.text) {
+      let rawText = fullData.text.replace(/\n/g, "<br>");
+      // Verifica se DOMPurify foi carregado no HTML
+      if (typeof DOMPurify !== 'undefined') {
+          textContainer.innerHTML = DOMPurify.sanitize(rawText, {
+              ALLOWED_TAGS: ['b', 'i', 'strong', 'em', 'p', 'br', 'ul', 'li', 'h3', 'h4', 'span'],
+              ALLOWED_ATTR: ['style', 'class', 'onclick'] // onclick permitido apenas se confiar muito na fonte
+          });
+      } else {
+          textContainer.innerHTML = rawText; // Fallback sem sanitização
+      }
+  } else {
+      textContainer.innerHTML = "Conteúdo não disponível.";
+  }
+
+  // 5. Renderiza Imagem
   const imgEl = document.getElementById("display-img");
   const noImgEl = document.getElementById("no-image-msg");
-  if (data.img && data.img !== "") {
-    imgEl.src = data.img;
+  
+  if (fullData.img && fullData.img !== "") {
+    imgEl.src = fullData.img;
     imgEl.style.display = "inline-block";
     noImgEl.style.display = "none";
   } else {
@@ -115,43 +156,39 @@ function loadLesson(modIdx, lessIdx) {
     noImgEl.style.display = "block";
   }
 
+  // 6. Configura Áudio
   const audioContainer = document.getElementById("audio-container");
   const pBass = document.getElementById("player-bass");
   const pBack = document.getElementById("player-back");
-  const rBass = document.getElementById("row-bass");
-  const rBack = document.getElementById("row-backing");
-
-  if (pBass) pBass.pause();
-  if (pBack) pBack.pause();
+  
+  // Pausa anteriores
+  if(pBass) pBass.pause();
+  if(pBack) pBack.pause();
 
   let hasAudio = false;
-  if (data.audioBass && data.audioBass !== "") {
-    if (pBass) pBass.src = data.audioBass;
-    if (rBass) rBass.style.display = "block";
-    hasAudio = true;
-  } else {
-    if (rBass) rBass.style.display = "none";
+  if (fullData.audioBass && fullData.audioBass !== "") {
+      pBass.src = fullData.audioBass;
+      if (rBass) rBass.style.display = "block";
+      hasAudio = true;
   }
-  if (data.audioBack && data.audioBack !== "") {
-    if (pBack) pBack.src = data.audioBack;
-    if (rBack) rBack.style.display = "block";
-    hasAudio = true;
-  } else {
-    if (rBack) rBack.style.display = "none";
+  if (fullData.audioBack && fullData.audioBack !== "") {
+      pBack.src = fullData.audioBack;
+      if (rBack) rBack.style.display = "block";
+      hasAudio = true;
   }
-  if (audioContainer)
-    audioContainer.style.display = hasAudio ? "block" : "none";
+  
+  if (audioContainer) audioContainer.style.display = hasAudio ? "block" : "none";
 
+  // 7. Finaliza UI
   updateActiveLink();
   updateNavButtons();
-  initTimer(data.duration);
+  if (fullData.duration) initTimer(fullData.duration);
+  
+  // Fecha menu mobile se necessário
   const sidebar = document.getElementById("sidebar");
-  if (
-    window.innerWidth <= 768 &&
-    sidebar &&
-    sidebar.classList.contains("mobile-open")
-  )
+  if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains("mobile-open")) {
     toggleMobileMenu();
+  }
 }
 
 function changeLesson(dir) {
@@ -263,38 +300,30 @@ function generateSteps() {
     div.onclick = () => cycleStepState(i);
     updateStepVisual(div, stepStates[i]);
 
-    // --- PARTE ADICIONADA: Cria o Texto (Label) ---
+    // --- Label do Metrônomo ---
     let labelText = "";
     if (sig === "6/8") {
-      // No 6/8 conta-se: 1 2 3 4 5 6
       labelText = (i + 1).toString();
     } else {
-      // Nos binários (4/4, 3/4, etc) conta-se: 1 e 2 e 3 e...
-      // Se o índice é par (0, 2, 4...), é o número da cabeça do tempo
       if (i % 2 === 0) labelText = (i / 2 + 1).toString();
-      // Se o índice é ímpar, é o contratempo ("e")
       else labelText = "e";
     }
 
     const label = document.createElement("span");
     label.innerText = labelText;
-    label.style.fontSize = "12px"; // Ajuste visual rápido
+    label.style.fontSize = "12px"; 
     label.style.marginTop = "5px";
     label.style.color = "#888";
-    // ---------------------------------------------
 
-    // Cria o Wrapper (agrupa a caixa e o texto)
     const w = document.createElement("div");
     w.className = "step-wrapper";
-
-    // Garante que fiquem um em cima do outro
     w.style.display = "flex";
     w.style.flexDirection = "column";
     w.style.alignItems = "center";
 
-    w.appendChild(div); // Adiciona a caixa
-    w.appendChild(label); // Adiciona o texto embaixo
-    tr.appendChild(w); // Adiciona ao trilho
+    w.appendChild(div); 
+    w.appendChild(label); 
+    tr.appendChild(w); 
   }
 }
 function cycleStepState(i) {
@@ -414,45 +443,23 @@ function finishTimer() {
   playAlarm();
 }
 function playAlarm() {
-    // Garante que o áudio está ativo
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    
     const now = audioCtx.currentTime;
-
-
-    // Loop externo: Executa a sequência 2 vezes
     for (let cycle = 0; cycle < 2; cycle++) {
-
-    // Define o atraso inicial de cada ciclo
-    // O ciclo 0 começa agora (0s). O ciclo 1 começa após 1.5 segundos (tempo para os 8 bips + pausa)
     const cycleDelay = cycle * 1.5;
-    
-    // Vamos criar um padrão de despertador digital: Bip-Bip-Bip-Bip
-    // Faremos um loop para criar 8 bips rápidos
     for (let i = 0; i < 8; i++) {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-        
-        // 'square' é a onda que soa como um buzzer/alarme digital
         osc.type = 'square'; 
-        
-        // Frequência alta (tipo relógio Casio)
         osc.frequency.value = 900; 
-        
-        // Ritmo: Um bip a cada 0.15 segundos
         const startTime = now + cycleDelay + (i * 0.15);
-        const duration = 0.08; // Duração curta para ser seco
-        
-        // Controle de Volume (Envelope) para não dar estalos
-        // Square wave é alta, então usamos volume 0.1 ou 0.2
+        const duration = 0.08; 
         gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(0.1, startTime + 0.01); // Ataque rápido
-        gain.gain.setValueAtTime(0.1, startTime + duration - 0.01); // Sustentação
-        gain.gain.linearRampToValueAtTime(0, startTime + duration); // Final seco
-        
+        gain.gain.linearRampToValueAtTime(0.1, startTime + 0.01); 
+        gain.gain.setValueAtTime(0.1, startTime + duration - 0.01); 
+        gain.gain.linearRampToValueAtTime(0, startTime + duration); 
         osc.start(startTime);
         osc.stop(startTime + duration + 0.05);
     }
@@ -495,12 +502,9 @@ async function toggleMap() {
       );
       container.innerHTML = svg;
 
-      // --- CORREÇÃO FINAL: REMOVE LARGURA FORÇADA ---
       const svgEl = container.querySelector("svg");
       if (svgEl) {
-        // Remove o atributo width fixo que o Mermaid coloca
         svgEl.removeAttribute("width");
-        // Deixa o CSS (style.css) controlar o tamanho
         svgEl.style.width = "";
       }
 

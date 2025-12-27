@@ -16,12 +16,39 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// =================================================================
+//  NOVA FUNÇÃO: LAZY LOADING (Busca conteúdo pesado sob demanda)
+// =================================================================
+window.fetchLessonContent = async function(modIdx, lessIdx) {
+    // Cria o ID único usado no Admin, ex: "aula_0_1"
+    const docId = `aula_${modIdx}_${lessIdx}`;
+    
+    // Referência à coleção de conteúdos pesados
+    const docRef = doc(db, "conteudo_aulas", docId);
+
+    try {
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            // Retorna o objeto completo: { text: "...", audioBass: "...", etc }
+            return docSnap.data(); 
+        } else {
+            console.warn("Conteúdo da aula não encontrado no banco:", docId);
+            return null;
+        }
+    } catch (error) {
+        console.error("Erro ao baixar aula:", error);
+        return null;
+    }
+};
+
+// =================================================================
+
 // Variáveis
 let currentUser = null;
 let currentModId = 0;
 let currentLessId = 0;
 let userProgressData = {}; 
-let menuObserver = null; // Guardamos o observador aqui
+let menuObserver = null; 
 
 // Elementos UI
 const loginScreen = document.getElementById('login-screen');
@@ -54,11 +81,9 @@ btnLogin.addEventListener('click', () => {
 if(btnLogout) {
     btnLogout.addEventListener('click', () => {
         if(confirm("Deseja realmente sair?")) {
-            // Chama a função de sair do Firebase
             signOut(auth)
                 .then(() => {
                     console.log("Usuário deslogado.");
-                    // O SEGREDO: Força a página a recarregar do zero
                     window.location.reload();
                 })
                 .catch((error) => {
@@ -70,8 +95,6 @@ if(btnLogout) {
 }
 
 // --- MONITORAMENTO DE ESTADO ---
-// ... imports anteriores mantidos ...
-
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -81,50 +104,54 @@ onAuthStateChanged(auth, async (user) => {
         appContainer.style.opacity = '1';
         appContainer.style.pointerEvents = 'all';
         
-        // --- NOVO: BAIXAR CONTEÚDO DO CURSO (Protegido) ---
+        // --- CARREGAMENTO DO CURSO (AGORA LEVE) ---
         try {
-            // Referência ao documento que criamos no admin
-            const docRef = doc(db, "site_data", "curso_completo");
+            // MUDANÇA CRÍTICA AQUI:
+            // Antes: "curso_completo" (Pesado) -> Agora: "indice_curso" (Leve)
+            // Certifique-se de ter rodado o Admin novo para criar este arquivo.
+            const docRef = doc(db, "site_data", "indice_curso");
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
-                const dadosSeguros = docSnap.data();
+                const dadosLeves = docSnap.data();
                 
-                // CHAMA A FUNÇÃO QUE CRIAMOS NO SCRIPT.JS
+                // Envia apenas o esqueleto (Títulos/Estrutura) para o script.js
                 if (window.iniciarCurso) {
-                    window.iniciarCurso(dadosSeguros);
+                    window.iniciarCurso(dadosLeves);
                 }
             } else {
-                console.error("Documento do curso não encontrado no Firestore!");
-                alert("Erro: Conteúdo do curso não encontrado. Contate o suporte.");
+                console.error("Índice do curso não encontrado! (Rode o Admin > Salvar e Distribuir)");
+                // Fallback: Se não achar o índice novo, tenta o antigo pra não quebrar
+                const fallbackRef = doc(db, "site_data", "curso_completo");
+                const fallbackSnap = await getDoc(fallbackRef);
+                if(fallbackSnap.exists()) {
+                    console.warn("Usando fallback antigo (curso_completo)");
+                    if (window.iniciarCurso) window.iniciarCurso(fallbackSnap.data());
+                } else {
+                    alert("Erro crítico: Nenhum dado de curso encontrado.");
+                }
             }
 
         } catch (error) {
-            console.error("Erro ao baixar curso:", error);
+            console.error("Erro ao baixar índice:", error);
             alert("Erro de conexão ao baixar o curso.");
         }
         // ---------------------------------------------------
 
-        // 1. Carrega progresso do usuário (mantido)
         await fetchUserProgress();
-        
-        // 2. Preenche memória sidebar (mantido)
         fillSidebarFromMemory();
-        
-        // 3. Observador (mantido)
         startMenuObserver();
 
         if(progressArea) updateSliderUI(currentModId, currentLessId);
 
     } else {
-        // ... (código de logout mantido)
+        // Usuário deslogado
     }
 });
 
 
 // --- SLIDER (SALVAR) ---
 if(progressSlider) {
-    // Evento 'change' só dispara quando solta o mouse (Evita chamadas excessivas)
     progressSlider.addEventListener('change', async (e) => {
         if(!currentUser) return;
         const valor = e.target.value;
@@ -133,9 +160,7 @@ if(progressSlider) {
 
         progressVal.innerText = valor + "%";
         
-        // Atualiza memória
         userProgressData[lessonKey] = valor;
-        // Atualiza sidebar visualmente
         updateSingleSidebarItem(currentModId, currentLessId, valor);
 
         try {
@@ -143,7 +168,6 @@ if(progressSlider) {
         } catch (error) { console.error("Erro ao salvar:", error); }
     });
 
-    // Evento 'input' é visual (enquanto arrasta)
     progressSlider.addEventListener('input', (e) => {
         progressVal.innerText = e.target.value + "%";
     });
@@ -165,14 +189,12 @@ async function fetchUserProgress() {
 function fillSidebarFromMemory() {
     for (const [key, value] of Object.entries(userProgressData)) {
         if (key.startsWith('progresso_')) {
-            // Corrige o ID: 'progresso_0_1' -> 'percent-0-1'
             let sidebarId = key.replace('progresso_', 'percent-');
             sidebarId = sidebarId.replace(/_/g, '-'); 
 
             const span = document.getElementById(sidebarId);
             if(span) {
                 const novoTexto = value > 0 ? value + "%" : "";
-                // PROTEÇÃO ANTI-LOOP: Só escreve se for diferente
                 if(span.innerText !== novoTexto) {
                     span.innerText = novoTexto;
                 }
@@ -185,7 +207,6 @@ function updateSingleSidebarItem(mod, less, val) {
     const span = document.getElementById(`percent-${mod}-${less}`);
     if(span) {
         const novoTexto = val > 0 ? val + "%" : "";
-        // PROTEÇÃO ANTI-LOOP: Verifica antes de escrever
         if(span.innerText !== novoTexto) {
             span.innerText = novoTexto;
         }
@@ -203,14 +224,11 @@ function updateSliderUI(mod, less) {
     progressVal.innerText = savedValue + "%";
 }
 
-// Observador Inteligente
 function startMenuObserver() {
     if(!menuContainer) return;
-    if(menuObserver) menuObserver.disconnect(); // Garante que não tem duplicados
+    if(menuObserver) menuObserver.disconnect();
     
     menuObserver = new MutationObserver((mutations) => {
-        // Filtra para ver se foi uma mudança de estrutura (Script.js criou menu)
-        // Ignora se a mudança foi num span de porcentagem (nossa própria culpa)
         const isMenuRebuild = mutations.some(m => {
             return m.type === 'childList' && 
                    (!m.target.id || !m.target.id.startsWith('percent-'));
@@ -224,7 +242,6 @@ function startMenuObserver() {
     menuObserver.observe(menuContainer, { childList: true, subtree: true });
 }
 
-// --- PONTE COM SCRIPT.JS ---
 window.addEventListener('load', () => {
     if(typeof loadLesson !== 'undefined') {
         const originalLoad = window.loadLesson;
