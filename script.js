@@ -18,12 +18,9 @@ window.iniciarCurso = function(dadosDoFirebase) {
     
     courseData = dadosDoFirebase.lista_aulas;
     
-    // Força flowchart TD para organizar melhor
-    let mapa = dadosDoFirebase.mapa_mermaid || "";
-    if(mapa.startsWith("graph TD")) {
-        mapa = mapa.replace("graph TD", "flowchart TD");
-    }
-    graphDefinition = mapa;
+    // --- MUDANÇA AQUI: Aceitamos o mapa exatamente como vem do Firebase ---
+    // Removemos a conversão forçada para 'flowchart TD'
+    graphDefinition = dadosDoFirebase.mapa_mermaid || "";
 
     generateMenu();
     
@@ -206,7 +203,7 @@ function toggleMobileMenu() {
 }
 
 /* =================================================================
-   4. METRÔNOMO E TIMER (Mantidos)
+   4. METRÔNOMO E TIMER
    ================================================================= */
 let metroInterval = null;
 let bpm = 100;
@@ -437,24 +434,17 @@ async function toggleMap() {
       const { svg } = await mermaid.render(uniqueId, graphDefinition);
       container.innerHTML = svg;
       
-      // 1. CORREÇÃO DE ROLAGEM: Remove o max-width do SVG gerado
       const svgElement = container.querySelector('svg');
       if (svgElement) {
           svgElement.style.maxWidth = 'none'; 
           svgElement.style.height = 'auto';
-          // Garante que o SVG ocupe o tamanho que precisa (forçando rolagem no pai)
           svgElement.removeAttribute('width');
       }
 
-      // 2. CORREÇÃO DE CLIQUE: Busca ID recursiva melhorada
       container.onclick = function(e) {
           let target = e.target;
-          // Sobe na árvore do DOM até achar um ID que CONTENHA "N_"
-          // Isso resolve casos onde o Mermaid coloca prefixos
           while (target && target !== container) {
               if (target.id && target.id.indexOf("N_") !== -1) {
-                  // Tenta extrair os números do ID (ex: "flowchart-N_0_1-123")
-                  // Procura padrão: N_numero_numero
                   const match = target.id.match(/N_(\d+)_(\d+)/);
                   if (match) {
                       const mod = parseInt(match[1]);
