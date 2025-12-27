@@ -598,100 +598,159 @@ audio {
   border-radius: 5px;
 }
 
-/* === RESPONSIVIDADE (CORREÇÃO DEFINITIVA MOBILE) === */
-@media (max-width: 768px) {
+/* --- ESTILOS GLOBAIS (DESKTOP E MOBILE) --- */
 
-  .timer-box {
-  margin: 5px 0 10px 0;
-  padding: 5px 10px;
-  background: linear-gradient(135deg, #1e3799, #0c2461);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 20px rgba(12, 36, 97, 0.4);
-  min-height: auto;
+/* Correção do Mapa Mermaid */
+#roadmap-container {
+    flex: 1;
+    width: 100%;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 10px;
+    background-color: #fdfdfd;
 }
 
-.timer-display {
-    font-size: 1.5rem;        /* Números bem menores (era 2.5rem) */
-    color: #ffffff;           /* Cor cinza claro, menos agressiva */
-  }
+#mermaid-graph {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding-bottom: 50px;
+}
 
+#mermaid-graph svg {
+  max-width: 500px !important; /* Trava no Desktop */
+  width: auto !important;
+  height: auto !important;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Imagens no Texto */
+.lesson-text img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 20px auto;
+  display: block;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  border: 1px solid #333;
+}
+
+/* Estilos do Diagrama de Baixo */
+.bass-diagram {
+    display: block;
+    margin: 20px auto;
+    max-width: 100%;
+    height: auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.string-line { stroke: #333; stroke-linecap: round; }
+.fret-line { stroke: #999; stroke-width: 2px; }
+.nut-line { stroke: #000; stroke-width: 5px; }
+.fret-number { fill: #666; font-size: 12px; text-anchor: middle; font-family: sans-serif; }
+.diagram-title { font-size: 20px; font-weight: bold; text-anchor: middle; fill: #2c3e50; font-family: sans-serif; }
+.note-circle { stroke: #000; stroke-width: 1px; transition: all 0.2s; }
+.note-text { font-size: 14px; font-weight: bold; text-anchor: middle; dominant-baseline: central; pointer-events: none; font-family: sans-serif; }
+
+/* Lógica de Visualização Diagrama */
+svg.view-finger .label-note, svg.view-finger .label-interval { display: none; }
+svg.view-note .label-finger, svg.view-note .label-interval { display: none; }
+svg.view-interval .label-finger, svg.view-interval .label-note { display: none; }
+
+
+/* ============================================================
+   RESPONSIVIDADE (MOBILE APENAS)
+   Todas as correções de layout mobile ficam AQUI DENTRO
+   ============================================================ */
+@media (max-width: 768px) {
+
+  /* 1. Timer Compacto */
+  .timer-box {
+    margin: 5px 0 10px 0;
+    padding: 5px 10px;
+    background: #151515; /* Cor neutra no mobile */
+    border: 1px solid #333;
+    box-shadow: none;
+    min-height: auto;
+  }
+  .timer-display {
+    font-size: 1.5rem;
+    color: #a0a0a0;
+  }
   .timer-box span {
-    font-size: 0.8rem !important; /* Texto "TEMPO DE PRÁTICA" menor */
+    font-size: 0.8rem !important;
   }
-
-.timer-btn {
-    padding: 6px 15px;        /* Botão menor */
+  .timer-btn {
+    padding: 6px 15px;
     font-size: 0.7rem;
     height: fit-content;
   }
 
-
-/* === PROGRESSO E TIMER === */
-.progress-box {
-  background: #1e272e;
-  color: #ecf0f1;
-  border-radius: 8px;
-  padding: 10px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  text-align: center;
-  border: 1px solid #34495e;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
-
-.progress-label {
-    font-size: 0.7rem;
+  /* 2. Slider Discreto */
+  .progress-box {
+    padding: 15px;
+    margin-top: 20px;
+    background: transparent;
+    border: 1px solid #333;
+    box-shadow: none;
+  }
+  .progress-label {
+    font-size: 0.8rem;
     margin-bottom: 5px;
   }
-  
   .progress-slider {
-    height: 4px;              /* Barra mais fina */
+    height: 6px;
   }
-  
   .progress-slider::-webkit-slider-thumb {
-    width: 15px;              /* Bolinha menor */
-    height: 15px;
+    width: 18px;
+    height: 18px;
     box-shadow: none;
   }
 
-
-  /* 3. DIAGRAMA DO BRAÇO (MAXIMIZADO / EDGE-TO-EDGE) */
-  /* Isso faz o desenho ignorar o padding do site e encostar nas bordas da tela */
+  /* 3. Diagrama Edge-to-Edge */
   .bass-diagram {
-    width: calc(100% + 30px) !important; /* 100% + o espaço das bordas */
-    margin-left: -15px !important;       /* Puxa para esquerda */
-    margin-right: -15px !important;      /* Puxa para direita */
-    border-radius: 0 !important;         /* Tira arredondamento */
+    width: calc(100% + 30px) !important;
+    margin-left: -15px !important;
+    margin-right: -15px !important;
+    border-radius: 0 !important;
     max-width: none !important;
     border-left: none;
     border-right: none;
-    box-shadow: none;                    /* Remove sombra para parecer nativo */
+    box-shadow: none;
     margin-top: 15px;
     margin-bottom: 0;
   }
-  
-  /* Ajusta a barra de botões (Dedos/Notas) para acompanhar o diagrama */
   .diagram-controls {
     width: calc(100% + 30px);
     margin-left: -15px;
-    background: #1a1a1a;      /* Fundo escuro para destacar botões */
+    background: #1a1a1a;
     padding: 10px 0;
     margin-bottom: 20px;
     border-bottom: 1px solid #333;
   }
-}
 
+  /* 4. Mermaid Mobile */
+  #mermaid-graph svg {
+    max-width: 100% !important;
+  }
 
+  /* 5. Imagens no Texto */
+  .lesson-text img {
+    margin: 15px 0;
+    width: 100%;
+  }
 
-  /* Destrava o corpo do site */
+  /* 6. Layout Geral (Destrava corpo do site) */
   body {
     flex-direction: column;
     height: auto !important;
     min-height: 100vh;
     overflow-y: auto !important;
   }
-
-  /* Destrava o container principal */
   #app-container {
     flex-direction: column;
     height: auto !important;
@@ -699,7 +758,6 @@ audio {
     overflow: visible !important;
     overflow-x: hidden;
   }
-
   #sidebar {
     width: 100%;
     height: auto;
@@ -710,7 +768,6 @@ audio {
     z-index: 1000;
     flex-shrink: 0;
   }
-
   .logo-area {
     display: flex;
     justify-content: space-between;
@@ -726,13 +783,9 @@ audio {
     height: fit-content;
     align-self: center;
   }
-
-  .tools-area,
-  #menu-container,
-  .sidebar-footer {
+  .tools-area, #menu-container, .sidebar-footer {
     display: none;
   }
-
   #sidebar.mobile-open {
     height: 100vh !important;
     position: fixed;
@@ -748,8 +801,6 @@ audio {
   #sidebar.mobile-open .sidebar-footer {
     display: block;
   }
-
-  /* Conteúdo com margem extra para rolagem */
   #content {
     width: 100%;
     height: auto !important;
@@ -758,7 +809,6 @@ audio {
     margin-top: 0;
     overflow: visible !important;
   }
-
   .container {
     padding: 15px;
     width: 100%;
@@ -766,7 +816,6 @@ audio {
     box-shadow: none;
     height: auto;
   }
-
   h2.lesson-title {
     font-size: 1.5rem;
   }
@@ -783,96 +832,3 @@ audio {
     z-index: 10;
   }
 }
-
-
-/* --- CORREÇÃO DO MAPA (MERMAID) --- */
-
-/* 1. O container que segura o mapa */
-#roadmap-container {
-    flex: 1;                /* Ocupa o espaço disponível */
-    width: 100%;            /* Largura total */
-    overflow: auto;         /* CRUCIAL: Adiciona barras de rolagem se for muito grande */
-    display: flex;          
-    justify-content: center; /* Centraliza horizontalmente */
-    align-items: flex-start; /* Alinha no topo */
-    padding: 10px;          /* Um respiro nas bordas */
-    background-color: #fdfdfd; /* Fundo claro para leitura */
-}
-
-/* === CORREÇÃO FINAL DE TAMANHO (TRAVA DE ZOOM) === */
-#mermaid-graph {
-  display: flex;
-  justify-content: center; /* Centraliza o gráfico na tela */
-  width: 100%;
-  padding-bottom: 50px; /* Espaço extra no final para rolar */
-}
-
-#mermaid-graph svg {
-  /* REGRA DESKTOP: */
-  /* Trava a largura máxima em 500px. */
-  /* Isso impede que o gráfico estique em telas grandes! */
-  max-width: 500px !important; 
-  
-  width: auto !important;
-  height: auto !important;
-  
-  /* Garante centralização */
-  display: block;
-  margin: 0 auto;
-}
-
-/* REGRA MOBILE: Libera para a largura do celular */
-@media (max-width: 768px) {
-  #mermaid-graph svg {
-    max-width: 100% !important;
-  }
-}
-
-
-
-/* === IMAGENS DENTRO DO TEXTO DA AULA === */
-.lesson-text img {
-  max-width: 100%;       /* Nunca estoura a largura da tela */
-  height: auto;          /* Mantém proporção */
-  border-radius: 8px;    /* Cantos arredondados */
-  margin: 20px auto;     /* Espaço em cima/baixo e centraliza */
-  display: block;        /* Garante que fique em linha própria */
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* Sombra elegante */
-  border: 1px solid #333;
-}
-
-/* Ajuste para mobile */
-@media (max-width: 768px) {
-  .lesson-text img {
-    margin: 15px 0;
-    width: 100%;
-  }
-}
-
-
-
-/* === ESTILOS DO DIAGRAMA === */
-.bass-diagram {
-    display: block;
-    margin: 20px auto;
-    max-width: 100%;
-    height: auto;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-/* Linhas */
-.string-line { stroke: #333; stroke-linecap: round; }
-.fret-line { stroke: #999; stroke-width: 2px; }
-.nut-line { stroke: #000; stroke-width: 5px; }
-.fret-number { fill: #666; font-size: 12px; text-anchor: middle; font-family: sans-serif; }
-.diagram-title { font-size: 20px; font-weight: bold; text-anchor: middle; fill: #2c3e50; font-family: sans-serif; }
-
-/* Bolinhas */
-.note-circle { stroke: #000; stroke-width: 1px; transition: all 0.2s; }
-.note-text { font-size: 14px; font-weight: bold; text-anchor: middle; dominant-baseline: central; pointer-events: none; font-family: sans-serif; }
-
-/* LÓGICA DE VISUALIZAÇÃO (Ocultar/Mostrar) */
-svg.view-finger .label-note, svg.view-finger .label-interval { display: none; }
-svg.view-note .label-finger, svg.view-note .label-interval { display: none; }
-svg.view-interval .label-finger, svg.view-interval .label-note { display: none; }
