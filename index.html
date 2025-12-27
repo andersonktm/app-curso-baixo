@@ -197,97 +197,69 @@
       </div>
 
       <div id="content">
-        <div class="container">
-          <div class="breadcrumb" id="display-module">Módulo...</div>
-          <h2 class="lesson-title" id="display-title">Título da Aula...</h2>
 
-          <div class="lesson-text" id="display-text">
-            Selecione uma aula no menu.
-          </div>
 
-          <div id="study-timer" class="timer-box" style="display: none">
-            <div style="display: flex; flex-direction: column">
-              <span
-                style="
-                  font-size: 0.8rem;
-                  text-transform: uppercase;
-                  letter-spacing: 1px;
-                  opacity: 0.8;
-                "
-                >Tempo de Prática</span
-              >
-              <span id="timer-display" class="timer-display">00:00</span>
-            </div>
-            <button
-              id="btn-timer"
-              class="timer-btn"
-              onclick="toggleStudyTimer()"
-            >
-              ▶ INICIAR
-            </button>
-          </div>
+<div class="container">
+    
+    <div class="breadcrumb" id="display-module">Módulo...</div>
+    <h2 class="lesson-title" id="display-title">Título da Aula...</h2>
 
-          <div class="image-container">
-            <img
-              id="display-img"
-              src=""
-              alt="Diagrama da aula"
-              style="display: none"
-            />
-            <div id="no-image-msg" class="no-image">
-              Sem imagem para esta aula
-            </div>
-          </div>
-
-          <div id="audio-container" class="audio-section" style="display: none">
-            <div class="audio-row" id="row-bass">
-              <span class="audio-label">🎸 Baixo Isolado (Referência):</span>
-              <audio id="player-bass" controls controlsList="nodownload">
-                <source src="" type="audio/mpeg" />
-              </audio>
-            </div>
-            <div class="audio-row" id="row-backing">
-              <span class="audio-label">🥁 Backing Track (Para Praticar):</span>
-              <audio id="player-back" controls controlsList="nodownload">
-                <source src="" type="audio/mpeg" />
-              </audio>
-            </div>
-          </div>
-
-          <div class="progress-box" id="progress-area" style="display: none">
-            <label class="progress-label">
-              SEU PROGRESSO NESTA AULA:
-              <span id="progress-val" class="progress-value">0%</span>
-            </label>
-            <input
-              type="range"
-              id="progress-slider"
-              class="progress-slider"
-              min="0"
-              max="100"
-              value="0"
-            />
-            <p
-              style="
-                font-size: 0.75rem;
-                color: #7f8c8d;
-                margin-top: 12px;
-                margin-bottom: 0;
-                font-style: italic;
-              "
-            >
-              Arraste para marcar. O progresso é salvo na sua conta.
-            </p>
-          </div>
-          <div class="nav-buttons">
-            <button id="btn-prev" class="nav-btn" onclick="changeLesson(-1)">
-              ⬅ Anterior
-            </button>
-            <button id="btn-next" class="nav-btn" onclick="changeLesson(1)">
-              Próximo ➡
-            </button>
-          </div>
+    <div id="study-timer" class="timer-box" style="display: none">
+        <div style="display: flex; flex-direction: column">
+            <span style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8;">Tempo de Prática</span>
+            <span id="timer-display" class="timer-display">00:00</span>
         </div>
+        <button id="btn-timer" class="timer-btn" onclick="toggleStudyTimer()">▶ INICIAR</button>
+    </div>
+
+    <div class="image-container" id="img-box" style="display: none;">
+        <img id="display-img" src="" alt="Diagrama da aula" />
+    </div>
+
+    <div class="lesson-text" id="display-text">
+        Selecione uma aula no menu.
+    </div>
+
+    <div id="audio-container" class="audio-section" style="display: none">
+        <div class="audio-row" id="row-bass">
+            <span class="audio-label">🎸 Baixo Isolado (Referência):</span>
+            <audio id="player-bass" controls controlsList="nodownload">
+                <source src="" type="audio/mpeg" />
+            </audio>
+        </div>
+        <div class="audio-row" id="row-backing">
+            <span class="audio-label">🥁 Backing Track (Para Praticar):</span>
+            <audio id="player-back" controls controlsList="nodownload">
+                <source src="" type="audio/mpeg" />
+            </audio>
+        </div>
+    </div>
+
+    <div class="progress-box" id="progress-area" style="display: none">
+        <label class="progress-label">
+            SEU PROGRESSO NESTA AULA:
+            <span id="progress-val" class="progress-value">0%</span>
+        </label>
+        <input type="range" id="progress-slider" class="progress-slider" min="0" max="100" value="0" />
+        <p style="font-size: 0.75rem; color: #7f8c8d; margin-top: 12px; margin-bottom: 0; font-style: italic;">
+            Arraste para marcar. O progresso é salvo na sua conta.
+        </p>
+    </div>
+
+    <div class="nav-buttons">
+        <button id="btn-prev" class="nav-btn" onclick="changeLesson(-1)">⬅ Anterior</button>
+        <button id="btn-next" class="nav-btn" onclick="changeLesson(1)">Próximo ➡</button>
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
       </div>
     </div>
 

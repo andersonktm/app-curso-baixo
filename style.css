@@ -600,6 +600,89 @@ audio {
 
 /* === RESPONSIVIDADE (CORREÇÃO DEFINITIVA MOBILE) === */
 @media (max-width: 768px) {
+
+  .timer-box {
+  margin: 5px 0 10px 0;
+  padding: 5px 10px;
+  background: linear-gradient(135deg, #1e3799, #0c2461);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 20px rgba(12, 36, 97, 0.4);
+  min-height: auto;
+}
+
+.timer-display {
+    font-size: 1.5rem;        /* Números bem menores (era 2.5rem) */
+    color: #ffffff;           /* Cor cinza claro, menos agressiva */
+  }
+
+  .timer-box span {
+    font-size: 0.8rem !important; /* Texto "TEMPO DE PRÁTICA" menor */
+  }
+
+.timer-btn {
+    padding: 6px 15px;        /* Botão menor */
+    font-size: 0.7rem;
+    height: fit-content;
+  }
+
+
+/* === PROGRESSO E TIMER === */
+.progress-box {
+  background: #1e272e;
+  color: #ecf0f1;
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+  border: 1px solid #34495e;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.progress-label {
+    font-size: 0.7rem;
+    margin-bottom: 5px;
+  }
+  
+  .progress-slider {
+    height: 4px;              /* Barra mais fina */
+  }
+  
+  .progress-slider::-webkit-slider-thumb {
+    width: 15px;              /* Bolinha menor */
+    height: 15px;
+    box-shadow: none;
+  }
+
+
+  /* 3. DIAGRAMA DO BRAÇO (MAXIMIZADO / EDGE-TO-EDGE) */
+  /* Isso faz o desenho ignorar o padding do site e encostar nas bordas da tela */
+  .bass-diagram {
+    width: calc(100% + 30px) !important; /* 100% + o espaço das bordas */
+    margin-left: -15px !important;       /* Puxa para esquerda */
+    margin-right: -15px !important;      /* Puxa para direita */
+    border-radius: 0 !important;         /* Tira arredondamento */
+    max-width: none !important;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;                    /* Remove sombra para parecer nativo */
+    margin-top: 15px;
+    margin-bottom: 0;
+  }
+  
+  /* Ajusta a barra de botões (Dedos/Notas) para acompanhar o diagrama */
+  .diagram-controls {
+    width: calc(100% + 30px);
+    margin-left: -15px;
+    background: #1a1a1a;      /* Fundo escuro para destacar botões */
+    padding: 10px 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #333;
+  }
+}
+
+
+
   /* Destrava o corpo do site */
   body {
     flex-direction: column;
@@ -744,3 +827,52 @@ audio {
     max-width: 100% !important;
   }
 }
+
+
+
+/* === IMAGENS DENTRO DO TEXTO DA AULA === */
+.lesson-text img {
+  max-width: 100%;       /* Nunca estoura a largura da tela */
+  height: auto;          /* Mantém proporção */
+  border-radius: 8px;    /* Cantos arredondados */
+  margin: 20px auto;     /* Espaço em cima/baixo e centraliza */
+  display: block;        /* Garante que fique em linha própria */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* Sombra elegante */
+  border: 1px solid #333;
+}
+
+/* Ajuste para mobile */
+@media (max-width: 768px) {
+  .lesson-text img {
+    margin: 15px 0;
+    width: 100%;
+  }
+}
+
+
+
+/* === ESTILOS DO DIAGRAMA === */
+.bass-diagram {
+    display: block;
+    margin: 20px auto;
+    max-width: 100%;
+    height: auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+/* Linhas */
+.string-line { stroke: #333; stroke-linecap: round; }
+.fret-line { stroke: #999; stroke-width: 2px; }
+.nut-line { stroke: #000; stroke-width: 5px; }
+.fret-number { fill: #666; font-size: 12px; text-anchor: middle; font-family: sans-serif; }
+.diagram-title { font-size: 20px; font-weight: bold; text-anchor: middle; fill: #2c3e50; font-family: sans-serif; }
+
+/* Bolinhas */
+.note-circle { stroke: #000; stroke-width: 1px; transition: all 0.2s; }
+.note-text { font-size: 14px; font-weight: bold; text-anchor: middle; dominant-baseline: central; pointer-events: none; font-family: sans-serif; }
+
+/* LÓGICA DE VISUALIZAÇÃO (Ocultar/Mostrar) */
+svg.view-finger .label-note, svg.view-finger .label-interval { display: none; }
+svg.view-note .label-finger, svg.view-note .label-interval { display: none; }
+svg.view-interval .label-finger, svg.view-interval .label-note { display: none; }

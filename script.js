@@ -35,7 +35,7 @@ window.onload = function () {
 };
 
 /* =================================================================
-   3. LÓGICA DO SISTEMA DE AULAS (AGORA COM LAZY LOADING)
+   3. LÓGICA DO SISTEMA DE AULAS (COM LAZY LOADING)
    ================================================================= */
 function generateMenu() {
   const container = document.getElementById("menu-container");
@@ -74,117 +74,135 @@ function toggleModule(modIdx) {
 let currentModule = 0;
 let currentLesson = 0;
 
-// === NOVA FUNÇÃO ASSÍNCRONA DE CARREGAMENTO ===
+// === FUNÇÃO ASSÍNCRONA DE CARREGAMENTO ===
 async function loadLesson(modIdx, lessIdx) {
-  // 1. Validação básica
   if (!courseData[modIdx] || !courseData[modIdx].lessons[lessIdx]) return;
   
   currentModule = modIdx;
   currentLesson = lessIdx;
   
-  // Pega os dados básicos (Título) que já estão na memória (do Índice Leve)
+  // Pega dados básicos do Índice Leve
   const basicData = courseData[modIdx].lessons[lessIdx];
 
-  // 2. Atualiza UI IMEDIATAMENTE (Feedback rápido de navegação)
+  // Feedback imediato
   document.getElementById("display-module").innerText = courseData[modIdx].module;
   document.getElementById("display-title").innerText = basicData.title;
   
-  // Mostra um "Carregando..." na área de texto
   const textContainer = document.getElementById("display-text");
   textContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#f39c12">⏳ Carregando conteúdo...</div>';
   
-  // Esconde elementos pesados e reseta rows de áudio para não mostrar lixo anterior
+  // Reseta UI (Esconde players antes de carregar)
   document.getElementById("audio-container").style.display = "none";
-  document.getElementById("display-img").style.display = "none";
-  document.getElementById("no-image-msg").style.display = "none";
+  const imgEl = document.getElementById("display-img");
+  const imgBox = document.getElementById("img-box"); // ID NOVO (ATENÇÃO AQUI)
+  
+  if(imgBox) imgBox.style.display = "none";
+  if(imgEl) imgEl.style.display = "none";
   
   const rBass = document.getElementById("row-bass");
   const rBack = document.getElementById("row-backing");
   if(rBass) rBass.style.display = "none";
   if(rBack) rBack.style.display = "none";
 
-  // 3. Busca o Conteúdo Pesado (Cache ou Nuvem)
+  // Busca Conteúdo (Cache ou Nuvem)
   let fullData = null;
   const cacheKey = `m${modIdx}l${lessIdx}`;
 
   if (lessonCache[cacheKey]) {
-      console.log("Usando cache local para aula:", cacheKey);
+      console.log("Usando cache local:", cacheKey);
       fullData = lessonCache[cacheKey];
   } else {
-      console.log("Baixando aula da nuvem:", cacheKey);
-      
-      // Chama a função global definida no firebase.js
+      console.log("Baixando da nuvem:", cacheKey);
       if (window.fetchLessonContent) {
           const content = await window.fetchLessonContent(modIdx, lessIdx);
           if (content) {
-              // Mescla os dados básicos (título) com o conteúdo baixado (texto, audio)
               fullData = { ...basicData, ...content };
-              lessonCache[cacheKey] = fullData; // Salva no cache
+              lessonCache[cacheKey] = fullData;
           }
       }
   }
 
-  // Fallback: Se não achou na nuvem (ainda não migrou DB), usa o que tem na memória local
+  // Fallback se não achar
   if (!fullData) fullData = basicData;
 
-  // 4. Renderiza o Conteúdo Texto (Com Proteção DOMPurify)
+  // Renderiza Texto Seguro (DOMPurify) e SVG
   if (fullData.text) {
       let rawText = fullData.text.replace(/\n/g, "<br>");
-      // Verifica se DOMPurify foi carregado no HTML
       if (typeof DOMPurify !== 'undefined') {
           textContainer.innerHTML = DOMPurify.sanitize(rawText, {
-              ALLOWED_TAGS: ['b', 'i', 'strong', 'em', 'p', 'br', 'ul', 'li', 'h3', 'h4', 'span'],
-              ALLOWED_ATTR: ['style', 'class', 'onclick'] // onclick permitido apenas se confiar muito na fonte
+              // Permite SVG, Imagens e Botões
+              ALLOWED_TAGS: [
+                  'b', 'i', 'strong', 'em', 'p', 'br', 'ul', 'li', 'h3', 'h4', 'span', 'div', 'img', 
+                  'svg', 'g', 'circle', 'line', 'text', 'button'
+              ],
+              ALLOWED_ATTR: [
+                  'style', 'class', 'onclick', 'src', 'alt', 'title', 'data-view',
+                  'width', 'height', 'viewBox', 'xmlns', 
+                  'x', 'y', 'x1', 'y1', 'x2', 'y2', 'r', 'dy', 
+                  'fill', 'stroke', 'stroke-width', 'transform'
+              ]
           });
       } else {
-          textContainer.innerHTML = rawText; // Fallback sem sanitização
+          textContainer.innerHTML = rawText;
       }
   } else {
       textContainer.innerHTML = "Conteúdo não disponível.";
   }
 
-  // 5. Renderiza Imagem
-  const imgEl = document.getElementById("display-img");
-  const noImgEl = document.getElementById("no-image-msg");
-  
+  // === ATIVAR BOTÕES DO DIAGRAMA (SVG) ===
+  const diagBtns = textContainer.querySelectorAll('.btn-diagram');
+  diagBtns.forEach(btn => {
+      btn.onclick = function() {
+          const mode = this.getAttribute('data-view');
+          const wrapper = this.closest('.diagram-wrapper');
+          if (wrapper) {
+              const svg = wrapper.querySelector('svg');
+              if (svg) {
+                  svg.setAttribute('class', `bass-diagram ${mode}`);
+                  wrapper.querySelectorAll('.btn-diagram').forEach(b => b.style.background = '#eee');
+                  this.style.background = '#ccc';
+              }
+          }
+      };
+  });
+
+  // Renderiza Imagem (Lógica corrigida para o novo layout)
   if (fullData.img && fullData.img !== "") {
-    imgEl.src = fullData.img;
-    imgEl.style.display = "inline-block";
-    noImgEl.style.display = "none";
+    if(imgEl) {
+        imgEl.src = fullData.img;
+        imgEl.style.display = "inline-block";
+    }
+    if(imgBox) imgBox.style.display = "block";
   } else {
-    imgEl.style.display = "none";
-    noImgEl.style.display = "block";
+    if(imgBox) imgBox.style.display = "none";
   }
 
-  // 6. Configura Áudio
+  // Configura Áudio
   const audioContainer = document.getElementById("audio-container");
   const pBass = document.getElementById("player-bass");
   const pBack = document.getElementById("player-back");
   
-  // Pausa anteriores
   if(pBass) pBass.pause();
   if(pBack) pBack.pause();
 
   let hasAudio = false;
   if (fullData.audioBass && fullData.audioBass !== "") {
-      pBass.src = fullData.audioBass;
+      if(pBass) pBass.src = fullData.audioBass;
       if (rBass) rBass.style.display = "block";
       hasAudio = true;
   }
   if (fullData.audioBack && fullData.audioBack !== "") {
-      pBack.src = fullData.audioBack;
+      if(pBack) pBack.src = fullData.audioBack;
       if (rBack) rBack.style.display = "block";
       hasAudio = true;
   }
   
   if (audioContainer) audioContainer.style.display = hasAudio ? "block" : "none";
 
-  // 7. Finaliza UI
   updateActiveLink();
   updateNavButtons();
   if (fullData.duration) initTimer(fullData.duration);
   
-  // Fecha menu mobile se necessário
   const sidebar = document.getElementById("sidebar");
   if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains("mobile-open")) {
     toggleMobileMenu();
@@ -222,12 +240,8 @@ function updateNavButtons() {
 }
 
 function updateActiveLink() {
-  document
-    .querySelectorAll(".lesson-link")
-    .forEach((el) => el.classList.remove("active"));
-  const activeEl = document.getElementById(
-    `link-${currentModule}-${currentLesson}`
-  );
+  document.querySelectorAll(".lesson-link").forEach((el) => el.classList.remove("active"));
+  const activeEl = document.getElementById(`link-${currentModule}-${currentLesson}`);
   if (activeEl) activeEl.classList.add("active");
 }
 
@@ -252,20 +266,12 @@ function toggleMobileMenu() {
 /* =================================================================
    4. METRÔNOMO DE ALTA PRECISÃO (Lookahead Scheduling)
    ================================================================= */
-// Configurações do Scheduler
-const lookahead = 25.0; // Milissegundos: Frequência de verificação (Task)
-const scheduleAheadTime = 0.1; // Segundos: Buffer de agendamento
+const lookahead = 25.0; 
+const scheduleAheadTime = 0.1; 
+let nextNoteTime = 0.0; 
+let timerID = null; 
 
-let nextNoteTime = 0.0; // Próximo tempo absoluto no AudioContext
-let timerID = null; // ID do setInterval
-
-// Estado
-let bpm = 100,
-    isPlaying = false,
-    currentStep = 0,
-    totalSteps = 8,
-    stepStates = [];
-
+let bpm = 100, isPlaying = false, currentStep = 0, totalSteps = 8, stepStates = [];
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function toggleMetronome() {
@@ -279,55 +285,34 @@ function generateSteps() {
   if (!tr) return;
   tr.innerHTML = "";
 
-  // Define o total de passos
-  totalSteps =
-    sig === "4/4" ? 8 : 
-    sig === "2/4" ? 4 : 
-    sig === "3/4" ? 6 : 
-    sig === "2/2" ? 4 : 
-    sig === "7/4" ? 14 : 6;
-
+  totalSteps = sig === "4/4" ? 8 : sig === "2/4" ? 4 : sig === "3/4" ? 6 : sig === "2/2" ? 4 : sig === "7/4" ? 14 : 6;
   stepStates = new Array(totalSteps).fill(0);
 
   for (let i = 0; i < totalSteps; i++) {
-    // Lógica padrão (Forte/Fraco)
     if (sig === "6/8") {
-      if (i === 0 || i === 3) stepStates[i] = 2;
-      else stepStates[i] = 1;
+      if (i === 0 || i === 3) stepStates[i] = 2; else stepStates[i] = 1;
     } else {
       if (i % 2 === 0) stepStates[i] = 2;
     }
 
-    // Elementos Visuais
     const div = document.createElement("div");
     div.className = "step-box";
     div.id = `step-${i}`;
     div.onclick = () => cycleStepState(i);
     updateStepVisual(div, stepStates[i]);
 
-    // Labels
     let labelText = "";
-    if (sig === "6/8") {
-      labelText = (i + 1).toString();
-    } else {
-      if (i % 2 === 0) labelText = (i / 2 + 1).toString();
-      else labelText = "e";
-    }
+    if (sig === "6/8") labelText = (i + 1).toString();
+    else labelText = (i % 2 === 0) ? (i / 2 + 1).toString() : "e";
 
     const label = document.createElement("span");
     label.innerText = labelText;
-    label.style.fontSize = "12px"; 
-    label.style.marginTop = "5px";
-    label.style.color = "#888";
+    label.style.fontSize = "12px"; label.style.marginTop = "5px"; label.style.color = "#888";
 
     const w = document.createElement("div");
     w.className = "step-wrapper";
-    w.style.display = "flex";
-    w.style.flexDirection = "column";
-    w.style.alignItems = "center";
-
-    w.appendChild(div); 
-    w.appendChild(label); 
+    w.style.display = "flex"; w.style.flexDirection = "column"; w.style.alignItems = "center";
+    w.appendChild(div); w.appendChild(label);
     tr.appendChild(w); 
   }
 }
@@ -343,54 +328,35 @@ function updateStepVisual(d, s) {
   if (s === 2) d.classList.add("strong");
 }
 
-// --- CORE DO METRÔNOMO ---
 function nextNote() {
-    // Avança o "ponteiro de tempo" para a próxima nota
     const secondsPerBeat = 60.0 / bpm;
-    // Ajuste para subdivisões (colcheias em compassos simples)
     const mul = document.getElementById("time-sig").value.includes("/4") ? 0.5 : 1;
-    
     nextNoteTime += (secondsPerBeat * mul);
-    
     currentStep++;
-    if (currentStep === totalSteps) {
-        currentStep = 0;
-    }
+    if (currentStep === totalSteps) currentStep = 0;
 }
 
 function scheduleNote(stepNumber, time) {
-    // 1. Áudio (Hardware Timer - Preciso)
     if (stepStates[stepNumber] > 0) {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-
         osc.frequency.value = stepStates[stepNumber] === 2 ? 1200 : 600;
         gain.gain.value = stepStates[stepNumber] === 2 ? 1.0 : 0.4;
-
         osc.start(time);
-        
-        // Envelope curto
         gain.gain.setValueAtTime(gain.gain.value, time);
         gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
         osc.stop(time + 0.1);
     }
-
-    // 2. Visual (Sincronização aproximada)
     const drawDelay = (time - audioCtx.currentTime) * 1000;
     setTimeout(() => {
-        // Limpa anteriores
-        for(let i=0; i<totalSteps; i++) {
-            document.getElementById(`step-${i}`)?.classList.remove("playing");
-        }
-        // Acende atual
+        for(let i=0; i<totalSteps; i++) document.getElementById(`step-${i}`)?.classList.remove("playing");
         document.getElementById(`step-${stepNumber}`)?.classList.add("playing");
     }, Math.max(0, drawDelay));
 }
 
 function scheduler() {
-    // Agenda notas que devem tocar dentro da janela de buffer
     while (nextNoteTime < audioCtx.currentTime + scheduleAheadTime) {
         scheduleNote(currentStep, nextNoteTime);
         nextNote();
@@ -399,26 +365,17 @@ function scheduler() {
 
 function togglePlayMetronome() {
   const btn = document.getElementById("btn-play-metro");
-  
   if (isPlaying) {
-    // PARAR
     window.clearInterval(timerID);
     isPlaying = false;
     btn.innerText = "▶ INICIAR";
     btn.style.background = "#2c3e50";
-    
-    // Reset visual
     document.querySelectorAll(".step-box").forEach(el => el.classList.remove("playing"));
   } else {
-    // INICIAR
     if (audioCtx.state === "suspended") audioCtx.resume();
-    
     currentStep = 0;
-    // Começa levemente no futuro para evitar cliques
     nextNoteTime = audioCtx.currentTime + 0.05;
-    
     timerID = setInterval(scheduler, lookahead);
-    
     isPlaying = true;
     btn.innerText = "⏹ PARAR";
     btn.style.background = "#c0392b";
@@ -428,17 +385,12 @@ function togglePlayMetronome() {
 function updateBpm(v) {
   bpm = parseInt(v);
   document.getElementById("bpm-val").innerText = bpm;
-  // Não precisa reiniciar o scheduler, ele pega o novo bpm no próximo nextNote()
 }
-
 
 /* =================================================================
    5. TIMER DE ESTUDO
    ================================================================= */
-let studyTimerInterval = null,
-  studyTimeRemaining = 0,
-  isStudyTimerRunning = false,
-  initialDuration = 0;
+let studyTimerInterval = null, studyTimeRemaining = 0, isStudyTimerRunning = false, initialDuration = 0;
 
 function initTimer(sec) {
   clearInterval(studyTimerInterval);
@@ -481,13 +433,9 @@ function toggleStudyTimer() {
 }
 
 function updateTimerDisplay() {
-  const m = Math.floor(studyTimeRemaining / 60),
-    s = studyTimeRemaining % 60;
+  const m = Math.floor(studyTimeRemaining / 60), s = studyTimeRemaining % 60;
   const d = document.getElementById("timer-display");
-  if (d)
-    d.innerText = `${m.toString().padStart(2, "0")}:${s
-      .toString()
-      .padStart(2, "0")}`;
+  if (d) d.innerText = `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
 function finishTimer() {
@@ -528,19 +476,14 @@ function playAlarm() {
 }
 
 /* =================================================================
-   6. MERMAID (MAPA MENTAL)
+   6. MERMAID (MAPA MENTAL) COM TRATAMENTO DE ERRO
    ================================================================= */
 try {
   mermaid.initialize({
     startOnLoad: false,
     theme: "neutral",
     securityLevel: "loose",
-    flowchart: {
-      curve: "basis",
-      nodeSpacing: 10,
-      rankSpacing: 30,
-      padding: 5,
-    },
+    flowchart: { curve: "basis", nodeSpacing: 10, rankSpacing: 30, padding: 5 },
   });
 } catch (e) {}
 
@@ -553,16 +496,12 @@ async function toggleMap() {
     container.innerHTML = '<p style="margin-top:20px;">Carregando...</p>';
 
     if (!graphDefinition) {
-      container.innerHTML =
-        "<p style='color:red'>Erro: O mapa está vazio. Use o Painel Admin para gerar.</p>";
+      container.innerHTML = "<p style='color:red'>Erro: O mapa está vazio. Use o Painel Admin para gerar.</p>";
       return;
     }
 
     try {
-      const { svg } = await mermaid.render(
-        "graph-" + Date.now(),
-        graphDefinition
-      );
+      const { svg } = await mermaid.render("graph-" + Date.now(), graphDefinition);
       container.innerHTML = svg;
 
       const svgEl = container.querySelector("svg");
@@ -585,7 +524,14 @@ async function toggleMap() {
         }
       };
     } catch (e) {
-      container.innerHTML = "Erro Mermaid: " + e.message;
+      console.error("Erro Mermaid:", e);
+      container.innerHTML = `
+        <div style="background: rgba(231, 76, 60, 0.1); border: 1px solid #e74c3c; border-radius: 8px; padding: 20px; color: #c0392b; margin-top: 20px;">
+            <h3 style="margin-top:0">😕 Ops! Erro no Mapa</h3>
+            <p>Não foi possível desenhar o mapa visual devido a um erro de formatação.</p>
+            <p style="font-size: 0.8rem; font-family: monospace; background: rgba(0,0,0,0.05); padding: 5px;">${e.message}</p>
+        </div>
+      `;
     }
   } else {
     modal.style.display = "none";
