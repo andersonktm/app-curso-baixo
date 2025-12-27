@@ -53,7 +53,19 @@ btnLogin.addEventListener('click', () => {
 
 if(btnLogout) {
     btnLogout.addEventListener('click', () => {
-        if(confirm("Deseja realmente sair?")) signOut(auth);
+        if(confirm("Deseja realmente sair?")) {
+            // Chama a função de sair do Firebase
+            signOut(auth)
+                .then(() => {
+                    console.log("Usuário deslogado.");
+                    // O SEGREDO: Força a página a recarregar do zero
+                    window.location.reload();
+                })
+                .catch((error) => {
+                    console.error("Erro ao sair:", error);
+                    alert("Ocorreu um erro ao tentar sair.");
+                });
+        }
     });
 }
 
