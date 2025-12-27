@@ -54,7 +54,7 @@ let menuObserver = null;
 const loginScreen = document.getElementById('login-screen');
 const appContainer = document.getElementById('app-container');
 const emailInput = document.getElementById('email');
-const passInput = document.getElementById('senha');
+const passInput = document.getElementById('senha'); // Certifique-se que no HTML o ID é 'senha' ou 'password'
 const errorMsg = document.getElementById('error-msg');
 const btnLogin = document.getElementById('btnLogin');
 const btnLogout = document.getElementById('btnLogout');
@@ -63,21 +63,35 @@ const progressSlider = document.getElementById('progress-slider');
 const progressVal = document.getElementById('progress-val');
 const menuContainer = document.getElementById('menu-container');
 
-// --- LOGIN ---
-btnLogin.addEventListener('click', () => {
-    const email = emailInput.value;
-    const pass = passInput.value;
-    btnLogin.innerText = "Verificando...";
-    signInWithEmailAndPassword(auth, email, pass)
-        .then(() => { btnLogin.innerText = "ENTRAR"; })
-        .catch((error) => {
-            btnLogin.innerText = "ENTRAR";
-            errorMsg.style.display = 'block';
-            errorMsg.innerText = "Dados incorretos.";
-            console.error(error);
-        });
-});
+// --- LOGIN (COM PROTEÇÃO CONTRA ERROS) ---
+if (btnLogin) {
+    btnLogin.addEventListener('click', (e) => {
+        // Previne que o formulário recarregue a página
+        e.preventDefault(); 
 
+        const email = emailInput.value;
+        const pass = passInput.value;
+
+        // Feedback visual
+        btnLogin.innerText = "Verificando...";
+        
+        signInWithEmailAndPassword(auth, email, pass)
+            .then(() => { 
+                btnLogin.innerText = "Sucesso!"; 
+                // O onAuthStateChanged vai lidar com o redirecionamento
+            })
+            .catch((error) => {
+                btnLogin.innerText = "ENTRAR NA ÁREA DO ALUNO";
+                if (errorMsg) {
+                    errorMsg.style.display = 'block';
+                    errorMsg.innerText = "E-mail ou senha incorretos.";
+                }
+                console.error("Erro no login:", error);
+            });
+    });
+}
+
+// --- LOGOUT ---
 if(btnLogout) {
     btnLogout.addEventListener('click', () => {
         if(confirm("Deseja realmente sair?")) {
@@ -98,29 +112,26 @@ if(btnLogout) {
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
-        
 
         // UI: Mostra o app
-        loginScreen.style.opacity = '0';
-        setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
-        appContainer.style.opacity = '1';
-        appContainer.style.pointerEvents = 'all';
+        if(loginScreen) {
+            loginScreen.style.opacity = '0';
+            setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
+        }
+        if(appContainer) {
+            appContainer.style.opacity = '1';
+            appContainer.style.pointerEvents = 'all';
+        }
 
-
-        // 1. PRIMEIRO: Baixa o progresso do usuário (Precisamos ter os dados na mão)
-        // Fazemos isso antes de tudo para garantir que userProgressData não esteja vazio
+        // 1. PRIMEIRO: Baixa o progresso do usuário
         await fetchUserProgress();
 
-        // 2. SEGUNDO: Liga o Observador (Vigia o container ANTES de criarmos o menu)
-        // Isso resolve a Race Condition. Assim que o menu nascer, o observador detecta e preenche.
+        // 2. SEGUNDO: Liga o Observador
         startMenuObserver();
 
-
-        
-        // 3. TERCEIRO: Baixa o Conteúdo e Inicia o Curso (Gera o Menu)-
+        // 3. TERCEIRO: Baixa o Conteúdo e Inicia o Curso
         try {
             const docRef = doc(db, "site_data", "indice_curso");
-            // Se ainda não tiver rodado o admin novo, usa o fallback antigo
             let docSnap = await getDoc(docRef);
             let dadosCurso = null;
 
@@ -134,28 +145,22 @@ onAuthStateChanged(auth, async (user) => {
             }
 
             if (dadosCurso && window.iniciarCurso) {
-                // AQUI A MÁGICA: Ao chamar isso, o script.js cria o HTML.
-                // Como o observador (passo 2) já está ligado, ele vai preencher 
-                // as porcentagens automaticamente assim que o HTML aparecer.
                 window.iniciarCurso(dadosCurso);
             } else {
-                console.error("Dados do curso não encontrados.");
+                console.error("Dados do curso não encontrados ou função iniciarCurso indisponível.");
             }
 
         } catch (error) {
             console.error("Erro ao baixar curso:", error);
-            alert("Erro de conexão.");
         }
         
-        // Fallback de segurança: Tenta preencher uma vez extra caso o observador falhe
-        // ou o menu já estivesse lá (re-login sem refresh)
+        // Fallback de segurança
         fillSidebarFromMemory();
         
-
         if(progressArea) updateSliderUI(currentModId, currentLessId);
 
     } else {
-        // Usuário deslogado
+        // Usuário deslogado - Mantém na tela de login
     }
 });
 
@@ -168,7 +173,7 @@ if(progressSlider) {
         const lessonKey = `progresso_${currentModId}_${currentLessId}`;
         const userRef = doc(db, "users", currentUser.uid);
 
-        progressVal.innerText = valor + "%";
+        if(progressVal) progressVal.innerText = valor + "%";
         
         userProgressData[lessonKey] = valor;
         updateSingleSidebarItem(currentModId, currentLessId, valor);
@@ -179,7 +184,7 @@ if(progressSlider) {
     });
 
     progressSlider.addEventListener('input', (e) => {
-        progressVal.innerText = e.target.value + "%";
+        if(progressVal) progressVal.innerText = e.target.value + "%";
     });
 }
 
@@ -230,8 +235,8 @@ function updateSliderUI(mod, less) {
     const lessonKey = `progresso_${mod}_${less}`;
     const savedValue = userProgressData[lessonKey] || 0;
     
-    progressSlider.value = savedValue;
-    progressVal.innerText = savedValue + "%";
+    if(progressSlider) progressSlider.value = savedValue;
+    if(progressVal) progressVal.innerText = savedValue + "%";
 }
 
 function startMenuObserver() {

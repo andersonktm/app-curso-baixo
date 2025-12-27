@@ -40,61 +40,138 @@ body {
 }
 
 /* === TELA DE LOGIN === */
+/* Container Principal que centraliza tudo */
 #login-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #2c3e50;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  color: white;
-  transition: opacity 0.5s;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%); /* Gradiente sutil */
+    padding: 20px;
 }
 .login-box {
-  background: white;
-  padding: 30px;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 320px;
-  text-align: center;
-  color: #333;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    background: var(--bg-card);
+    padding: 40px;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    color: var(--text-primary);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Sombra mais dramática */
+    border: 1px solid #333; /* Borda sutil para definição */
 }
+/* Área do Logo (Imagem PNG/JPG) */
+.login-logo-area {
+    margin-bottom: 20px;
+    display: flex;            /* Centraliza a imagem */
+    justify-content: center;
+}
+
+.login-img {
+    width: 150px;             /* Defina aqui o tamanho que você quer */
+    height: auto;             /* Mantém a proporção */
+    max-width: 100%;          /* Garante que não estoure em telas pequenas */
+    
+    /* Opcional: Se sua imagem for PNG transparente e você quiser um brilho laranja nela */
+    /* filter: drop-shadow(0 0 10px rgba(255, 159, 67, 0.5)); */
+}
+h2 {
+    margin: 0 0 30px 0;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+/* === INPUTS MODERNOS (Com label flutuante) === */
+.input-group {
+    position: relative;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
 .login-input {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 16px;
+    width: 100%;
+    padding: 15px;
+    background: #2d2d2d; /* Fundo do input mais claro que o card */
+    border: 2px solid #444;
+    border-radius: 8px;
+    font-size: 16px;
+    color: white;
+    outline: none;
+    transition: 0.3s;
 }
+/* Label que fica dentro do input */
+.input-group label {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+    pointer-events: none;
+    transition: 0.3s ease all;
+    background: transparent;
+    padding: 0 5px;
+}
+
+
+/* Mágica: Quando clica ou tem texto, o label sobe e muda de cor */
+.login-input:focus,
+.login-input:not(:placeholder-shown) {
+    border-color: var(--accent-color); /* Borda laranja ao focar */
+    box-shadow: 0 0 15px rgba(255, 159, 67, 0.2);
+}
+
+.login-input:focus + label,
+.login-input:not(:placeholder-shown) + label {
+    top: 0;
+    font-size: 0.85rem;
+    color: var(--accent-color);
+    background: var(--bg-card); /* Truque para cobrir a borda */
+    padding: 2px 5px;
+}
+
+
+/* === BOTÃO === */
 .login-btn {
-  width: 100%;
-  padding: 12px;
-  background: #e67e22;
-  color: white;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 16px;
-  transition: 0.3s;
-  margin-top: 10px;
+    width: 100%;
+    padding: 15px;
+    background: var(--accent-color);
+    color: #000; /* Texto preto no laranja para contraste máximo */
+    border: none;
+    font-weight: 800;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: 0.3s;
+    margin-top: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
+
+
+
 .login-btn:hover {
-  background: #d35400;
+    background: #e67e22; /* Laranja um pouco mais escuro no hover */
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(230, 126, 34, 0.4);
 }
+
+
+/* Mensagens de Erro */
 .error-msg {
-  color: #e74c3c;
-  font-size: 14px;
-  display: none;
-  margin-top: 10px;
-  font-weight: bold;
+    color: #ff5252;
+    background: rgba(255, 82, 82, 0.1);
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    display: none; /* Controlado via JS */
+    margin-top: 20px;
+    border: 1px solid #ff5252;
 }
 
 /* === LAYOUT FIXO (DESKTOP) === */

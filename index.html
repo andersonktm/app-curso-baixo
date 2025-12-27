@@ -20,26 +20,39 @@
     <link rel="stylesheet" href="style.css?v=9" />
   </head>
   <body>
-    <div id="login-screen">
-      <div class="login-box">
-        <h2 style="margin-top: 0; color: #2c3e50">🎸 Lógica do Groove</h2>
-        <p style="color: #7f8c8d; font-size: 0.9rem">Área Restrita a Alunos</p>
-        <input
-          type="email"
-          id="email"
-          placeholder="E-mail"
-          class="login-input"
-        />
-        <input
-          type="password"
-          id="senha"
-          placeholder="Senha"
-          class="login-input"
-        />
-        <button class="login-btn" id="btnLogin">ENTRAR</button>
-        <p id="error-msg" class="error-msg">E-mail ou senha incorretos.</p>
+
+      <div id="login-screen">
+        <div class="login-box">
+            
+          <div class="login-logo-area">
+              <img src="logo.png" alt="Logo Lógica do Groove" class="login-img">
+          </div>
+
+          <h2>Área Restrita a Alunos</h2>
+          
+          <form id="login-form">
+              <div class="input-group">
+                  <input type="email" id="email" class="login-input" placeholder=" " required>
+                  <label for="email">E-mail</label>
+              </div>
+              
+              <div class="input-group">
+                  <input type="password" id="password" class="login-input" placeholder=" " required>
+                  <label for="password">Senha</label>
+              </div>
+
+              <button type="submit" class="login-btn">ENTRAR NA ÁREA DO ALUNO</button>
+          </form>
+
+          <p id="error-msg" class="error-msg"></p>
+          <p style="margin-top: 20px; font-size: 0.9rem; color: #888;">Esqueceu a senha? <a href="#" style="color:var(--accent-color)">Clique aqui</a></p>
+        </div>
       </div>
-    </div>
+
+
+
+
+
 
     <div id="app-container">
       <div id="metronome-modal">
