@@ -1,51 +1,49 @@
 /* =================================================================
    1. CONFIGURAÇÃO E VARIÁVEIS GLOBAIS
    ================================================================= */
-let courseData = [];      // Será preenchido pelo Firebase
-let graphDefinition = ""; // Será preenchido pelo Firebase
+let courseData = [];      
+let graphDefinition = ""; 
 
-// Link Mágico: Faz o comando 'carregarAula' do gráfico Mermaid funcionar
+// Mantemos por compatibilidade, mas o clique principal será via Listener abaixo
 window.carregarAula = function(mod, less) {
     loadLesson(mod, less);
-    // Fecha o modal do mapa se estiver aberto
     document.getElementById("map-modal").style.display = "none";
 };
 
 /* =================================================================
-   2. INICIALIZAÇÃO (Chamada pelo firebase.js após login)
+   2. INICIALIZAÇÃO
    ================================================================= */
-// Esta função é chamada EXTERNAMENTE quando o Firebase entrega os dados
 window.iniciarCurso = function(dadosDoFirebase) {
-    console.log("Iniciando app com dados seguros...");
+    console.log("Iniciando app...");
     
-    // 1. Preenche as variáveis globais
     courseData = dadosDoFirebase.lista_aulas;
-    graphDefinition = dadosDoFirebase.mapa_mermaid;
+    
+    // TRUQUE VISUAL: Troca 'graph TD' por 'flowchart TD' (Organiza melhor as setas)
+    // Se o admin salvou como graph, convertemos na hora para ficar mais bonito.
+    let mapa = dadosDoFirebase.mapa_mermaid || "";
+    if(mapa.startsWith("graph TD")) {
+        mapa = mapa.replace("graph TD", "flowchart TD");
+    }
+    graphDefinition = mapa;
 
-    // 2. Gera o Menu Lateral
     generateMenu();
     
-    // 3. Carrega a primeira aula (se houver)
     if(courseData.length > 0) {
         loadLesson(0, 0);
     }
 
-    // 4. Inicia o visual do metrônomo
     generateSteps();
     
-    // 5. Limpa mensagem de carregamento
     const msgSetup = document.getElementById('display-text');
     if(msgSetup) msgSetup.innerHTML = "Selecione uma aula no menu.";
 }
 
-// O onload agora serve apenas para coisas que NÃO dependem dos dados
 window.onload = function () {
     console.log("Interface carregada. Aguardando login...");
-    // generateSteps() foi movido para iniciarCurso para garantir segurança
 };
 
 /* =================================================================
-   3. LÓGICA DO SISTEMA DE AULAS (Menu e Navegação)
+   3. LÓGICA DO SISTEMA DE AULAS
    ================================================================= */
 function generateMenu() {
   const container = document.getElementById("menu-container");
@@ -69,11 +67,7 @@ function generateMenu() {
       btn.className = "lesson-link";
       btn.id = `link-${modIdx}-${lessIdx}`;
       btn.innerHTML = `${less.title} <span id="percent-${modIdx}-${lessIdx}" class="menu-percent"></span>`;
-      
-      btn.onclick = () => {
-        loadLesson(modIdx, lessIdx);
-      };
-
+      btn.onclick = () => loadLesson(modIdx, lessIdx);
       lessonList.appendChild(btn);
     });
 
@@ -91,29 +85,18 @@ let currentModule = 0;
 let currentLesson = 0;
 
 function loadLesson(modIdx, lessIdx) {
-  // Proteção: Se não houver dados ainda, não faz nada
-  if (!courseData[modIdx] || !courseData[modIdx].lessons[lessIdx]) {
-    console.error("Erro: Aula não encontrada ou dados não carregados!", modIdx, lessIdx);
-    return;
-  }
+  if (!courseData[modIdx] || !courseData[modIdx].lessons[lessIdx]) return;
 
   currentModule = modIdx;
   currentLesson = lessIdx;
   const data = courseData[modIdx].lessons[lessIdx];
 
-  // Atualiza Textos
   document.getElementById("display-module").innerText = courseData[modIdx].module;
   document.getElementById("display-title").innerText = data.title;
   
-  // Tratamento de quebra de linha no texto
   const textContainer = document.getElementById("display-text");
-  if(data.text) {
-      textContainer.innerHTML = data.text.replace(/\n/g, "<br>");
-  } else {
-      textContainer.innerHTML = "";
-  }
+  textContainer.innerHTML = data.text ? data.text.replace(/\n/g, "<br>") : "";
 
-  // Lógica da Imagem
   const imgEl = document.getElementById("display-img");
   const noImgEl = document.getElementById("no-image-msg");
   if (data.img && data.img !== "") {
@@ -125,20 +108,18 @@ function loadLesson(modIdx, lessIdx) {
     noImgEl.style.display = "block";
   }
 
-  // Lógica de Áudio
+  // ÁUDIO
   const audioContainer = document.getElementById("audio-container");
   const playerBass = document.getElementById("player-bass");
   const playerBack = document.getElementById("player-back");
   const rowBass = document.getElementById("row-bass");
   const rowBack = document.getElementById("row-backing");
 
-  // Pausa anteriores
   if(playerBass) playerBass.pause();
   if(playerBack) playerBack.pause();
 
   let hasAudio = false;
 
-  // Configura Baixo
   if (data.audioBass && data.audioBass !== "") {
     if(playerBass) playerBass.src = data.audioBass;
     if(rowBass) rowBass.style.display = "block";
@@ -147,7 +128,6 @@ function loadLesson(modIdx, lessIdx) {
     if(rowBass) rowBass.style.display = "none";
   }
 
-  // Configura Backing Track
   if (data.audioBack && data.audioBack !== "") {
     if(playerBack) playerBack.src = data.audioBack;
     if(rowBack) rowBack.style.display = "block";
@@ -160,11 +140,9 @@ function loadLesson(modIdx, lessIdx) {
 
   updateActiveLink();
   updateNavButtons();
-  
-  // Inicia Timer com a duração da aula (se houver)
   initTimer(data.duration);
-
-  // Fecha menu mobile se necessário
+  
+  // Fecha menu mobile
   const sidebar = document.getElementById("sidebar");
   if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains("mobile-open")) {
     toggleMobileMenu();
@@ -173,7 +151,6 @@ function loadLesson(modIdx, lessIdx) {
 
 function changeLesson(direction) {
   if(courseData.length === 0) return;
-  
   let mod = currentModule;
   let less = currentLesson + direction;
   const maxLess = courseData[mod].lessons.length;
@@ -182,29 +159,23 @@ function changeLesson(direction) {
     if (mod > 0) {
       mod--;
       less = courseData[mod].lessons.length - 1;
-      const list = document.getElementById(`mod-list-${mod}`);
-      if(list) list.classList.add("open");
+      document.getElementById(`mod-list-${mod}`).classList.add("open");
     } else return;
   } else if (less >= maxLess) {
     if (mod < courseData.length - 1) {
       mod++;
       less = 0;
-      const list = document.getElementById(`mod-list-${mod}`);
-      if(list) list.classList.add("open");
+      document.getElementById(`mod-list-${mod}`).classList.add("open");
     } else return;
   }
-
   loadLesson(mod, less);
 }
 
 function updateNavButtons() {
   if(courseData.length === 0) return;
-  
   const prevBtn = document.getElementById("btn-prev");
   const nextBtn = document.getElementById("btn-next");
-  
   if(prevBtn) prevBtn.disabled = currentModule === 0 && currentLesson === 0;
-  
   const lastMod = courseData.length - 1;
   const lastLess = courseData[lastMod].lessons.length - 1;
   if(nextBtn) nextBtn.disabled = currentModule === lastMod && currentLesson === lastLess;
@@ -221,10 +192,8 @@ function toggleMobileMenu() {
   const sidebar = document.getElementById("sidebar");
   if(!sidebar) return;
   sidebar.classList.toggle("mobile-open");
-
   const btn = document.querySelector(".mobile-menu-toggle");
   if(!btn) return;
-
   if (sidebar.classList.contains("mobile-open")) {
     btn.innerText = "✕ Fechar";
     btn.style.background = "#c0392b";
@@ -239,7 +208,7 @@ function toggleMobileMenu() {
 }
 
 /* =================================================================
-   4. METRÔNOMO SEQUENCIADOR (Mantido Original)
+   4. METRÔNOMO E TIMER (Mantidos)
    ================================================================= */
 let metroInterval = null;
 let bpm = 100;
@@ -256,8 +225,7 @@ function toggleMetronome() {
 
 function generateSteps() {
   const sigSelect = document.getElementById("time-sig");
-  if(!sigSelect) return; // Proteção caso elementos não existam
-  
+  if(!sigSelect) return;
   const sig = sigSelect.value;
   const track = document.getElementById("sequencer-track");
   track.innerHTML = "";
@@ -273,7 +241,6 @@ function generateSteps() {
   }
 
   stepStates = new Array(totalSteps).fill(0);
-
   for (let i = 0; i < totalSteps; i++) {
     if (sig.includes("/4") || sig.includes("/2")) {
       if (i % 2 === 0) stepStates[i] = 2; 
@@ -287,27 +254,18 @@ function generateSteps() {
   for (let i = 0; i < totalSteps; i++) {
     const wrapper = document.createElement("div");
     wrapper.className = "step-wrapper";
-
     const div = document.createElement("div");
     div.className = "step-box";
     div.id = `step-${i}`; 
     div.onclick = () => cycleStepState(i);
     updateStepVisual(div, stepStates[i]);
-
     const label = document.createElement("div");
     label.className = "step-label";
-
-    if (sig === "6/8") {
-      label.innerText = i + 1;
-    } else {
-      if (i % 2 === 0) {
-        label.innerText = i / 2 + 1;
-        label.style.color = "#e0e0e0"; 
-      } else {
-        label.innerText = "e";
-      }
+    if (sig === "6/8") label.innerText = i + 1;
+    else {
+      if (i % 2 === 0) { label.innerText = i / 2 + 1; label.style.color = "#e0e0e0"; } 
+      else label.innerText = "e";
     }
-
     wrapper.appendChild(div);
     wrapper.appendChild(label);
     track.appendChild(wrapper);
@@ -316,24 +274,19 @@ function generateSteps() {
 
 function cycleStepState(index) {
   stepStates[index] = (stepStates[index] + 1) % 3;
-  const div = document.getElementById(`step-${index}`);
-  updateStepVisual(div, stepStates[index]);
+  updateStepVisual(document.getElementById(`step-${index}`), stepStates[index]);
 }
-
 function updateStepVisual(div, state) {
   div.classList.remove("weak", "strong");
   if (state === 1) div.classList.add("weak");
   if (state === 2) div.classList.add("strong");
 }
-
 function playStep() {
   const prevIndex = (currentStep - 1 + totalSteps) % totalSteps;
   const prevEl = document.getElementById(`step-${prevIndex}`);
   if(prevEl) prevEl.classList.remove("playing");
-  
   const currDiv = document.getElementById(`step-${currentStep}`);
   if (currDiv) currDiv.classList.add("playing");
-
   const state = stepStates[currentStep];
   if (state > 0) {
     if (audioCtx.state === "suspended") audioCtx.resume();
@@ -341,40 +294,29 @@ function playStep() {
     const gain = audioCtx.createGain();
     osc.connect(gain);
     gain.connect(audioCtx.destination);
-
-    if (state === 2) {
-      osc.frequency.value = 1200;
-      gain.gain.value = 1.0;
-    } else {
-      osc.frequency.value = 600;
-      gain.gain.value = 0.4;
-    }
-
+    if (state === 2) { osc.frequency.value = 1200; gain.gain.value = 1.0; } 
+    else { osc.frequency.value = 600; gain.gain.value = 0.4; }
     osc.start();
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
     osc.stop(audioCtx.currentTime + 0.1);
   }
   currentStep = (currentStep + 1) % totalSteps;
 }
-
 function updateBpm(val) {
   bpm = val;
   const bpmDisplay = document.getElementById("bpm-val");
   if(bpmDisplay) bpmDisplay.innerText = val;
   if (isPlaying) restartInterval();
 }
-
 function restartInterval() {
   clearInterval(metroInterval);
   const sigEl = document.getElementById("time-sig");
   const sig = sigEl ? sigEl.value : "4/4";
-  
   let multiplier = 1;
   if (sig.includes("/4") || sig.includes("/2")) multiplier = 0.5;
   const intervalTime = (60000 / bpm) * multiplier;
   metroInterval = setInterval(playStep, intervalTime);
 }
-
 function togglePlayMetronome() {
   const btn = document.getElementById("btn-play-metro");
   if (isPlaying) {
@@ -392,9 +334,7 @@ function togglePlayMetronome() {
   }
 }
 
-/* =================================================================
-   5. TIMER DE ESTUDO (Mantido Original)
-   ================================================================= */
+// Timer
 let studyTimerInterval = null;
 let studyTimeRemaining = 0;
 let isStudyTimerRunning = false;
@@ -406,26 +346,16 @@ function initTimer(seconds) {
   const timerBox = document.getElementById("study-timer");
   const btn = document.getElementById("btn-timer");
   const display = document.getElementById("timer-display");
-
-  // Se não houver timer na tela ou tempo <= 0, esconde
   if (!timerBox || !seconds || seconds <= 0) {
     if(timerBox) timerBox.style.display = "none";
     return;
   }
-
   timerBox.style.display = "flex";
   initialDuration = seconds;
   studyTimeRemaining = seconds;
-  
   if(display) updateTimerDisplay();
-  
-  if(btn) {
-      btn.innerText = "▶ INICIAR";
-      btn.classList.remove("running");
-      btn.disabled = false;
-  }
+  if(btn) { btn.innerText = "▶ INICIAR"; btn.classList.remove("running"); btn.disabled = false; }
 }
-
 function toggleStudyTimer() {
   const btn = document.getElementById("btn-timer");
   if (isStudyTimerRunning) {
@@ -438,7 +368,6 @@ function toggleStudyTimer() {
     isStudyTimerRunning = true;
     btn.innerText = "⏸ PAUSAR";
     btn.classList.add("running");
-
     studyTimerInterval = setInterval(() => {
       studyTimeRemaining--;
       updateTimerDisplay();
@@ -446,7 +375,6 @@ function toggleStudyTimer() {
     }, 1000);
   }
 }
-
 function updateTimerDisplay() {
   const minutes = Math.floor(studyTimeRemaining / 60);
   const seconds = studyTimeRemaining % 60;
@@ -454,19 +382,13 @@ function updateTimerDisplay() {
   const el = document.getElementById("timer-display");
   if(el) el.innerText = `${fmt(minutes)}:${fmt(seconds)}`;
 }
-
 function finishTimer() {
   clearInterval(studyTimerInterval);
   isStudyTimerRunning = false;
   const btn = document.getElementById("btn-timer");
-  if(btn) {
-      btn.innerText = "✅ CONCLUÍDO";
-      btn.disabled = true;
-      btn.classList.remove("running");
-  }
+  if(btn) { btn.innerText = "✅ CONCLUÍDO"; btn.disabled = true; btn.classList.remove("running"); }
   playAlarmSound();
 }
-
 function playAlarmSound() {
   if (audioCtx.state === "suspended") audioCtx.resume();
   const now = audioCtx.currentTime;
@@ -487,11 +409,8 @@ function playAlarmSound() {
 }
 
 /* =================================================================
-   6. MAPA DE ESTUDO (MERMAID)
+   5. MAPA DE ESTUDO (Mermaid) - CORREÇÃO DE CLIQUE E VISUAL
    ================================================================= */
-// Obs: Removi o lessonMap hardcoded antigo (A0: [0,0]) porque agora 
-// usaremos a interatividade direta do novo gráfico (carregarAula).
-
 try {
   mermaid.initialize({
     startOnLoad: false,
@@ -510,9 +429,8 @@ async function toggleMap() {
     modal.style.display = "flex";
     container.innerHTML = '<p style="margin-top:20px;">Carregando mapa...</p>';
     
-    // Verificação de segurança
     if(!graphDefinition || graphDefinition === "") {
-        container.innerHTML = '<p style="color:red">Mapa não disponível (dados não carregados).</p>';
+        container.innerHTML = '<p style="color:red">Mapa indisponível.</p>';
         return;
     }
 
@@ -521,12 +439,31 @@ async function toggleMap() {
       const { svg } = await mermaid.render(uniqueId, graphDefinition);
       container.innerHTML = svg;
       
-      // O evento de clique é tratado automaticamente pelo 'call carregarAula()'
-      // que você definiu no arquivo dados_curso.js
-      
+      // --- CORREÇÃO DO CLIQUE (Event Delegation) ---
+      // Em vez de depender do Mermaid gerar o onclick correto, nós mesmos 
+      // detectamos onde o usuário clicou.
+      container.onclick = function(e) {
+          let target = e.target;
+          
+          // Sobe na árvore do DOM até achar um elemento com ID (ex: "N_0_1")
+          while (target && target !== container) {
+              if (target.id && target.id.startsWith("N_")) {
+                  const parts = target.id.split("_");
+                  // ID padrão gerado pelo Admin: N_mod_aula
+                  if(parts.length >= 3) {
+                      const mod = parseInt(parts[1]);
+                      const less = parseInt(parts[2]);
+                      window.carregarAula(mod, less); // Chama a função de carregar
+                      return;
+                  }
+              }
+              target = target.parentNode;
+          }
+      };
+
     } catch (error) {
       console.error("Erro Mapa:", error);
-      container.innerHTML = `<div style="padding:20px; color:red;">Erro ao desenhar mapa. Verifique a sintaxe.</div>`;
+      container.innerHTML = `<div style="padding:20px; color:red;">Erro ao desenhar mapa. Tente recarregar.</div>`;
     }
   } else {
     modal.style.display = "none";
