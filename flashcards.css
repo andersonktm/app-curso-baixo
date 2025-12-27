@@ -1,0 +1,196 @@
+:root {
+    --bg-dark: #121212;
+    --card-blue: #0d47a1;
+    --text-white: #ffffff;
+    --accent: #e67e22;
+    --success: #2ecc71;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-white);
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden; /* Evita rolagem dupla */
+}
+
+/* === HEADER (GRID PARA ALINHAMENTO PERFEITO) === */
+.game-header {
+    background: #1e1e1e;
+    padding: 15px 20px;
+    
+    /* MUDANÇA: Grid de 3 colunas para controlar o espaço */
+    display: grid;
+    grid-template-columns: 80px 1fr 80px; /* Esquerda (Botão), Meio (Título), Direita (Contador) */
+    align-items: center;
+    border-bottom: 2px solid #333;
+    flex-shrink: 0;
+    gap: 10px;
+}
+
+.btn-back {
+    background: #333;
+    border: none;
+    color: white;
+    padding: 10px; /* Botão um pouco maior para toque */
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    width: fit-content;
+}
+
+.game-header h2 {
+    color: var(--accent);
+    margin: 0;
+    font-size: 1.1rem;
+    text-align: center; /* Centraliza o texto no espaço do meio */
+    line-height: 1.2;
+    /* Isso garante que ele fique "mais a direita" do botão voltar */
+}
+
+.counter {
+    font-size: 0.8rem;
+    color: #888;
+    text-align: right; /* Alinha o contador à direita */
+    line-height: 1.2;
+}
+#counter-val { color: var(--accent); font-weight: bold; font-size: 1.2rem; display: block; }
+
+/* === ÁREA DO JOGO === */
+.game-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* Centraliza verticalmente na tela */
+    padding: 20px;
+    width: 100%;
+    
+    /* MUDANÇA: Gap maior para empurrar o botão para baixo */
+    gap: 60px; 
+}
+
+/* === CENA DO CARTÃO === */
+.card-scene {
+    width: 100%;
+    /* Tamanhos responsivos */
+    max-width: 380px; 
+    height: 260px; /* Altura fixa para consistência */
+    perspective: 1000px;
+}
+
+.card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); /* Animação mais suave */
+    transform-style: preserve-3d;
+    cursor: pointer;
+}
+
+.card.is-flipped {
+    transform: rotateY(180deg);
+}
+
+.card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: 20px; /* Bordas mais arredondadas */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 15px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6); /* Sombra mais profunda */
+    border: 2px solid #2980b9;
+    box-sizing: border-box;
+}
+
+/* Frente e Verso */
+.card-front { background: var(--card-blue); color: white; }
+.card-back { background: #1565c0; color: white; transform: rotateY(180deg); }
+
+/* Tipografia */
+.question-label { font-size: 1rem; margin: 0; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
+#question-text { font-size: 2rem; margin: 15px 0; font-weight: 700; }
+#answer-text { font-size: 5rem; font-weight: 800; margin: 0; }
+.tap-hint { font-size: 0.8rem; opacity: 0.5; margin-top: auto; padding-bottom: 5px; }
+
+/* === ÁREA DOS BOTÕES === */
+.controls-area {
+    width: 100%;
+    display: flex;
+    justify-content: center; /* Garante centralização horizontal absoluta */
+    align-items: flex-start;
+    height: 90px; /* Reserva altura para não pular o layout */
+}
+
+/* === BOTÃO DE CHECK (VERDE) === */
+.btn-next {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: none;
+    font-size: 2.2rem;
+    background: #2ecc71;
+    color: white;
+    box-shadow: 0 10px 25px rgba(46, 204, 113, 0.3);
+    
+    /* Estado Inicial: Escondido e deslocado para baixo */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(30px) scale(0.8);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: default;
+    
+    /* Centralização do ícone dentro da bolinha */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Estado Ativo: Aparece */
+.btn-next.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    cursor: pointer;
+}
+
+.btn-next:active {
+    transform: scale(0.95);
+    background: #27ae60;
+}
+
+/* === RESPONSIVIDADE ESPECÍFICA PARA CELULARES === */
+@media (max-width: 480px) {
+    .game-header {
+        padding: 10px 15px;
+        grid-template-columns: auto 1fr auto; /* Adapta colunas */
+    }
+    
+    .game-header h2 {
+        font-size: 1rem; /* Fonte menor no título para não quebrar */
+    }
+
+    .card-scene {
+        height: 240px; /* Cartão um pouco menor na altura */
+        max-width: 90%; /* Margem lateral segura */
+    }
+
+    #question-text { font-size: 1.8rem; }
+    #answer-text { font-size: 4rem; }
+    
+    .game-container {
+        gap: 50px; /* Ajuste fino do espaçamento vertical */
+    }
+}

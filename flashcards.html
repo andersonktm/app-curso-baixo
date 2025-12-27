@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards de Intervalos - Lógica do Groove</title>
+    <link rel="stylesheet" href="flashcards.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="game-header">
+        <button onclick="window.location.href='index.html'" class="btn-back">← Voltar</button>
+        <h2 style="color: #e67e22; margin: 0;">ADIVINHE O INTERVALO</h2>
+        <div class="counter">
+            <span id="counter-val">0</span> Concluídos
+        </div>
+    </header>
+
+    <main class="game-container">
+        
+        <div class="card-scene">
+            <div class="card" id="flashcard">
+                
+                <div class="card-face card-front">
+                    <p class="question-label">Qual é a...</p>
+                    <h1 id="question-text">Terça Maior<br>de C</h1>
+                    <div class="tap-hint">👆 Toque para virar</div>
+                </div>
+
+                <div class="card-face card-back">
+                    <h1 id="answer-text">E</h1>
+                    <div class="tap-hint">🔊 Tocando nota...</div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="controls-area">
+            <button class="btn-next" id="btnNext" onclick="nextCard()">
+                ✔
+            </button>
+        </div>
+
+    </main>
+
+    <script src="flashcards.js"></script>
+</body>
+</html>

@@ -977,3 +977,22 @@ svg.view-interval .label-finger, svg.view-interval .label-note { display: none; 
     font-size: 0.85rem !important;
   }
 }
+
+
+/* Classe para os botões dentro do menu (filhos) */
+.sub-item {
+    width: 95% !important;     /* Um pouco mais estreito */
+    margin-left: 5% !important; /* Recuo para a direita (efeito escada) */
+    margin-top: 5px !important;
+    font-size: 0.9rem !important; /* Texto levemente menor */
+    padding: 10px !important;     /* Altura levemente menor */
+    border-left: 3px solid rgba(255,255,255,0.3) !important; /* Detalhe visual */
+}
+
+/* Animação suave para a seta */
+#games-arrow {
+    transition: transform 0.3s ease;
+}
+.rotate-arrow {
+    transform: rotate(180deg);
+}

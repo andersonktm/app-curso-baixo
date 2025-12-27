@@ -1,0 +1,130 @@
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f4f4f9;
+    color: #333;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+h1 {
+    color: #2c3e50;
+}
+
+/* Botão Voltar */
+.btn-voltar {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.btn-voltar:hover {
+    background-color: #2980b9;
+}
+
+/* Tabela */
+.table-container {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    overflow-x: auto; /* Para mobile */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background-color: #2c3e50;
+    color: white;
+    text-transform: uppercase;
+    font-size: 0.9em;
+    letter-spacing: 1px;
+}
+
+.col-interval {
+    width: 15%;
+    font-weight: bold;
+    background-color: #34495e;
+}
+
+.col-direction {
+    width: 42.5%;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Estilo do Item da Lista de Músicas */
+.song-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+}
+
+.yt-link {
+    color: #ff0000;
+    margin-left: 10px;
+    font-size: 1.2em;
+    transition: transform 0.2s;
+}
+
+.yt-link:hover {
+    transform: scale(1.2);
+    color: #cc0000;
+}
+
+.artist {
+    color: #666;
+    font-style: italic;
+    font-size: 0.9em;
+    margin-left: 5px;
+}
+
+/* Destaque para o nome do intervalo */
+.interval-name {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.interval-semitones {
+    display: block;
+    font-size: 0.8em;
+    color: #7f8c8d;
+    font-weight: normal;
+}

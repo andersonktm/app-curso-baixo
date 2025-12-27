@@ -184,23 +184,46 @@
       <div id="sidebar">
         <div class="logo-area">
           <h1>Lógica do Groove</h1>
-          <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
-            ☰ Menu
-          </button>
+          <button class="mobile-menu-toggle" onclick="toggleMobileMenu()"> ☰ Menu </button>
         </div>
 
         <div class="tools-area">
-          <button class="btn-metronome" onclick="toggleMetronome()">
-            <span>⏱️</span> Abrir Metrônomo
+          <button class="btn-metronome" onclick="toggleMetronome()"> <span>⏱️</span>
+            Abrir Metrônomo
           </button>
-          <button
-            class="btn-metronome"
-            onclick="toggleMap()"
-            style="background: #27ae60"
-          >
-            <span>🗺️</span> Mapa de Estudo
+          
+          <button class="btn-metronome" onclick="toggleMap()" style="background: #27ae60" > <span>🗺️</span>
+            Mapa de Estudo
           </button>
-        </div>
+
+          <button class="btn-metronome" id="btn-games-toggle" onclick="toggleGamesMenu()" style="background: #8e44ad; display: flex; justify-content: space-between; align-items: center;"> 
+    <span>🎮 Jogos & Treinos</span>
+    <span id="games-arrow" style="font-size: 0.8rem;">▼</span>
+</button>
+
+<div id="games-submenu" style="display: none; overflow: hidden; transition: all 0.3s ease;">
+    
+    <button class="btn-metronome sub-item" style="background: #9b59b6;" onclick="window.location.href='game.html'"> 
+        <span>🎼</span> Treino de Notas
+    </button>
+
+    <button class="btn-metronome sub-item" style="background: #2980b9;" onclick="window.location.href='flashcards.html'"> 
+        <span>👂</span> Adivinhe o Intervalo
+    </button>
+
+    <button class="btn-metronome sub-item" style="background: #c0392b;" onclick="window.location.href='songs.html'">
+        <span>🎶</span> Interval Songs
+    </button>
+
+    <button class="btn-metronome sub-item" style="background: #d35400;" onclick="window.location.href='game_virus.html'"> 
+        <span>🦠</span> Desafio Vírus
+    </button>
+
+</div>
+
+</div>
+
+
 
         <div id="menu-container"></div>
           <div class="sidebar-footer" style="padding: 10px; border-top: 1px solid #34495e;">
@@ -275,7 +298,7 @@
       </div>
     </div>
 
-    <script src="script.js?v=9"></script>
+    <script src="script.js?v=10"></script>
     <script type="module" src="firebase.js?"></script>
   </body>
 </html>

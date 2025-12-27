@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treino de Notas - Lógica do Groove</title>
+    <link rel="stylesheet" href="game.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="game-header">
+        <button onclick="window.history.back()" class="btn-back">← Voltar</button>
+        <h2 style="color: #e67e22; margin: 0;">TREINO DE NOTAS</h2>
+        
+        <div class="score-board">
+            <div class="score-item">
+                <span class="label">Acertos</span>
+                <span class="value success" id="score-right">0</span>
+            </div>
+            <div class="score-item">
+                <span class="label">Erros</span>
+                <span class="value error" id="score-wrong">0</span>
+            </div>
+            <button onclick="resetGame()" class="btn-reset">↺</button>
+        </div>
+    </header>
+
+    <main class="game-container">
+        
+        <div class="fretboard-container">
+            <svg id="fretboard" viewBox="0 0 840 280" preserveAspectRatio="xMidYMid meet">
+                </svg>
+        </div>
+
+        <p class="instruction">Qual é a nota marcada em <span style="color:#e74c3c; font-weight:bold">vermelho</span>?</p>
+
+        <div class="controls-area">
+            
+            <div class="notes-row sharps">
+                <button class="note-btn accident" data-note="C#">C#</button>
+                <button class="note-btn accident" data-note="D#">D#</button>
+                <div class="spacer"></div>
+                <button class="note-btn accident" data-note="F#">F#</button>
+                <button class="note-btn accident" data-note="G#">G#</button>
+                <button class="note-btn accident" data-note="A#">A#</button>
+                <div class="spacer"></div>
+            </div>
+            
+            <div class="notes-row naturals">
+                <button class="note-btn" data-note="C">C</button>
+                <button class="note-btn" data-note="D">D</button>
+                <button class="note-btn" data-note="E">E</button>
+                <button class="note-btn" data-note="F">F</button>
+                <button class="note-btn" data-note="G">G</button>
+                <button class="note-btn" data-note="A">A</button>
+                <button class="note-btn" data-note="B">B</button>
+            </div>
+
+            <div class="notes-row flats">
+                <button class="note-btn accident" data-note="Db">Db</button>
+                <button class="note-btn accident" data-note="Eb">Eb</button>
+                <div class="spacer"></div>
+                <button class="note-btn accident" data-note="Gb">Gb</button>
+                <button class="note-btn accident" data-note="Ab">Ab</button>
+                <button class="note-btn accident" data-note="Bb">Bb</button>
+                <div class="spacer"></div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script src="game.js"></script>
+</body>
+</html>

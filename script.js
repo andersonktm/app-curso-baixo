@@ -537,3 +537,19 @@ async function toggleMap() {
     modal.style.display = "none";
   }
 }
+
+
+function toggleGamesMenu() {
+    const submenu = document.getElementById('games-submenu');
+    const arrow = document.getElementById('games-arrow');
+    
+    if (submenu.style.display === "none") {
+        // Abrir
+        submenu.style.display = "block";
+        arrow.classList.add("rotate-arrow"); // Gira a setinha
+    } else {
+        // Fechar
+        submenu.style.display = "none";
+        arrow.classList.remove("rotate-arrow"); // Volta a setinha
+    }
+}
