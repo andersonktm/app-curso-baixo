@@ -18,8 +18,7 @@ window.iniciarCurso = function(dadosDoFirebase) {
     
     courseData = dadosDoFirebase.lista_aulas;
     
-    // --- MUDANÇA AQUI: Aceitamos o mapa exatamente como vem do Firebase ---
-    // Removemos a conversão forçada para 'flowchart TD'
+    // Aceita exatamente o que o Admin criou (flowchart ou graph)
     graphDefinition = dadosDoFirebase.mapa_mermaid || "";
 
     generateMenu();
