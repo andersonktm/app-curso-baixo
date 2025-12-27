@@ -58,6 +58,8 @@ if(btnLogout) {
 }
 
 // --- MONITORAMENTO DE ESTADO ---
+// ... imports anteriores mantidos ...
+
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -67,30 +69,46 @@ onAuthStateChanged(auth, async (user) => {
         appContainer.style.opacity = '1';
         appContainer.style.pointerEvents = 'all';
         
-        // 1. Carrega dados
+        // --- NOVO: BAIXAR CONTEÚDO DO CURSO (Protegido) ---
+        try {
+            // Referência ao documento que criamos no admin
+            const docRef = doc(db, "site_data", "curso_completo");
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const dadosSeguros = docSnap.data();
+                
+                // CHAMA A FUNÇÃO QUE CRIAMOS NO SCRIPT.JS
+                if (window.iniciarCurso) {
+                    window.iniciarCurso(dadosSeguros);
+                }
+            } else {
+                console.error("Documento do curso não encontrado no Firestore!");
+                alert("Erro: Conteúdo do curso não encontrado. Contate o suporte.");
+            }
+
+        } catch (error) {
+            console.error("Erro ao baixar curso:", error);
+            alert("Erro de conexão ao baixar o curso.");
+        }
+        // ---------------------------------------------------
+
+        // 1. Carrega progresso do usuário (mantido)
         await fetchUserProgress();
         
-        // 2. Preenche memória
+        // 2. Preenche memória sidebar (mantido)
         fillSidebarFromMemory();
-
-        // 3. Inicia o observador seguro
+        
+        // 3. Observador (mantido)
         startMenuObserver();
 
-        // 4. Atualiza o slider se necessário
         if(progressArea) updateSliderUI(currentModId, currentLessId);
 
     } else {
-        currentUser = null;
-        userProgressData = {};
-        loginScreen.style.display = 'flex';
-        setTimeout(() => { loginScreen.style.opacity = '1'; }, 10);
-        appContainer.style.opacity = '0';
-        appContainer.style.pointerEvents = 'none';
-        
-        // Desliga observador ao sair
-        if(menuObserver) { menuObserver.disconnect(); menuObserver = null; }
+        // ... (código de logout mantido)
     }
 });
+
 
 // --- SLIDER (SALVAR) ---
 if(progressSlider) {
