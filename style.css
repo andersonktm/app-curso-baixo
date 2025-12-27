@@ -716,15 +716,31 @@ audio {
     background-color: #fdfdfd; /* Fundo claro para leitura */
 }
 
-/* 2. O Gráfico em si (SVG gerado pelo Mermaid) */
+/* === CORREÇÃO FINAL DE TAMANHO (TRAVA DE ZOOM) === */
 #mermaid-graph {
-    width: 100%;
-    display: flex;
-    justify-content: center;
+  display: flex;
+  justify-content: center; /* Centraliza o gráfico na tela */
+  width: 100%;
+  padding-bottom: 50px; /* Espaço extra no final para rolar */
 }
 
-/* 3. A MÁGICA: Força o desenho a caber na tela */
 #mermaid-graph svg {
-    max-width: 100% !important; /* Não deixa passar da largura da tela */
-    height: auto !important;    /* Mantém a proporção */
+  /* REGRA DESKTOP: */
+  /* Trava a largura máxima em 500px. */
+  /* Isso impede que o gráfico estique em telas grandes! */
+  max-width: 500px !important; 
+  
+  width: auto !important;
+  height: auto !important;
+  
+  /* Garante centralização */
+  display: block;
+  margin: 0 auto;
+}
+
+/* REGRA MOBILE: Libera para a largura do celular */
+@media (max-width: 768px) {
+  #mermaid-graph svg {
+    max-width: 100% !important;
+  }
 }

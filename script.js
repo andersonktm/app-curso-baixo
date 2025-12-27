@@ -4,21 +4,27 @@
 let courseData = [];      
 let graphDefinition = ""; 
 
+// Link Mágico para carregar aula via clique no mapa
 window.carregarAula = function(mod, less) {
     loadLesson(mod, less);
     document.getElementById("map-modal").style.display = "none";
 };
 
 /* =================================================================
-   2. INICIALIZAÇÃO
+   2. INICIALIZAÇÃO (Conecta com o Firebase)
    ================================================================= */
 window.iniciarCurso = function(dadosDoFirebase) {
-    console.log("Iniciando app...");
+    console.log("Iniciando app com dados da nuvem...");
     courseData = dadosDoFirebase.lista_aulas;
     graphDefinition = dadosDoFirebase.mapa_mermaid || "";
+    
     generateMenu();
+    
+    // Se houver aulas, carrega a primeira
     if(courseData.length > 0) loadLesson(0, 0);
+    
     generateSteps();
+    
     const msg = document.getElementById('display-text');
     if(msg) msg.innerHTML = "Selecione uma aula no menu.";
 }
@@ -138,7 +144,7 @@ function toggleMobileMenu() {
   else { btn.innerText = "☰ Menu"; btn.style.background = "transparent"; btn.style.color="var(--accent-color)"; btn.style.border="1px solid var(--accent-color)"; }
 }
 
-// METRONOMO E TIMER
+// === METRÔNOMO E TIMER ===
 let metroInterval=null, bpm=100, isPlaying=false, currentStep=0, totalSteps=8, stepStates=[];
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -179,7 +185,6 @@ function togglePlayMetronome() {
     else { currentStep=0; restartInterval(); btn.innerText="⏹ PARAR"; btn.style.background="#c0392b"; isPlaying=true; }
 }
 
-// TIMER
 let studyTimerInterval=null, studyTimeRemaining=0, isStudyTimerRunning=false, initialDuration=0;
 function initTimer(sec) { clearInterval(studyTimerInterval); isStudyTimerRunning=false; 
     const box=document.getElementById("study-timer"); if(!sec||sec<=0) { if(box) box.style.display="none"; return; }
@@ -199,7 +204,7 @@ function updateTimerDisplay() { const m=Math.floor(studyTimeRemaining/60), s=stu
 function finishTimer() { clearInterval(studyTimerInterval); isStudyTimerRunning=false; const b=document.getElementById("btn-timer"); if(b) { b.innerText="✅ FIM"; b.disabled=true; b.classList.remove("running"); } if(audioCtx.state==="suspended") audioCtx.resume(); playAlarm(); }
 function playAlarm() { const t=audioCtx.currentTime; const o=audioCtx.createOscillator(); o.connect(audioCtx.destination); o.start(t); o.stop(t+0.5); }
 
-// MERMAID (CONFIGURAÇÃO DE COMPACTAÇÃO)
+// === MERMAID ===
 try { 
     mermaid.initialize({ 
         startOnLoad: false, 
@@ -207,43 +212,51 @@ try {
         securityLevel: "loose", 
         flowchart: { 
             curve: 'basis',
-            nodeSpacing: 20, // Aproxima os nós horizontalmente
-            rankSpacing: 40, // Aproxima os níveis verticalmente
-            padding: 5       // Reduz a "gordura" interna do gráfico
+            nodeSpacing: 10, 
+            rankSpacing: 30,
+            padding: 5
         } 
     }); 
 } catch(e) {}
 
 async function toggleMap() {
-    const modal = document.getElementById("map-modal");
-    const container = document.getElementById("mermaid-graph");
-    if (modal.style.display === "none" || modal.style.display === "") {
-        modal.style.display = "flex";
-        container.innerHTML = '<p style="margin-top:20px;">Carregando...</p>';
-        if(!graphDefinition) { container.innerHTML="Erro: Mapa vazio"; return; }
-        try {
-            const { svg } = await mermaid.render("graph-" + Date.now(), graphDefinition);
-            container.innerHTML = svg;
-            
-            const svgEl = container.querySelector('svg'); 
-            if(svgEl) { 
-                svgEl.style.width = '100%'; 
-                svgEl.style.height = 'auto'; 
-                svgEl.style.maxWidth = '100%';
-            }
-            
-            container.onclick = (e) => {
-                let t = e.target;
-                while(t && t!==container) {
-                    if(t.id && t.id.includes("N_")) {
-                        const m = t.id.match(/N_(\d+)_(\d+)/);
-                        if(m) { window.carregarAula(parseInt(m[1]), parseInt(m[2])); return; }
-                    }
-                    t = t.parentNode;
-                }
-            };
-        } catch(e) { container.innerHTML = "Erro Mermaid: "+e.message; }
-    } else {
-        modal.style.display = "none";
+  const modal = document.getElementById("map-modal");
+  const container = document.getElementById("mermaid-graph");
+
+  if (modal.style.display === "none" || modal.style.display === "") {
+    modal.style.display = "flex";
+    container.innerHTML = '<p style="margin-top:20px;">Carregando...</p>';
+    
+    if(!graphDefinition) { 
+        container.innerHTML="<p style='color:red'>Erro: O mapa está vazio. Use o Painel Admin para gerar.</p>"; 
+        return; 
     }
+    
+    try {
+      const { svg } = await mermaid.render("graph-" + Date.now(), graphDefinition);
+      container.innerHTML = svg;
+      
+      // --- CORREÇÃO FINAL: REMOVE LARGURA FORÇADA ---
+      const svgEl = container.querySelector('svg'); 
+      if(svgEl) { 
+          // Remove o atributo width fixo que o Mermaid coloca
+          svgEl.removeAttribute('width');
+          // Deixa o CSS (style.css) controlar o tamanho
+          svgEl.style.width = ''; 
+      }
+      
+      container.onclick = (e) => {
+        let t = e.target;
+        while(t && t!==container) {
+          if(t.id && t.id.includes("N_")) {
+            const m = t.id.match(/N_(\d+)_(\d+)/);
+            if(m) { window.carregarAula(parseInt(m[1]), parseInt(m[2])); return; }
+          }
+          t = t.parentNode;
+        }
+      };
+    } catch(e) { container.innerHTML = "Erro Mermaid: "+e.message; }
+  } else {
+    modal.style.display = "none";
+  }
 }
