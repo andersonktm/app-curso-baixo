@@ -4,7 +4,7 @@
 let courseData = [];      
 let graphDefinition = ""; 
 
-// Mantemos por compatibilidade, mas o clique principal será via Listener abaixo
+// Link Mágico (Mantido para compatibilidade)
 window.carregarAula = function(mod, less) {
     loadLesson(mod, less);
     document.getElementById("map-modal").style.display = "none";
@@ -18,8 +18,7 @@ window.iniciarCurso = function(dadosDoFirebase) {
     
     courseData = dadosDoFirebase.lista_aulas;
     
-    // TRUQUE VISUAL: Troca 'graph TD' por 'flowchart TD' (Organiza melhor as setas)
-    // Se o admin salvou como graph, convertemos na hora para ficar mais bonito.
+    // Força flowchart TD para organizar melhor
     let mapa = dadosDoFirebase.mapa_mermaid || "";
     if(mapa.startsWith("graph TD")) {
         mapa = mapa.replace("graph TD", "flowchart TD");
@@ -108,7 +107,7 @@ function loadLesson(modIdx, lessIdx) {
     noImgEl.style.display = "block";
   }
 
-  // ÁUDIO
+  // AUDIO
   const audioContainer = document.getElementById("audio-container");
   const playerBass = document.getElementById("player-bass");
   const playerBack = document.getElementById("player-back");
@@ -142,7 +141,6 @@ function loadLesson(modIdx, lessIdx) {
   updateNavButtons();
   initTimer(data.duration);
   
-  // Fecha menu mobile
   const sidebar = document.getElementById("sidebar");
   if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains("mobile-open")) {
     toggleMobileMenu();
@@ -409,7 +407,7 @@ function playAlarmSound() {
 }
 
 /* =================================================================
-   5. MAPA DE ESTUDO (Mermaid) - CORREÇÃO DE CLIQUE E VISUAL
+   5. MAPA DE ESTUDO (CORREÇÃO DE ROLAGEM E CLIQUE)
    ================================================================= */
 try {
   mermaid.initialize({
@@ -439,21 +437,29 @@ async function toggleMap() {
       const { svg } = await mermaid.render(uniqueId, graphDefinition);
       container.innerHTML = svg;
       
-      // --- CORREÇÃO DO CLIQUE (Event Delegation) ---
-      // Em vez de depender do Mermaid gerar o onclick correto, nós mesmos 
-      // detectamos onde o usuário clicou.
+      // 1. CORREÇÃO DE ROLAGEM: Remove o max-width do SVG gerado
+      const svgElement = container.querySelector('svg');
+      if (svgElement) {
+          svgElement.style.maxWidth = 'none'; 
+          svgElement.style.height = 'auto';
+          // Garante que o SVG ocupe o tamanho que precisa (forçando rolagem no pai)
+          svgElement.removeAttribute('width');
+      }
+
+      // 2. CORREÇÃO DE CLIQUE: Busca ID recursiva melhorada
       container.onclick = function(e) {
           let target = e.target;
-          
-          // Sobe na árvore do DOM até achar um elemento com ID (ex: "N_0_1")
+          // Sobe na árvore do DOM até achar um ID que CONTENHA "N_"
+          // Isso resolve casos onde o Mermaid coloca prefixos
           while (target && target !== container) {
-              if (target.id && target.id.startsWith("N_")) {
-                  const parts = target.id.split("_");
-                  // ID padrão gerado pelo Admin: N_mod_aula
-                  if(parts.length >= 3) {
-                      const mod = parseInt(parts[1]);
-                      const less = parseInt(parts[2]);
-                      window.carregarAula(mod, less); // Chama a função de carregar
+              if (target.id && target.id.indexOf("N_") !== -1) {
+                  // Tenta extrair os números do ID (ex: "flowchart-N_0_1-123")
+                  // Procura padrão: N_numero_numero
+                  const match = target.id.match(/N_(\d+)_(\d+)/);
+                  if (match) {
+                      const mod = parseInt(match[1]);
+                      const less = parseInt(match[2]);
+                      window.carregarAula(mod, less);
                       return;
                   }
               }
