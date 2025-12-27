@@ -666,25 +666,34 @@ svg.view-interval .label-finger, svg.view-interval .label-note { display: none; 
    RESPONSIVIDADE (MOBILE APENAS)
    Todas as correções de layout mobile ficam AQUI DENTRO
    ============================================================ */
-@media (max-width: 768px) {
+@media (max-width: 961px) {
 
   /* 1. Timer Compacto */
   .timer-box {
     margin: 5px 0 10px 0;
+    color: white;
     padding: 5px 10px;
-    background: #151515; /* Cor neutra no mobile */
-    border: 1px solid #333;
-    box-shadow: none;
+    border-radius: var(--border-radius);
+    background: linear-gradient(135deg, #1e3799, #0c2461);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 20px rgba(12, 36, 97, 0.4);
     min-height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
   .timer-display {
+    font-family: "Courier New", monospace;
     font-size: 1.5rem;
-    color: #a0a0a0;
+    font-weight: bold;
+    color: #fff;
   }
   .timer-box span {
     font-size: 0.8rem !important;
   }
   .timer-btn {
+    background: white;
+    color: #0c2461;
     padding: 6px 15px;
     font-size: 0.7rem;
     height: fit-content;
@@ -694,8 +703,9 @@ svg.view-interval .label-finger, svg.view-interval .label-note { display: none; 
   .progress-box {
     padding: 15px;
     margin-top: 20px;
-    background: transparent;
+    background: #1e272e;
     border: 1px solid #333;
+    color: #ecf0f1;
     box-shadow: none;
   }
   .progress-label {
