@@ -700,3 +700,31 @@ audio {
     z-index: 10;
   }
 }
+
+
+/* --- CORREÇÃO DO MAPA (MERMAID) --- */
+
+/* 1. O container que segura o mapa */
+#roadmap-container {
+    flex: 1;                /* Ocupa o espaço disponível */
+    width: 100%;            /* Largura total */
+    overflow: auto;         /* CRUCIAL: Adiciona barras de rolagem se for muito grande */
+    display: flex;          
+    justify-content: center; /* Centraliza horizontalmente */
+    align-items: flex-start; /* Alinha no topo */
+    padding: 10px;          /* Um respiro nas bordas */
+    background-color: #fdfdfd; /* Fundo claro para leitura */
+}
+
+/* 2. O Gráfico em si (SVG gerado pelo Mermaid) */
+#mermaid-graph {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* 3. A MÁGICA: Força o desenho a caber na tela */
+#mermaid-graph svg {
+    max-width: 100% !important; /* Não deixa passar da largura da tela */
+    height: auto !important;    /* Mantém a proporção */
+}
