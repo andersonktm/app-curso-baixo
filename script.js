@@ -83,7 +83,26 @@ function loadLesson(modIdx, lessIdx) {
     courseData[modIdx].module;
   document.getElementById("display-title").innerText = data.title;
   const textContainer = document.getElementById("display-text");
-  textContainer.innerHTML = data.text ? data.text.replace(/\n/g, "<br>") : "";
+  // LÓGICA ANTIGA (Insegura):
+  //textContainer.innerHTML = data.text ? data.text.replace(/\n/g, "<br>") : "";
+
+
+  // LÓGICA NOVA (Blindada):
+  if (data.text) {
+      // 1. Converte quebras de linha (\n) do banco de dados para <br>
+      let rawText = data.text.replace(/\n/g, "<br>");
+
+      // 2. O DOMPurify remove scripts maliciosos, mas mantém <b>, <i>, <br>, etc.
+      // Ele limpa a sujeira antes de o navegador tentar ler.
+      let cleanText = DOMPurify.sanitize(rawText, {
+          ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'li', 'h3', 'h4'], // Lista branca do que é permitido
+          ALLOWED_ATTR: ['href', 'target', 'style'] // Permite links e estilos básicos
+      });
+
+      textContainer.innerHTML = cleanText;
+  } else {
+      textContainer.innerHTML = "";
+  }
 
   const imgEl = document.getElementById("display-img");
   const noImgEl = document.getElementById("no-image-msg");
