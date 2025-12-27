@@ -666,7 +666,7 @@ svg.view-interval .label-finger, svg.view-interval .label-note { display: none; 
    RESPONSIVIDADE (MOBILE APENAS)
    Todas as correções de layout mobile ficam AQUI DENTRO
    ============================================================ */
-@media (max-width: 961px) {
+@media (max-width: 991px) {
 
   /* 1. Timer Compacto */
   .timer-box {
