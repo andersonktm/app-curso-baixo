@@ -16,6 +16,29 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+
+// Variáveis
+let currentUser = null;
+let currentModId = 0;
+let currentLessId = 0;
+let userProgressData = {}; 
+let menuObserver = null; 
+
+
+// Elementos UI
+const loginScreen = document.getElementById('login-screen');
+const appContainer = document.getElementById('app-container');
+const emailInput = document.getElementById('email');
+const passInput = document.getElementById('password'); // Certifique-se que no HTML o ID é 'senha' ou 'password'
+const errorMsg = document.getElementById('error-msg');
+const btnLogin = document.getElementById('btnLogin');
+const btnLogout = document.getElementById('btnLogout');
+const progressArea = document.getElementById('progress-area');
+const progressSlider = document.getElementById('progress-slider');
+const progressVal = document.getElementById('progress-val');
+const menuContainer = document.getElementById('menu-container');
+
+
 // =================================================================
 //  NOVA FUNÇÃO: LAZY LOADING (Busca conteúdo pesado sob demanda)
 // =================================================================
@@ -43,25 +66,9 @@ window.fetchLessonContent = async function(modIdx, lessIdx) {
 
 // =================================================================
 
-// Variáveis
-let currentUser = null;
-let currentModId = 0;
-let currentLessId = 0;
-let userProgressData = {}; 
-let menuObserver = null; 
 
-// Elementos UI
-const loginScreen = document.getElementById('login-screen');
-const appContainer = document.getElementById('app-container');
-const emailInput = document.getElementById('email');
-const passInput = document.getElementById('senha'); // Certifique-se que no HTML o ID é 'senha' ou 'password'
-const errorMsg = document.getElementById('error-msg');
-const btnLogin = document.getElementById('btnLogin');
-const btnLogout = document.getElementById('btnLogout');
-const progressArea = document.getElementById('progress-area');
-const progressSlider = document.getElementById('progress-slider');
-const progressVal = document.getElementById('progress-val');
-const menuContainer = document.getElementById('menu-container');
+
+
 
 // --- LOGIN (COM PROTEÇÃO CONTRA ERROS) ---
 if (btnLogin) {

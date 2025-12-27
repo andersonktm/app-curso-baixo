@@ -25,27 +25,26 @@
         <div class="login-box">
             
           <div class="login-logo-area">
-              <img src="logo.png" alt="Logo Lógica do Groove" class="login-img">
+              <img src="logo.png" alt="Logo Lógica do Groove" class="login-img" width="150">
           </div>
 
           <h2>Área Restrita a Alunos</h2>
           
-          <form id="login-form">
-              <div class="input-group">
-                  <input type="email" id="email" class="login-input" placeholder=" " required>
-                  <label for="email">E-mail</label>
-              </div>
+        <form id="login-form">
+                <div class="input-group">
+                    <input type="email" id="email" class="login-input" placeholder=" " required>
+                    <label for="email">E-mail</label>
+                </div>
               
-              <div class="input-group">
-                  <input type="password" id="password" class="login-input" placeholder=" " required>
-                  <label for="password">Senha</label>
-              </div>
+            <div class="input-group">
+                    <input type="password" id="password" class="login-input" placeholder=" " required>
+                    <label for="password">Senha</label>
+                </div>
 
-              <button type="submit" class="login-btn">ENTRAR NA ÁREA DO ALUNO</button>
-          </form>
+         <button type="button" id="btnLogin" class="login-btn">ENTRAR NA ÁREA DO ALUNO</button>
+            </form>
 
           <p id="error-msg" class="error-msg"></p>
-          <p style="margin-top: 20px; font-size: 0.9rem; color: #888;">Esqueceu a senha? <a href="#" style="color:var(--accent-color)">Clique aqui</a></p>
         </div>
       </div>
 
@@ -277,6 +276,6 @@
     </div>
 
     <script src="script.js?v=9"></script>
-    <script type="module" src="firebase.js?v=9"></script>
+    <script type="module" src="firebase.js?"></script>
   </body>
 </html>
