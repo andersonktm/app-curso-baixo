@@ -99,48 +99,58 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
         
+
+        // UI: Mostra o app
         loginScreen.style.opacity = '0';
         setTimeout(() => { loginScreen.style.display = 'none'; }, 500);
         appContainer.style.opacity = '1';
         appContainer.style.pointerEvents = 'all';
+
+
+        // 1. PRIMEIRO: Baixa o progresso do usuário (Precisamos ter os dados na mão)
+        // Fazemos isso antes de tudo para garantir que userProgressData não esteja vazio
+        await fetchUserProgress();
+
+        // 2. SEGUNDO: Liga o Observador (Vigia o container ANTES de criarmos o menu)
+        // Isso resolve a Race Condition. Assim que o menu nascer, o observador detecta e preenche.
+        startMenuObserver();
+
+
         
-        // --- CARREGAMENTO DO CURSO (AGORA LEVE) ---
+        // 3. TERCEIRO: Baixa o Conteúdo e Inicia o Curso (Gera o Menu)-
         try {
-            // MUDANÇA CRÍTICA AQUI:
-            // Antes: "curso_completo" (Pesado) -> Agora: "indice_curso" (Leve)
-            // Certifique-se de ter rodado o Admin novo para criar este arquivo.
             const docRef = doc(db, "site_data", "indice_curso");
-            const docSnap = await getDoc(docRef);
+            // Se ainda não tiver rodado o admin novo, usa o fallback antigo
+            let docSnap = await getDoc(docRef);
+            let dadosCurso = null;
 
             if (docSnap.exists()) {
-                const dadosLeves = docSnap.data();
-                
-                // Envia apenas o esqueleto (Títulos/Estrutura) para o script.js
-                if (window.iniciarCurso) {
-                    window.iniciarCurso(dadosLeves);
-                }
+                dadosCurso = docSnap.data();
             } else {
-                console.error("Índice do curso não encontrado! (Rode o Admin > Salvar e Distribuir)");
-                // Fallback: Se não achar o índice novo, tenta o antigo pra não quebrar
+                console.warn("Índice leve não encontrado, tentando fallback...");
                 const fallbackRef = doc(db, "site_data", "curso_completo");
                 const fallbackSnap = await getDoc(fallbackRef);
-                if(fallbackSnap.exists()) {
-                    console.warn("Usando fallback antigo (curso_completo)");
-                    if (window.iniciarCurso) window.iniciarCurso(fallbackSnap.data());
-                } else {
-                    alert("Erro crítico: Nenhum dado de curso encontrado.");
-                }
+                if(fallbackSnap.exists()) dadosCurso = fallbackSnap.data();
+            }
+
+            if (dadosCurso && window.iniciarCurso) {
+                // AQUI A MÁGICA: Ao chamar isso, o script.js cria o HTML.
+                // Como o observador (passo 2) já está ligado, ele vai preencher 
+                // as porcentagens automaticamente assim que o HTML aparecer.
+                window.iniciarCurso(dadosCurso);
+            } else {
+                console.error("Dados do curso não encontrados.");
             }
 
         } catch (error) {
-            console.error("Erro ao baixar índice:", error);
-            alert("Erro de conexão ao baixar o curso.");
+            console.error("Erro ao baixar curso:", error);
+            alert("Erro de conexão.");
         }
-        // ---------------------------------------------------
-
-        await fetchUserProgress();
+        
+        // Fallback de segurança: Tenta preencher uma vez extra caso o observador falhe
+        // ou o menu já estivesse lá (re-login sem refresh)
         fillSidebarFromMemory();
-        startMenuObserver();
+        
 
         if(progressArea) updateSliderUI(currentModId, currentLessId);
 

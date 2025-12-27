@@ -249,43 +249,48 @@ function toggleMobileMenu() {
   }
 }
 
-// === METRÔNOMO E TIMER ===
-let metroInterval = null,
-  bpm = 100,
-  isPlaying = false,
-  currentStep = 0,
-  totalSteps = 8,
-  stepStates = [];
+/* =================================================================
+   4. METRÔNOMO DE ALTA PRECISÃO (Lookahead Scheduling)
+   ================================================================= */
+// Configurações do Scheduler
+const lookahead = 25.0; // Milissegundos: Frequência de verificação (Task)
+const scheduleAheadTime = 0.1; // Segundos: Buffer de agendamento
+
+let nextNoteTime = 0.0; // Próximo tempo absoluto no AudioContext
+let timerID = null; // ID do setInterval
+
+// Estado
+let bpm = 100,
+    isPlaying = false,
+    currentStep = 0,
+    totalSteps = 8,
+    stepStates = [];
+
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function toggleMetronome() {
   const m = document.getElementById("metronome-modal");
   m.style.display = m.style.display === "flex" ? "none" : "flex";
 }
+
 function generateSteps() {
   const sig = document.getElementById("time-sig")?.value || "4/4";
   const tr = document.getElementById("sequencer-track");
   if (!tr) return;
   tr.innerHTML = "";
 
-  // Define o total de passos baseado no compasso
+  // Define o total de passos
   totalSteps =
-    sig === "4/4"
-      ? 8
-      : sig === "2/4"
-      ? 4
-      : sig === "3/4"
-      ? 6
-      : sig === "2/2"
-      ? 4
-      : sig === "7/4"
-      ? 14
-      : 6;
+    sig === "4/4" ? 8 : 
+    sig === "2/4" ? 4 : 
+    sig === "3/4" ? 6 : 
+    sig === "2/2" ? 4 : 
+    sig === "7/4" ? 14 : 6;
 
   stepStates = new Array(totalSteps).fill(0);
 
   for (let i = 0; i < totalSteps; i++) {
-    // Lógica dos estados (Forte/Fraco/Mudo)
+    // Lógica padrão (Forte/Fraco)
     if (sig === "6/8") {
       if (i === 0 || i === 3) stepStates[i] = 2;
       else stepStates[i] = 1;
@@ -293,14 +298,14 @@ function generateSteps() {
       if (i % 2 === 0) stepStates[i] = 2;
     }
 
-    // Cria a caixinha do passo
+    // Elementos Visuais
     const div = document.createElement("div");
     div.className = "step-box";
     div.id = `step-${i}`;
     div.onclick = () => cycleStepState(i);
     updateStepVisual(div, stepStates[i]);
 
-    // --- Label do Metrônomo ---
+    // Labels
     let labelText = "";
     if (sig === "6/8") {
       labelText = (i + 1).toString();
@@ -326,63 +331,115 @@ function generateSteps() {
     tr.appendChild(w); 
   }
 }
+
 function cycleStepState(i) {
   stepStates[i] = (stepStates[i] + 1) % 3;
   updateStepVisual(document.getElementById(`step-${i}`), stepStates[i]);
 }
+
 function updateStepVisual(d, s) {
   d.classList.remove("weak", "strong");
   if (s === 1) d.classList.add("weak");
   if (s === 2) d.classList.add("strong");
 }
-function playStep() {
-  const prev = (currentStep - 1 + totalSteps) % totalSteps;
-  document.getElementById(`step-${prev}`)?.classList.remove("playing");
-  document.getElementById(`step-${currentStep}`)?.classList.add("playing");
-  if (stepStates[currentStep] > 0) {
-    if (audioCtx.state === "suspended") audioCtx.resume();
-    const o = audioCtx.createOscillator(),
-      g = audioCtx.createGain();
-    o.connect(g);
-    g.connect(audioCtx.destination);
-    o.frequency.value = stepStates[currentStep] === 2 ? 1200 : 600;
-    g.gain.value = stepStates[currentStep] === 2 ? 1.0 : 0.4;
-    o.start();
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-    o.stop(audioCtx.currentTime + 0.1);
-  }
-  currentStep = (currentStep + 1) % totalSteps;
+
+// --- CORE DO METRÔNOMO ---
+function nextNote() {
+    // Avança o "ponteiro de tempo" para a próxima nota
+    const secondsPerBeat = 60.0 / bpm;
+    // Ajuste para subdivisões (colcheias em compassos simples)
+    const mul = document.getElementById("time-sig").value.includes("/4") ? 0.5 : 1;
+    
+    nextNoteTime += (secondsPerBeat * mul);
+    
+    currentStep++;
+    if (currentStep === totalSteps) {
+        currentStep = 0;
+    }
 }
-function updateBpm(v) {
-  bpm = v;
-  document.getElementById("bpm-val").innerText = v;
-  if (isPlaying) restartInterval();
+
+function scheduleNote(stepNumber, time) {
+    // 1. Áudio (Hardware Timer - Preciso)
+    if (stepStates[stepNumber] > 0) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.frequency.value = stepStates[stepNumber] === 2 ? 1200 : 600;
+        gain.gain.value = stepStates[stepNumber] === 2 ? 1.0 : 0.4;
+
+        osc.start(time);
+        
+        // Envelope curto
+        gain.gain.setValueAtTime(gain.gain.value, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+        osc.stop(time + 0.1);
+    }
+
+    // 2. Visual (Sincronização aproximada)
+    const drawDelay = (time - audioCtx.currentTime) * 1000;
+    setTimeout(() => {
+        // Limpa anteriores
+        for(let i=0; i<totalSteps; i++) {
+            document.getElementById(`step-${i}`)?.classList.remove("playing");
+        }
+        // Acende atual
+        document.getElementById(`step-${stepNumber}`)?.classList.add("playing");
+    }, Math.max(0, drawDelay));
 }
-function restartInterval() {
-  clearInterval(metroInterval);
-  let mul = document.getElementById("time-sig").value.includes("/4") ? 0.5 : 1;
-  metroInterval = setInterval(playStep, (60000 / bpm) * mul);
+
+function scheduler() {
+    // Agenda notas que devem tocar dentro da janela de buffer
+    while (nextNoteTime < audioCtx.currentTime + scheduleAheadTime) {
+        scheduleNote(currentStep, nextNoteTime);
+        nextNote();
+    }
 }
+
 function togglePlayMetronome() {
   const btn = document.getElementById("btn-play-metro");
+  
   if (isPlaying) {
-    clearInterval(metroInterval);
+    // PARAR
+    window.clearInterval(timerID);
+    isPlaying = false;
     btn.innerText = "▶ INICIAR";
     btn.style.background = "#2c3e50";
-    isPlaying = false;
+    
+    // Reset visual
+    document.querySelectorAll(".step-box").forEach(el => el.classList.remove("playing"));
   } else {
+    // INICIAR
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    
     currentStep = 0;
-    restartInterval();
+    // Começa levemente no futuro para evitar cliques
+    nextNoteTime = audioCtx.currentTime + 0.05;
+    
+    timerID = setInterval(scheduler, lookahead);
+    
+    isPlaying = true;
     btn.innerText = "⏹ PARAR";
     btn.style.background = "#c0392b";
-    isPlaying = true;
   }
 }
 
+function updateBpm(v) {
+  bpm = parseInt(v);
+  document.getElementById("bpm-val").innerText = bpm;
+  // Não precisa reiniciar o scheduler, ele pega o novo bpm no próximo nextNote()
+}
+
+
+/* =================================================================
+   5. TIMER DE ESTUDO
+   ================================================================= */
 let studyTimerInterval = null,
   studyTimeRemaining = 0,
   isStudyTimerRunning = false,
   initialDuration = 0;
+
 function initTimer(sec) {
   clearInterval(studyTimerInterval);
   isStudyTimerRunning = false;
@@ -402,6 +459,7 @@ function initTimer(sec) {
     btn.classList.remove("running");
   }
 }
+
 function toggleStudyTimer() {
   const btn = document.getElementById("btn-timer");
   if (isStudyTimerRunning) {
@@ -421,6 +479,7 @@ function toggleStudyTimer() {
     }, 1000);
   }
 }
+
 function updateTimerDisplay() {
   const m = Math.floor(studyTimeRemaining / 60),
     s = studyTimeRemaining % 60;
@@ -430,6 +489,7 @@ function updateTimerDisplay() {
       .toString()
       .padStart(2, "0")}`;
 }
+
 function finishTimer() {
   clearInterval(studyTimerInterval);
   isStudyTimerRunning = false;
@@ -442,6 +502,7 @@ function finishTimer() {
   if (audioCtx.state === "suspended") audioCtx.resume();
   playAlarm();
 }
+
 function playAlarm() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const now = audioCtx.currentTime;
@@ -466,7 +527,9 @@ function playAlarm() {
   }
 }
 
-// === MERMAID ===
+/* =================================================================
+   6. MERMAID (MAPA MENTAL)
+   ================================================================= */
 try {
   mermaid.initialize({
     startOnLoad: false,
