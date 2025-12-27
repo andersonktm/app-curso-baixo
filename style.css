@@ -842,3 +842,61 @@ svg.view-interval .label-finger, svg.view-interval .label-note { display: none; 
     z-index: 10;
   }
 }
+
+
+
+
+/* ============================================================
+   AJUSTE PARA CELULAR DEITADO (LANDSCAPE / TELA BAIXA)
+   Isso evita que o menu suma quando a altura é pouca
+   ============================================================ */
+@media (max-width: 1024px) and (max-height: 600px) {
+  
+  /* 1. Logo menor */
+  .logo-area {
+    padding: 5px 15px !important; /* Reduz muito o padding */
+  }
+  
+  /* 2. Botões de Ferramentas (Metrônomo/Mapa) lado a lado */
+  /* Isso economiza muito espaço vertical */
+  .tools-area {
+    padding: 5px 15px !important;
+    display: flex;
+    gap: 10px;
+  }
+  
+  .btn-metronome, .btn-map-toggle {
+    flex: 1; /* Divide o espaço */
+    font-size: 0.75rem !important; /* Fonte menor */
+    padding: 8px !important;
+    margin-bottom: 0 !important; /* Tira margem de baixo */
+  }
+
+  /* 3. Rodapé (Logout) mais compacto */
+  .sidebar-footer {
+    padding: 10px 15px !important;
+  }
+  .btn-logout {
+    padding: 8px !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* 4. Garante que a lista de aulas tenha espaço */
+  #menu-container {
+    flex: 1; /* Força a ocupar o espaço que sobra */
+    overflow-y: auto; /* Garante a rolagem */
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+  }
+  
+  /* Reduz tamanho dos itens da lista */
+  .module-header {
+    padding: 8px 10px !important;
+    margin-top: 2px !important;
+    font-size: 0.9rem !important;
+  }
+  .lesson-link {
+    padding: 6px 10px !important;
+    font-size: 0.85rem !important;
+  }
+}

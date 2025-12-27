@@ -204,7 +204,7 @@ async function loadLesson(modIdx, lessIdx) {
   if (fullData.duration) initTimer(fullData.duration);
   
   const sidebar = document.getElementById("sidebar");
-  if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains("mobile-open")) {
+  if (window.innerWidth <= 1024 && sidebar && sidebar.classList.contains("mobile-open")) {
     toggleMobileMenu();
   }
 }
