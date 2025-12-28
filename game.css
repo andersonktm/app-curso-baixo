@@ -26,6 +26,7 @@ body {
     align-items: center;
     border-bottom: 2px solid #333;
     flex-shrink: 0;
+    font-size: 0.8rem;
 }
 
 .btn-back, .btn-reset {
@@ -155,4 +156,55 @@ body {
     .note-btn { width: 38px; height: 40px; font-size: 0.8rem; }
     .spacer { width: 38px; }
     .fretboard-container { padding: 5px; }
+}
+
+
+
+@media (max-width: 1010px) {
+    /* Define o cabeçalho como referência e centraliza o conteúdo (o título) */
+.game-header {
+        position: relative; /* Necessário para os botões absolutos */
+        display: flex;
+        justify-content: center; /* Centraliza o elemento do meio */
+        align-items: center;
+        min-height: 60px; /* Um pouco mais alto para caber 2 linhas */
+        padding: 0 10px;
+    }
+
+/* === BOTÃO VOLTAR (Lado Esquerdo) === */
+    .btn-back {
+        position: absolute; /* Tira do fluxo para não empurrar o título */
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%); /* Centraliza verticalmente exato */
+        
+        /* Deixando bem menor como pediu */
+        font-size: 0.7rem !important; 
+        padding: 6px 10px !important;
+        white-space: nowrap; /* Garante que "Voltar" não quebre linha */
+    }
+
+/* === PLACAR (Lado Direito) === */
+    .score-board {
+        position: absolute; /* Tira do fluxo */
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%); /* Centraliza verticalmente exato */
+        
+        /* Reduz um pouco o placar para ganhar espaço */
+        transform: translateY(-50%) scale(0.9); 
+    }
+
+/* === TÍTULO (Centro) === */
+    .game-title {
+        text-align: center;
+        font-weight: bold;
+        color: var(--accent);
+        
+        /* O SEGREDO PARA 2 LINHAS: */
+        max-width: 100px; /* Força a quebra de linha pois o texto é maior que isso */
+        line-height: 1.1; /* Linhas mais juntinhas */
+        font-size: 0.9rem; /* Tamanho confortável */
+        margin: 0 auto; /* Garante centralização */
+    }
 }

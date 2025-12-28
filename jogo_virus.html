@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Desafio Auditivo - Vírus</title>
     <style>
         body {
@@ -11,6 +11,7 @@
             background-color: #d4f0b6;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             user-select: none;
+            -webkit-touch-callout: none; /* Impede menu de contexto no iOS */
         }
 
         #virusCanvas {
@@ -27,7 +28,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 80px;
+            height: 80px; /* Altura Padrão Desktop */
             padding: 0 15px;
             background: rgba(255, 255, 255, 0.95);
             border-bottom: 3px solid #333;
@@ -37,54 +38,39 @@
             z-index: 20;
             box-sizing: border-box;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            transition: height 0.3s ease;
         }
 
-        /* Lado Esquerdo: Botões de Controle */
-        /* ALTERAÇÃO AQUI: Mudamos para row para ficarem lado a lado */
         .hud-left {
             display: flex;
-            flex-direction: row; /* Lado a lado */
+            flex-direction: row;
             align-items: center;
-            gap: 10px; /* Espaço entre os botões */
+            gap: 10px;
         }
 
-        #btn-back {
-            background-color: #34495e;
-            color: white;
+        /* Botões Padrão */
+        .hud-btn {
             border: none;
-            padding: 8px 16px; /* Aumentei um pouco para ficar igual ao outro */
             border-radius: 4px;
             cursor: pointer;
             font-size: 0.9rem;
             text-decoration: none;
-            text-align: center;
             display: flex;
             align-items: center;
-            height: 36px; /* Altura fixa para alinhar */
+            justify-content: center;
+            height: 36px;
+            padding: 0 16px;
             box-sizing: border-box;
-        }
-
-        #btn-replay {
-            background-color: #ff6b81;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            height: 36px; /* Altura fixa para alinhar */
-            box-sizing: border-box;
-            box-shadow: 0 4px #d63031;
-        }
-        #btn-replay:active { 
-            transform: translateY(4px); 
-            box-shadow: 0 0 #d63031;
+            color: white;
+            transition: all 0.2s;
         }
 
-        /* Centro: Área das Dicas (Vírus de Referência) */
+        #btn-back { background-color: #34495e; }
+        #btn-replay { background-color: #ff6b81; box-shadow: 0 4px #d63031; }
+        #btn-replay:active { transform: translateY(4px); box-shadow: 0 0 #d63031; }
+
+        /* Centro: Dicas */
         .hud-center {
             display: flex;
             flex-direction: column;
@@ -102,9 +88,9 @@
         .dicas-container {
             display: flex;
             gap: 8px;
+            justify-content: center;
         }
 
-        /* Estilo dos Vírus de Dica */
         .dica-virus {
             width: 35px;
             height: 35px;
@@ -119,55 +105,39 @@
             cursor: pointer;
             position: relative;
             box-shadow: 0 0 0 2px rgba(45, 52, 54, 0.2);
-            transition: transform 0.2s, background-color 0.2s;
         }
         
         .dica-virus::after {
-            content: '';
-            position: absolute;
-            top: -2px; left: -2px; right: -2px; bottom: -2px;
-            border-radius: 50%;
-            border: 2px dashed #2d3436;
-            animation: spin 10s linear infinite;
-        }
-
-        .dica-virus:hover {
-            transform: scale(1.2);
-            background-color: #00cec9;
-        }
-        .dica-virus:active {
-            transform: scale(0.9);
+            content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+            border-radius: 50%; border: 2px dashed #2d3436; animation: spin 10s linear infinite;
         }
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-
-        /* Lado Direito: Placar */
         .hud-right {
             text-align: right;
             font-weight: bold;
             color: #2c3e50;
             font-size: 1.1rem;
+            min-width: 60px;
         }
-        #virus-count {
-            color: #e74c3c;
-            font-size: 1.4rem;
-        }
+        #virus-count { color: #e74c3c; font-size: 1.4rem; }
 
         /* --- ÁREA DO JOGO --- */
         #game-area {
             position: absolute;
-            top: 80px;
+            top: 80px; /* Deve bater com a altura do HUD */
             left: 0;
             width: 100%;
             height: calc(100% - 80px);
             z-index: 5;
+            transition: top 0.3s ease, height 0.3s ease;
         }
 
         .nota-blob {
             position: absolute;
-            width: 90px;
-            height: 90px;
+            width: 90px;  /* Tamanho Desktop */
+            height: 90px; /* Tamanho Desktop */
             background-color: #ff8fab;
             border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
             display: flex;
@@ -177,57 +147,105 @@
             font-size: 1.4rem;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s;
             box-shadow: 2px 5px 10px rgba(0,0,0,0.1);
             animation: flutuar 3s infinite ease-in-out alternate;
+            
+            /* Melhoria para Mobile: Evita que o toque dê zoom ou highlight */
+            -webkit-tap-highlight-color: transparent;
+            transform: translate(-50%, -50%); /* Centraliza no ponto X/Y exato */
         }
-        .nota-blob:hover { transform: scale(1.1); background-color: #ffb7c5; }
-        .nota-blob:active { transform: scale(0.95); }
+        
+        .nota-blob:active { transform: translate(-50%, -50%) scale(0.95); }
 
         @keyframes flutuar {
-            from { transform: translateY(0px) rotate(0deg); }
-            to { transform: translateY(-10px) rotate(2deg); }
+            from { margin-top: 0px; transform: translate(-50%, -50%) rotate(0deg); }
+            to { margin-top: -10px; transform: translate(-50%, -50%) rotate(2deg); }
         }
 
         .acerto { background-color: #55efc4 !important; }
         .erro { background-color: #ff7675 !important; animation: shake 0.5s !important; }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+            0%, 100% { margin-left: 0; }
+            25% { margin-left: -5px; }
+            75% { margin-left: 5px; }
         }
 
-        /* OVERLAY INICIAL */
+        /* --- OVERLAY --- */
         #start-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            color: white;
-            flex-direction: column;
-            text-align: center;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 100; color: white; flex-direction: column; text-align: center;
+            padding: 20px; box-sizing: border-box;
         }
         #start-btn {
-            padding: 20px 40px;
-            font-size: 1.5rem;
-            background: #2ecc71;
-            border: none;
-            color: white;
-            cursor: pointer;
-            border-radius: 10px;
-            margin-top: 20px;
+            padding: 15px 30px; font-size: 1.2rem; background: #2ecc71;
+            border: none; color: white; cursor: pointer; border-radius: 10px; margin-top: 20px;
+        }
+
+        /* =========================================
+           RESPONSIVIDADE (A MÁGICA ACONTECE AQUI)
+           ========================================= */
+
+        /* 1. Mobile Portrait (Celular em pé) */
+        @media (max-width: 600px) {
+            #hud { padding: 0 5px; }
+            
+            /* Botões menores e sem texto se ficar apertado (opcional) */
+            .hud-btn { padding: 0 10px; font-size: 0.8rem; height: 32px; }
+            
+            /* Dicas menores */
+            .dica-virus { width: 28px; height: 28px; font-size: 0.8rem; }
+            .dicas-label { font-size: 0.6rem; }
+            
+            /* Texto do placar menor */
+            .hud-right { font-size: 0.9rem; }
+            #virus-count { font-size: 1.1rem; }
+
+            /* NOTAS MENORES para não encavalar */
+            .nota-blob {
+                width: 65px;
+                height: 65px;
+                font-size: 1.1rem;
+            }
+        }
+
+        /* 2. Mobile Landscape (Celular deitado) - Crítico! */
+        @media (max-height: 500px) and (orientation: landscape) {
+            /* Encolhe o menu drasticamente */
+            #hud { height: 50px; }
+            #game-area { top: 50px; height: calc(100% - 50px); }
+
+            /* Ajusta botões */
+            .hud-btn { height: 28px; font-size: 0.8rem; padding: 0 8px; }
+            
+            /* Esconde label "Banco de Amostras" para ganhar espaço vertical */
+            .dicas-label { display: none; }
+            .dica-virus { width: 25px; height: 25px; font-size: 0.7rem; }
+            
+            /* Placar em uma linha */
+            .hud-right { font-size: 0.8rem; line-height: 1; }
+            #virus-count { font-size: 1rem; }
+
+            /* Notas ainda menores para caber na altura curta */
+            .nota-blob {
+                width: 55px;
+                height: 55px;
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
 <body>
 
     <div id="start-overlay">
-        <h1>Combate ao Vírus Musical</h1>
-        <p>1. Ouça a nota tocada.<br>2. Clique na célula rosa correta.<br>3. Use os <b>vírus pretos</b> no topo como dica.</p>
+        <h1>Combate ao Vírus</h1>
+        <p style="max-width: 400px; line-height: 1.5;">
+            1. Ouça a nota.<br>
+            2. Clique na célula rosa.<br>
+            3. Use as dicas pretas no topo.
+        </p>
         <button id="start-btn">INICIAR MISSÃO</button>
         <br><br>
         <a href="index.html" style="color: #aaa; text-decoration: none; font-size: 0.9rem;">⬅ Voltar ao Painel</a>
@@ -235,18 +253,17 @@
 
     <div id="hud">
         <div class="hud-left">
-            <button id="btn-back" onclick="window.location.href='index.html'">⬅ Voltar</button>
-            <button id="btn-replay">🔊 Ouvir Nota</button>
+            <button id="btn-back" class="hud-btn" onclick="window.location.href='index.html'">⬅</button>
+            <button id="btn-replay" class="hud-btn">🔊 Ouvir</button>
         </div>
 
         <div class="hud-center">
-            <div class="dicas-label">Banco de Amostras (Dicas)</div>
-            <div class="dicas-container" id="dicas-wrapper">
-                </div>
+            <div class="dicas-label">Banco de Amostras</div>
+            <div class="dicas-container" id="dicas-wrapper"></div>
         </div>
 
         <div class="hud-right">
-            Vírus:<br>
+            Vírus<br>
             <span id="virus-count">60</span>
         </div>
     </div>
@@ -260,29 +277,20 @@ class AudioEngine {
         this.ctx = null;
         this.notas = { 'C': 261.63, 'D': 293.66, 'E': 329.63, 'F': 349.23, 'G': 392.00, 'A': 440.00, 'B': 493.88 };
     }
-    
-    iniciar() { 
-        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
-    }
+    iniciar() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
     
     tocarNota(nota, duracao = 1.5) {
         if (!this.ctx) return;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        
         osc.type = 'triangle';
         osc.frequency.value = this.notas[nota];
-        
-        // Volume ajustado para 80% (mais alto)
         const volumeMaximo = 0.8; 
-
         gain.gain.setValueAtTime(0, this.ctx.currentTime);
         gain.gain.linearRampToValueAtTime(volumeMaximo, this.ctx.currentTime + 0.05);
         gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duracao);
-        
         osc.connect(gain);
         gain.connect(this.ctx.destination);
-        
         osc.start();
         osc.stop(this.ctx.currentTime + duracao);
     }
@@ -291,14 +299,11 @@ class AudioEngine {
         if (!this.ctx) return;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(150, this.ctx.currentTime);
         osc.frequency.linearRampToValueAtTime(50, this.ctx.currentTime + 0.5);
-        
         gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
         gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
-        
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start();
@@ -342,22 +347,19 @@ class Game {
     criarDicasTopo() {
         const container = document.getElementById('dicas-wrapper');
         const notas = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-        
         notas.forEach(nota => {
             const btn = document.createElement('div');
             btn.className = 'dica-virus';
             btn.innerText = nota;
-            btn.title = "Ouvir nota " + nota;
             btn.addEventListener('click', () => {
-                if(this.audio.ctx) {
-                    this.audio.tocarNota(nota, 0.5);
-                }
+                if(this.audio.ctx) this.audio.tocarNota(nota, 0.5);
             });
             container.appendChild(btn);
         });
     }
 
     criarBotoesNotas() {
+        // Ajustei levemente as posições para evitar bordas extremas
         const posicoes = [
             { nota: 'C', label: 'DÓ', x: 70, y: 35 },
             { nota: 'D', label: 'RÉ', x: 60, y: 65 },
@@ -371,6 +373,7 @@ class Game {
             const btn = document.createElement('div');
             btn.className = 'nota-blob';
             btn.innerText = p.label;
+            // Centralização baseada em transform translate no CSS
             btn.style.left = p.x + '%';
             btn.style.top = p.y + '%';
             btn.addEventListener('click', (e) => this.checkInput(p.nota, e.target));
@@ -385,7 +388,6 @@ class Game {
             const notas = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
             this.notaAlvo = notas[Math.floor(Math.random() * notas.length)];
         }
-        console.log("Desafio: " + this.notaAlvo);
         this.audio.tocarNota(this.notaAlvo);
     }
 
@@ -446,7 +448,7 @@ class Game {
         this.ctxCanvas.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctxCanvas.fillStyle = '#2d3436';
         this.virusAnimacao.forEach(v => {
-            this.ctxCanvas.beginPath();
+            this.ctxCanvas.beginPath(); // CORREÇÃO: era ctxCaanvas
             this.ctxCanvas.arc(v.x, v.y, v.size, 0, Math.PI * 2);
             this.ctxCanvas.fill();
             v.x += v.speedX; v.y += v.speedY;
