@@ -315,23 +315,74 @@ class Game {
         });
     }
 
-    criarBotoesNotas() {
-        const posicoes = [
-            { nota: 'C', label: 'DÓ', x: 70, y: 35 },
-            { nota: 'D', label: 'RÉ', x: 60, y: 65 },
-            { nota: 'E', label: 'MI', x: 75, y: 65 },
-            { nota: 'F', label: 'FÁ', x: 45, y: 55 },
-            { nota: 'G', label: 'SOL', x: 65, y: 25 },
-            { nota: 'A', label: 'LÁ', x: 35, y: 70 },
-            { nota: 'B', label: 'SI', x: 65, y: 15 },
+criarBotoesNotas() {
+        // Limpa notas antigas se houver
+        this.elGameArea.innerHTML = '';
+
+        const notasInfo = [
+            { nota: 'C', label: 'DÓ' }, { nota: 'D', label: 'RÉ' },
+            { nota: 'E', label: 'MI' }, { nota: 'F', label: 'FÁ' },
+            { nota: 'G', label: 'SOL' }, { nota: 'A', label: 'LÁ' },
+            { nota: 'B', label: 'SI' }
         ];
-        posicoes.forEach(p => {
+
+        // Tamanho aproximado da bolha (pixel) + uma margem de segurança
+        // Se estiver no mobile, consideramos a bolha menor (65px)
+        const isMobile = window.innerWidth < 600;
+        const buttonSize = isMobile ? 65 : 90; 
+        const safetyMargin = 10; // Espaço mínimo entre elas
+        const minDistance = buttonSize + safetyMargin;
+
+        const containerW = this.elGameArea.clientWidth;
+        const containerH = this.elGameArea.clientHeight;
+        
+        const placedNotes = []; // Guarda onde já colocamos notas
+
+        notasInfo.forEach(dado => {
             const btn = document.createElement('div');
             btn.className = 'nota-blob';
-            btn.innerText = p.label;
-            btn.style.left = p.x + '%';
-            btn.style.top = p.y + '%';
-            btn.addEventListener('click', (e) => this.checkInput(p.nota, e.target));
+            btn.innerText = dado.label;
+
+            let x, y;
+            let overlapping = true;
+            let attempts = 0;
+            const maxAttempts = 150; // Tenta 150 vezes achar um lugar, senão desiste e coloca em qualquer um
+
+            while (overlapping && attempts < maxAttempts) {
+                overlapping = false;
+                attempts++;
+
+                // Sorteia uma posição (evitando as bordas extremas com padding de 10%)
+                const paddingX = containerW * 0.10;
+                const paddingY = containerH * 0.10;
+                
+                x = paddingX + Math.random() * (containerW - paddingX * 2);
+                y = paddingY + Math.random() * (containerH - paddingY * 2);
+
+                // Verifica distância contra TODAS as notas já colocadas
+                for (let other of placedNotes) {
+                    const dx = x - other.x;
+                    const dy = y - other.y;
+                    const distance = Math.sqrt(dx*dx + dy*dy);
+
+                    if (distance < minDistance) {
+                        overlapping = true;
+                        break; // Bateu em alguém, tenta de novo
+                    }
+                }
+            }
+
+            // Salva a posição válida (ou a última tentada)
+            placedNotes.push({ x, y });
+
+            // Converte pixel para porcentagem (melhor para responsividade se a tela girar pouco)
+            // Mas aqui vamos usar 'px' direto no left/top para respeitar o cálculo exato do loop
+            // Porém, usamos transform translate(-50%, -50%) no CSS, então x/y é o centro.
+            
+            btn.style.left = x + 'px';
+            btn.style.top = y + 'px';
+
+            btn.addEventListener('click', (e) => this.checkInput(dado.nota, e.target));
             this.elGameArea.appendChild(btn);
         });
     }
