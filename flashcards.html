@@ -1,49 +1,402 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flashcards de Intervalos - Lógica do Groove</title>
-    <link rel="stylesheet" href="flashcards.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flashcards de Intervalos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* =========================================
+           ESTILO GERAL (Base Desktop / Mobile First)
+           ========================================= */
+        :root {
+            --bg-dark: #121212;
+            --card-blue: #0d47a1;
+            --text-white: #ffffff;
+            --accent: #e67e22;
+            --success: #2ecc71;
+        }
+
+        html, body {
+            width: 100%; height: 100%; margin: 0; padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-white);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Evita rolagem */
+            position: fixed; /* Trava no iOS para evitar o "bounce" */
+            display: flex; flex-direction: column;
+            user-select: none; -webkit-touch-callout: none;
+        }
+
+        /* === HEADER === */
+        .game-header {
+            background: #1e1e1e;
+            height: 70px; /* Altura Fixa */
+            padding: 0 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #333;
+            flex-shrink: 0;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .btn-back {
+            background: #333; border: none; color: white;
+            padding: 0 16px; border-radius: 6px; cursor: pointer;
+            font-weight: bold; font-size: 0.9rem; text-decoration: none;
+            display: flex; align-items: center; justify-content: center; height: 36px;
+        }
+
+        .header-title {
+            color: var(--accent); font-size: 1.1rem; font-weight: bold; text-align: center;
+            text-transform: uppercase; line-height: 1.2;
+        }
+
+        .counter {
+            font-size: 0.8rem; color: #888; text-align: right; min-width: 60px;
+        }
+        #counter-val { color: var(--accent); font-weight: bold; font-size: 1.2rem; display: block; }
+
+        /* === CONTAINER PRINCIPAL === */
+        .game-container {
+            flex: 1;
+            width: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            position: relative;
+            gap: 20px; /* Gap padrão */
+        }
+
+        /* === CENA DO CARTÃO === */
+        .card-scene {
+            width: 90%; max-width: 380px; 
+            height: 260px;
+            perspective: 1000px;
+            position: relative;
+            z-index: 5;
+            margin: auto; /* Centraliza se sobrar espaço */
+        }
+
+        .card {
+            width: 100%; height: 100%; position: relative;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d; cursor: pointer;
+        }
+        .card.is-flipped { transform: rotateY(180deg); }
+
+        .card-face {
+            position: absolute; width: 100%; height: 100%;
+            -webkit-backface-visibility: hidden; backface-visibility: hidden;
+            border-radius: 20px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; padding: 15px; box-sizing: border-box;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid #2980b9;
+        }
+
+        .card-front { background: var(--card-blue); color: white; }
+        .card-back { background: #1565c0; color: white; transform: rotateY(180deg); }
+
+        /* Texto do Cartão */
+        .question-label { font-size: 1rem; margin: 0; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; }
+        #question-text { font-size: 2.5rem; margin: 15px 0; font-weight: 700; color: #ffeb3b; line-height: 1.1; } 
+        #answer-text { font-size: 5rem; font-weight: 800; margin: 0; }
+        .tap-hint { font-size: 0.8rem; opacity: 0.5; margin-top: auto; padding-bottom: 5px; }
+
+        /* === ÁREA DO BOTÃO DE CONFIRMAÇÃO === */
+        .controls-area {
+            width: 100%;
+            height: 100px; /* Altura reservada */
+            display: flex; justify-content: center; align-items: flex-start;
+            flex-shrink: 0;
+            padding-bottom: 20px;
+        }
+
+        .btn-next {
+            width: 80px; height: 80px; border-radius: 50%;
+            border: none; font-size: 2.5rem; background: #2ecc71; color: white;
+            box-shadow: 0 10px 25px rgba(46, 204, 113, 0.3);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transform: translateY(30px) scale(0.8);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-next.active { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+        .btn-next:active { transform: scale(0.95); background: #27ae60; }
+
+
+        /* =========================================
+           RESPONSIVIDADE INTELIGENTE
+           ========================================= */
+
+        /* 1. CELULAR EM PÉ (Portrait) */
+        @media (max-width: 600px) {
+            .game-header { height: 60px; padding: 0 10px; }
+            .header-title { font-size: 0.9rem; max-width: 120px; } 
+            .btn-back { padding: 0 12px; font-size: 0.8rem; height: 32px; }
+            
+            .game-container { justify-content: center; gap: 10px; }
+            .card-scene { height: 240px; width: 85%; }
+            #question-text { font-size: 2.2rem; }
+            #answer-text { font-size: 4rem; }
+        }
+
+        /* 2. CELULAR DEITADO (LANDSCAPE) - O Grande Truque */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .game-header { height: 45px; padding: 0 10px; }
+            .header-title { font-size: 0.8rem; display: inline-block; } 
+            .btn-back { height: 28px; font-size: 0.75rem; padding: 0 10px; }
+            .counter { font-size: 0.75rem; }
+
+            /* MUDANÇA ESTRUTURAL: Layout Horizontal */
+            .game-container {
+                flex-direction: row; /* Itens lado a lado */
+                justify-content: space-evenly;
+                align-items: center;
+                padding: 10px;
+                gap: 0;
+            }
+
+            .card-scene {
+                width: 45%; 
+                height: 85%; 
+                max-width: none; 
+                max-height: 220px;
+                margin: 0; 
+            }
+            
+            /* Ajuste de Texto */
+            .question-label { font-size: 0.8rem; }
+            #question-text { font-size: 2rem; margin: 5px 0; }
+            #answer-text { font-size: 3.5rem; }
+            .tap-hint { display: none; } 
+
+            /* Botão na Direita */
+            .controls-area {
+                width: 30%; 
+                height: 100%; 
+                align-items: center; /* Centraliza verticalmente */
+                padding: 0;
+            }
+            
+            .btn-next { width: 70px; height: 70px; font-size: 2rem; }
+        }
+    </style>
 </head>
 <body>
 
     <header class="game-header">
         <button onclick="window.location.href='index.html'" class="btn-back">← Voltar</button>
-        <h2 style="color: #e67e22; margin: 0;">ADIVINHE O INTERVALO</h2>
+        <div class="header-title">ADIVINHE O<br>INTERVALO</div>
         <div class="counter">
-            <span id="counter-val">0</span> Concluídos
+            Concluídos
+            <span id="counter-val">0</span>
         </div>
     </header>
 
     <main class="game-container">
-        
         <div class="card-scene">
             <div class="card" id="flashcard">
-                
                 <div class="card-face card-front">
-                    <p class="question-label">Qual é a...</p>
-                    <h1 id="question-text">Terça Maior<br>de C</h1>
-                    <div class="tap-hint">👆 Toque para virar</div>
+                    <p class="question-label">QUAL É A...</p>
+                    <div id="question-text">Oitava de C</div>
+                    <p class="tap-hint">👆 Toque para virar</p>
                 </div>
-
                 <div class="card-face card-back">
-                    <h1 id="answer-text">E</h1>
-                    <div class="tap-hint">🔊 Tocando nota...</div>
+                    <p class="question-label">RESPOSTA</p>
+                    <div id="answer-text">C</div>
                 </div>
-
             </div>
         </div>
 
         <div class="controls-area">
-            <button class="btn-next" id="btnNext" onclick="nextCard()">
-                ✔
-            </button>
+            <button class="btn-next" id="btn-next" onclick="proximoCard()">✓</button>
         </div>
-
     </main>
 
-    <script src="flashcards.js"></script>
+<script>
+    // === 1. ENGINE DE ÁUDIO PRO (Bass Synth) ===
+    class AudioEngine {
+        constructor() {
+            this.ctx = null;
+            this.notas = { 
+                'C': 130.81, 'C#': 138.59, 'D': 146.83, 'D#': 155.56, 'E': 164.81, 'F': 174.61, 
+                'F#': 185.00, 'G': 196.00, 'G#': 207.65, 'A': 220.00, 'A#': 233.08, 'B': 246.94 
+            };
+            this.compressor = null;
+            this.masterGain = null;
+        }
+        
+        iniciar() { 
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.compressor = this.ctx.createDynamicsCompressor();
+                this.compressor.threshold.value = -24;
+                this.compressor.ratio.value = 12;
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.gain.value = 0.8;
+                this.compressor.connect(this.masterGain);
+                this.masterGain.connect(this.ctx.destination);
+            }
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+        }
+        
+        tocarNota(nomeNota, duracao = 1.0) {
+            if (!this.ctx) return;
+            const t = this.ctx.currentTime;
+            
+            // Tratamento simples para oitavas (ex: se o sistema pedir C, toca C3)
+            // Se o nome vier "C4", removemos o número para achar no mapa
+            const notaLimpa = nomeNota.replace(/[0-9]/g, '');
+            const freq = this.notas[notaLimpa] || 220; 
+
+            // Oscilador 1 (Corpo)
+            const osc1 = this.ctx.createOscillator();
+            osc1.type = 'triangle';
+            osc1.frequency.value = freq;
+
+            // Oscilador 2 (Ronco)
+            const osc2 = this.ctx.createOscillator();
+            osc2.type = 'sawtooth';
+            osc2.frequency.value = freq;
+            osc2.detune.value = 4; 
+
+            // Filtro
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.Q.value = 3;
+            filter.frequency.setValueAtTime(freq * 4, t); 
+            filter.frequency.exponentialRampToValueAtTime(freq * 1.5, t + 0.2);
+
+            // Envelope
+            const envelope = this.ctx.createGain();
+            envelope.gain.setValueAtTime(0, t);
+            envelope.gain.linearRampToValueAtTime(1.0, t + 0.02);
+            envelope.gain.exponentialRampToValueAtTime(0.6, t + 0.2);
+            envelope.gain.linearRampToValueAtTime(0.01, t + duracao);
+
+            const gainOsc2 = this.ctx.createGain();
+            gainOsc2.gain.value = 0.7;
+
+            osc1.connect(filter);
+            osc2.connect(gainOsc2).connect(filter);
+            filter.connect(envelope);
+            envelope.connect(this.compressor);
+            
+            osc1.start(t); osc2.start(t);
+            osc1.stop(t + duracao); osc2.stop(t + duracao);
+        }
+    }
+
+    const audio = new AudioEngine();
+
+    // === 2. DADOS E LÓGICA DO JOGO ===
+    const notesScale = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    
+    const intervals = [
+        { name: "Segunda Menor", semitones: 1 }, { name: "Segunda Maior", semitones: 2 },
+        { name: "Terça Menor", semitones: 3 }, { name: "Terça Maior", semitones: 4 },
+        { name: "Quarta Justa", semitones: 5 }, { name: "Trítono", semitones: 6 },
+        { name: "Quinta Justa", semitones: 7 }, { name: "Sexta Menor", semitones: 8 },
+        { name: "Sexta Maior", semitones: 9 }, { name: "Sétima Menor", semitones: 10 },
+        { name: "Sétima Maior", semitones: 11 }, { name: "Oitava", semitones: 12 }
+    ];
+
+    let currentRootIndex = 0;
+    let currentInterval = null;
+    let contador = 0;
+    let isFlipped = false;
+    
+    // Elementos DOM
+    const card = document.getElementById('flashcard');
+    const qText = document.getElementById('question-text');
+    const aText = document.getElementById('answer-text');
+    const btnNext = document.getElementById('btn-next');
+    const counterDisplay = document.getElementById('counter-val');
+
+    function gerarCarta() {
+        // Reset Visual
+        isFlipped = false;
+        card.classList.remove('is-flipped');
+        btnNext.classList.remove('active');
+        
+        // Sorteio
+        currentRootIndex = Math.floor(Math.random() * 12);
+        const rootNoteName = notesScale[currentRootIndex];
+        currentInterval = intervals[Math.floor(Math.random() * intervals.length)];
+        
+        // Cálculo da Resposta (Circular)
+        const answerIndex = (currentRootIndex + currentInterval.semitones) % 12;
+        const answerNoteName = notesScale[answerIndex];
+
+        // Atualiza HTML (com cor laranja na nota)
+        qText.innerHTML = `${currentInterval.name}<br>de <span style="color:#e67e22">${rootNoteName}</span>`;
+        aText.innerText = answerNoteName;
+
+        // Toca Nota Base (com delay pequeno para transição)
+        setTimeout(() => {
+            audio.iniciar();
+            audio.tocarNota(rootNoteName, 1.0);
+        }, 600);
+    }
+
+    // Evento de Clique no Cartão
+    card.addEventListener('click', () => {
+        if (!isFlipped) {
+            audio.iniciar();
+            isFlipped = true;
+            card.classList.add('is-flipped');
+            btnNext.classList.add('active'); // Mostra botão
+            
+            // Toca o intervalo (Base + Resposta)
+            const rootName = notesScale[currentRootIndex];
+            const answerIndex = (currentRootIndex + currentInterval.semitones) % 12;
+            const answerName = notesScale[answerIndex];
+
+            // Toca arpejo rápido
+            audio.tocarNota(rootName, 0.4);
+            setTimeout(() => {
+                audio.tocarNota(answerName, 1.2);
+            }, 400);
+        }
+    });
+
+    function proximoCard() {
+        if(!isFlipped) return;
+        contador++;
+        counterDisplay.innerText = contador;
+        
+        // Esconde botão para forçar o fluxo
+        btnNext.classList.remove('active');
+        
+        // Gera nova carta (o CSS transition cuida da virada de volta se quiser, 
+        // mas aqui geramos direto para dar dinamismo)
+        card.classList.remove('is-flipped');
+        setTimeout(gerarCarta, 300);
+    }
+
+    // === 3. CORREÇÃO DE ROTAÇÃO E REDIMENSIONAMENTO ===
+    let resizeTimer;
+    
+    function handleResize() {
+        // Garante altura correta no mobile
+        document.body.style.height = window.innerHeight + 'px';
+    }
+
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(handleResize, 100);
+    });
+    
+    window.addEventListener('orientationchange', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(handleResize, 100);
+    });
+
+    // Início
+    handleResize();
+    gerarCarta();
+
+</script>
 </body>
 </html>
