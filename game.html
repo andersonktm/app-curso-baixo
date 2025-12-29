@@ -1,28 +1,205 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Treino de Notas - Lógica do Groove</title>
-    <link rel="stylesheet" href="game.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* =========================================
+           ESTILO GERAL (Base)
+           ========================================= */
+        :root {
+            --bg-dark: #121212;
+            --surface: #1e1e1e;
+            --accent: #e67e22;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --text: #ecf0f1;
+        }
+
+        html, body {
+            width: 100%; height: 100%; margin: 0; padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Evita rolagem */
+            position: fixed; /* Trava no iOS */
+            display: flex; flex-direction: column;
+            user-select: none; -webkit-touch-callout: none;
+        }
+
+        /* === HEADER === */
+        .game-header {
+            background: var(--surface);
+            height: 70px; padding: 0 10px;
+            display: flex; align-items: center; justify-content: center; /* Centraliza tudo */
+            border-bottom: 2px solid #333;
+            flex-shrink: 0; position: relative; /* Para posicionamento absoluto dos filhos */
+            z-index: 10;
+        }
+
+        /* Botão Voltar (Absoluto na Esquerda) */
+        .btn-back {
+            position: absolute; left: 10px;
+            background: #333; border: none; color: white;
+            padding: 8px 12px; border-radius: 6px; cursor: pointer;
+            font-weight: bold; font-size: 0.8rem; text-decoration: none;
+            display: flex; align-items: center; justify-content: center; height: 36px;
+            z-index: 2;
+        }
+
+        /* Placar (Absoluto na Direita) */
+        .score-board {
+            position: absolute; right: 10px;
+            display: flex; gap: 10px; align-items: center;
+            z-index: 2;
+        }
+        .score-item { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+        .score-label { font-size: 0.65rem; color: #888; text-transform: uppercase; }
+        .score-val { font-weight: 800; font-size: 1.1rem; }
+        .score-val.success { color: var(--success); }
+        .score-val.error { color: var(--error); }
+        
+        .btn-reset {
+            background: #333; border: none; color: white; width: 36px; height: 36px;
+            border-radius: 6px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* Título Central (Com quebra de linha forçada no mobile) */
+        .header-title {
+            color: var(--accent); font-weight: 800; text-align: center;
+            line-height: 1.1; margin: 0; z-index: 1;
+            /* Truque para centralizar e quebrar */
+            width: 120px; 
+        }
+
+        /* === CONTAINER PRINCIPAL === */
+        .game-container {
+            flex: 1; width: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-start;
+            padding: 10px; box-sizing: border-box;
+            overflow-y: auto; /* Permite rolagem se a tela for muito pequena */
+        }
+
+        /* === BRAÇO DO BAIXO (SVG) === */
+        .fretboard-container {
+            width: 100%; max-width: 900px;
+            background: #fff; border-radius: 10px;
+            padding: 5px; margin-bottom: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            /* Aspect ratio controlado pelo SVG, mas limitamos a altura no landscape */
+            flex-shrink: 1; 
+        }
+        
+        svg#fretboard {
+            width: 100%; height: auto; display: block;
+            touch-action: none;
+        }
+
+        /* Estilos do SVG */
+        .string { stroke: #333; stroke-linecap: round; }
+        .fret { stroke: #999; stroke-width: 2px; }
+        .nut { stroke: #000; stroke-width: 6px; }
+        .fret-marker { fill: #ddd; }
+        .string-name { font-family: sans-serif; font-weight: bold; fill: #333; font-size: 18px; text-anchor: middle; dominant-baseline: central; }
+        .fret-number { font-family: sans-serif; fill: #666; font-size: 14px; text-anchor: middle; }
+        
+        /* Bolinha Alvo */
+        .target-note {
+            fill: var(--error); stroke: #fff; stroke-width: 2px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { r: 9; opacity: 1; } 50% { r: 11; opacity: 0.8; } 100% { r: 9; opacity: 1; } }
+
+        /* Instrução */
+        .instruction { font-size: 0.9rem; color: #aaa; margin: 5px 0 15px 0; text-align: center; }
+
+        /* === BOTÕES DE NOTAS === */
+        .controls-area {
+            display: flex; flex-direction: column; gap: 8px;
+            align-items: center; width: 100%;
+            flex-shrink: 0; padding-bottom: 20px;
+        }
+
+        .notes-row { display: flex; gap: 6px; justify-content: center; width: 100%; }
+
+        .note-btn {
+            width: 48px; height: 42px;
+            border: none; border-radius: 6px;
+            font-weight: bold; font-size: 0.95rem; cursor: pointer;
+            background: #ecf0f1; color: #2c3e50;
+            box-shadow: 0 3px 0 #bdc3c7; transition: transform 0.1s;
+            display: flex; align-items: center; justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .note-btn:active { transform: translateY(3px); box-shadow: none; }
+
+        .note-btn.accident { background: #95a5a6; color: #fff; box-shadow: 0 3px 0 #7f8c8d; font-size: 0.85rem; }
+        
+        /* Espaçador para alinhar piano */
+        .spacer { width: 48px; display: none; } /* Escondido no mobile para ganhar espaço */
+
+        /* Feedback */
+        .note-btn.correct-anim { background: var(--success) !important; color: white !important; box-shadow: 0 3px 0 #219150 !important; }
+        .note-btn.wrong-anim { background: var(--error) !important; color: white !important; opacity: 0.6; pointer-events: none; }
+
+
+        /* =========================================
+           RESPONSIVIDADE INTELIGENTE
+           ========================================= */
+
+        /* CELULAR EM PÉ (Portrait) */
+        @media (max-width: 600px) {
+            .header-title { font-size: 0.9rem; }
+            .btn-back { padding: 0 10px; font-size: 0.75rem; height: 32px; }
+            
+            /* Botões menores para caber na tela */
+            .note-btn { width: 13%; height: 45px; font-size: 0.9rem; margin: 0 1px; }
+            .spacer { display: none; } /* Remove espaçadores estéticos */
+            .notes-row { gap: 2px; } /* Aperta o layout */
+            
+            /* Braço ocupa largura total */
+            .fretboard-container { margin: 0; width: 98%; }
+        }
+
+        /* CELULAR DEITADO (Landscape) - Otimização de Espaço */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .game-header { height: 45px; padding: 0 10px; }
+            .header-title { font-size: 0.8rem; display: inline-block; width: auto; } /* Título em linha */
+            .btn-back { height: 28px; font-size: 0.75rem; }
+            .score-label { display: none; } /* Esconde labels para limpar */
+            .btn-reset { width: 28px; height: 28px; font-size: 1rem; }
+
+            .game-container { padding: 5px; justify-content: center; }
+            
+            .instruction { display: none; } /* Esconde texto instrucional */
+
+            /* Braço menor */
+            .fretboard-container { max-width: 600px; margin-bottom: 5px; padding: 2px; }
+
+            /* Botões bem compactos */
+            .controls-area { gap: 4px; padding-bottom: 5px; }
+            .note-btn { height: 32px; font-size: 0.8rem; width: 40px; }
+        }
+    </style>
 </head>
 <body>
 
     <div class="game-header">
-        <button onclick="window.history.back()" class="btn-back">← Voltar</button>
+        <a href="index.html" class="btn-back">← Voltar</a>
         
-        
-        <h2 style="color: #e67e22; margin: 0;">TREINO DE NOTAS</h2>
+        <h2 class="header-title">TREINO DE<br>NOTAS</h2>
         
         <div class="score-board">
             <div class="score-item">
-                <span class="label">Acertos</span>
-                <span class="value success" id="score-right">0</span>
+                <span class="score-label">Acertos</span>
+                <span class="score-val success" id="score-right">0</span>
             </div>
             <div class="score-item">
-                <span class="label">Erros</span>
-                <span class="value error" id="score-wrong">0</span>
+                <span class="score-label">Erros</span>
+                <span class="score-val error" id="score-wrong">0</span>
             </div>
             <button onclick="resetGame()" class="btn-reset">↺</button>
         </div>
@@ -31,22 +208,18 @@
     <main class="game-container">
         
         <div class="fretboard-container">
-            <svg id="fretboard" viewBox="0 0 840 280" preserveAspectRatio="xMidYMid meet">
-                </svg>
+            <svg id="fretboard" viewBox="0 0 840 220" preserveAspectRatio="xMidYMid meet"></svg>
         </div>
 
         <p class="instruction">Qual é a nota marcada em <span style="color:#e74c3c; font-weight:bold">vermelho</span>?</p>
 
         <div class="controls-area">
-            
             <div class="notes-row sharps">
                 <button class="note-btn accident" data-note="C#">C#</button>
                 <button class="note-btn accident" data-note="D#">D#</button>
-                <div class="spacer"></div>
-                <button class="note-btn accident" data-note="F#">F#</button>
+                <div class="spacer"></div> <button class="note-btn accident" data-note="F#">F#</button>
                 <button class="note-btn accident" data-note="G#">G#</button>
                 <button class="note-btn accident" data-note="A#">A#</button>
-                <div class="spacer"></div>
             </div>
             
             <div class="notes-row naturals">
@@ -66,13 +239,208 @@
                 <button class="note-btn accident" data-note="Gb">Gb</button>
                 <button class="note-btn accident" data-note="Ab">Ab</button>
                 <button class="note-btn accident" data-note="Bb">Bb</button>
-                <div class="spacer"></div>
             </div>
-
         </div>
 
     </main>
 
-    <script src="game.js"></script>
+<script>
+    // === 1. ENGINE DE ÁUDIO PRO (Bass Synth) ===
+    class AudioEngine {
+        constructor() {
+            this.ctx = null;
+            // Mapa de Frequências (Oitava 3 para grave)
+            this.notas = { 
+                'C': 130.81, 'C#': 138.59, 'Db': 138.59, 
+                'D': 146.83, 'D#': 155.56, 'Eb': 155.56,
+                'E': 164.81, 
+                'F': 174.61, 'F#': 185.00, 'Gb': 185.00,
+                'G': 196.00, 'G#': 207.65, 'Ab': 207.65,
+                'A': 220.00, 'A#': 233.08, 'Bb': 233.08,
+                'B': 246.94 
+            };
+            this.compressor = null;
+            this.masterGain = null;
+        }
+        
+        iniciar() { 
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.compressor = this.ctx.createDynamicsCompressor();
+                this.compressor.threshold.value = -24; this.compressor.ratio.value = 12;
+                this.masterGain = this.ctx.createGain(); this.masterGain.gain.value = 0.8;
+                this.compressor.connect(this.masterGain); this.masterGain.connect(this.ctx.destination);
+            }
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+        }
+        
+        tocarNota(nomeNota, duracao = 1.0) {
+            this.iniciar();
+            const t = this.ctx.currentTime;
+            
+            // Resolve nome da nota (remove número da oitava se vier do MIDI mapper)
+            // Mas aqui passamos o nome direto ou calculamos freq
+            let freq = 220; 
+            if (typeof nomeNota === 'number') {
+                // Se vier MIDI number
+                freq = 440 * Math.pow(2, (nomeNota - 69) / 12);
+            } else {
+                // Se vier String ("C#")
+                freq = this.notas[nomeNota] || 220;
+            }
+
+            const osc1 = this.ctx.createOscillator(); osc1.type = 'triangle'; osc1.frequency.value = freq;
+            const osc2 = this.ctx.createOscillator(); osc2.type = 'sawtooth'; osc2.frequency.value = freq; osc2.detune.value = 4;
+            const filter = this.ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.Q.value = 3;
+            filter.frequency.setValueAtTime(freq * 4, t); filter.frequency.exponentialRampToValueAtTime(freq * 1.5, t + 0.2);
+            const envelope = this.ctx.createGain();
+            envelope.gain.setValueAtTime(0, t); envelope.gain.linearRampToValueAtTime(1.0, t + 0.02);
+            envelope.gain.exponentialRampToValueAtTime(0.6, t + 0.2); envelope.gain.linearRampToValueAtTime(0.01, t + duracao);
+            const gainOsc2 = this.ctx.createGain(); gainOsc2.gain.value = 0.7;
+            osc1.connect(filter); osc2.connect(gainOsc2).connect(filter);
+            filter.connect(envelope); envelope.connect(this.compressor);
+            osc1.start(t); osc2.start(t); osc1.stop(t + duracao); osc2.stop(t + duracao);
+        }
+    }
+
+    const audio = new AudioEngine();
+
+    // === 2. CONFIGURAÇÕES DO JOGO ===
+    const strings = 4;
+    const frets = 12;
+    const fretboardEl = document.getElementById("fretboard");
+    const openStringsMidi = [43, 38, 33, 28]; // G2, D2, A1, E1
+    const stringNames = ["G", "D", "A", "E"]; 
+    const notesScale = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const enharmonicMap = { "C#": "Db", "Db": "C#", "D#": "Eb", "Eb": "D#", "F#": "Gb", "Gb": "F#", "G#": "Ab", "Ab": "G#", "A#": "Bb", "Bb": "A#" };
+
+    let currentTarget = null;
+    let stats = { right: 0, wrong: 0 };
+    let isGameActive = true;
+
+    // === 3. DESENHO (SVG) ===
+    function drawFretboard() {
+        fretboardEl.innerHTML = ''; 
+        const marginX = 60; const marginY = 30;
+        const boardWidth = 760; const boardHeight = 150; // Altura ajustada
+        const fretDist = boardWidth / frets;
+
+        // Nut
+        createLine(marginX, marginY, marginX, marginY + (strings-1)*50, "nut", 6);
+
+        // Trastes
+        for (let i = 1; i <= frets; i++) {
+            const x = marginX + (i * fretDist);
+            createLine(x, marginY, x, marginY + (strings-1)*50, "fret", 2);
+            if ([1, 3, 5, 7, 9, 12].includes(i)) createText(x - (fretDist/2), marginY + boardHeight + 25, i, "fret-number");
+            if([3, 5, 7, 9].includes(i)) drawDot(x - (fretDist/2), marginY + 75, "#ddd");
+            if(i === 12) { drawDot(x - (fretDist/2), marginY + 25, "#ddd"); drawDot(x - (fretDist/2), marginY + 125, "#ddd"); }
+        }
+
+        // Cordas
+        for (let i = 0; i < strings; i++) {
+            const y = marginY + (i * 50);
+            createLine(marginX, y, marginX + boardWidth, y, "string", 1 + (i * 0.8));
+            createText(25, y + 5, stringNames[i], "string-name");
+        }
+    }
+
+    function createLine(x1, y1, x2, y2, cls, w) {
+        const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        l.setAttribute("x1", x1); l.setAttribute("y1", y1); l.setAttribute("x2", x2); l.setAttribute("y2", y2);
+        l.setAttribute("class", cls); if(w) l.setAttribute("stroke-width", w);
+        fretboardEl.appendChild(l);
+    }
+    function createText(x, y, txt, cls) {
+        const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        t.setAttribute("x", x); t.setAttribute("y", y); t.setAttribute("class", cls); t.textContent = txt;
+        fretboardEl.appendChild(t);
+    }
+    function drawDot(cx, cy, color, id) {
+        const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        c.setAttribute("cx", cx); c.setAttribute("cy", cy); c.setAttribute("r", 9);
+        c.setAttribute("fill", color);
+        if(id) { c.setAttribute("id", id); c.setAttribute("class", "target-note"); } 
+        else { c.setAttribute("class", "fret-marker"); }
+        fretboardEl.appendChild(c);
+    }
+
+    // === 4. LÓGICA ===
+    function generateNewNote() {
+        isGameActive = true;
+        const old = document.getElementById("target-dot"); if(old) old.remove();
+        document.querySelectorAll(".note-btn").forEach(b => b.classList.remove("wrong-anim", "correct-anim"));
+
+        const strIndex = Math.floor(Math.random() * strings);
+        const fretIndex = Math.floor(Math.random() * (frets + 1));
+        const midiVal = openStringsMidi[strIndex] + fretIndex;
+        const noteName = notesScale[midiVal % 12];
+
+        currentTarget = { string: strIndex, fret: fretIndex, note: noteName, midi: midiVal };
+
+        const marginX = 60; const marginY = 30; const boardWidth = 760; const fretDist = boardWidth / frets;
+        let cx = marginX + (fretIndex * fretDist) - (fretDist/2);
+        if(fretIndex === 0) cx = 40;
+        const cy = marginY + (strIndex * 50);
+
+        drawDot(cx, cy, "red", "target-dot");
+        setTimeout(() => audio.tocarNota(midiVal), 200);
+    }
+
+    function checkAnswer(userNote) {
+        if(!isGameActive) return;
+        audio.iniciar(); // Garante audio context
+
+        const targetNote = currentTarget.note;
+        const isCorrect = (userNote === targetNote) || (enharmonicMap[userNote] === targetNote);
+
+        if (isCorrect) {
+            stats.right++;
+            audio.tocarNota(currentTarget.midi + 12, 0.5); // Som agudo de vitória
+            
+            const clickedBtn = document.querySelector(`button[data-note="${userNote}"]`);
+            if(clickedBtn) clickedBtn.classList.add("correct-anim");
+            if(enharmonicMap[userNote]) {
+                const sibling = document.querySelector(`button[data-note="${enharmonicMap[userNote]}"]`);
+                if(sibling) sibling.classList.add("correct-anim");
+            }
+            isGameActive = false;
+            setTimeout(generateNewNote, 800);
+        } else {
+            stats.wrong++;
+            const btn = document.querySelector(`button[data-note="${userNote}"]`);
+            if(btn) btn.classList.add("wrong-anim");
+            // Som grave de erro (opcional, pode usar o oscilador simples)
+        }
+        updateStats();
+    }
+
+    function updateStats() {
+        document.getElementById("score-right").innerText = stats.right;
+        document.getElementById("score-wrong").innerText = stats.wrong;
+    }
+
+    function resetGame() {
+        stats = { right: 0, wrong: 0 }; updateStats(); generateNewNote();
+    }
+
+    // Inicialização
+    document.querySelectorAll(".note-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => checkAnswer(e.target.getAttribute("data-note")));
+    });
+
+    drawFretboard();
+    generateNewNote();
+
+    // Fix Rotação
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            document.body.style.height = window.innerHeight + 'px';
+        }, 200);
+    });
+
+</script>
 </body>
 </html>

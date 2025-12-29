@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Treino de Ouvido - Intervalos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* =========================================
+           ESTILO GERAL 
+           ========================================= */
+        :root {
+            --bg-dark: #121212;
+            --surface: #1e1e1e;
+            --primary: #0d47a1;
+            --accent: #e67e22;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --text: #ffffff;
+            --text-dim: #b0b0b0;
+        }
+
+        html, body {
+            width: 100%; height: 100%; margin: 0; padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; position: fixed;
+            display: flex; flex-direction: column;
+            user-select: none; -webkit-touch-callout: none;
+        }
+
+        /* === HEADER === */
+        .game-header {
+            background: var(--surface);
+            height: 60px; padding: 0 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #333; flex-shrink: 0; z-index: 10;
+        }
+
+        .btn-icon {
+            background: #333; border: none; color: white;
+            width: 36px; height: 36px; border-radius: 6px; cursor: pointer;
+            font-weight: bold; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;
+            text-decoration: none; transition: background 0.2s;
+        }
+        .btn-icon:active { transform: scale(0.95); }
+
+        .header-title {
+            color: var(--accent); font-size: 1rem; font-weight: bold; 
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .score-box {
+            font-size: 0.8rem; color: var(--text-dim); text-align: right; min-width: 60px;
+        }
+        #score-val { color: var(--success); font-weight: bold; font-size: 1.1rem; }
+
+        /* === CONTAINER PRINCIPAL === */
+        .game-container {
+            flex: 1; width: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-start;
+            padding: 10px; box-sizing: border-box;
+            gap: 10px; overflow-y: auto;
+        }
+
+        /* === ÁREA DE PLAY (Som) === */
+        .play-area {
+            width: 100%; max-width: 400px;
+            background: var(--surface);
+            padding: 15px; border-radius: 12px;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            flex-shrink: 0;
+        }
+
+        .btn-play {
+            width: 70px; height: 70px; border-radius: 50%;
+            border: none; background: var(--accent); color: white;
+            font-size: 2rem; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(230, 126, 34, 0.4);
+            transition: transform 0.1s; display: flex; align-items: center; justify-content: center;
+        }
+        .btn-play:active { transform: scale(0.95); }
+        .play-label { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; }
+
+        /* === ÁREA DE RESPOSTAS === */
+        .input-area {
+            width: 100%; max-width: 500px;
+            display: flex; flex-direction: column; gap: 15px;
+            flex: 1; justify-content: center;
+            padding-bottom: 20px;
+        }
+
+        /* Seletor de Direção (Resposta do Usuário) */
+        .direction-toggle {
+            display: flex; background: #333;
+            border-radius: 8px; padding: 4px; gap: 4px;
+        }
+        .dir-btn {
+            flex: 1; padding: 12px; border: none; background: transparent;
+            color: var(--text-dim); font-weight: bold; cursor: pointer;
+            transition: all 0.2s; border-radius: 4px;
+        }
+        .dir-btn.selected { background: var(--primary); color: white; }
+        
+        /* Grid de Intervalos (Resposta do Usuário) */
+        .intervals-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .int-btn {
+            background: #2c2c2c; border: 2px solid #333;
+            color: white; padding: 12px 5px; border-radius: 8px;
+            font-size: 0.9rem; font-weight: bold; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .int-btn:active { transform: translateY(2px); }
+        .int-btn.selected { 
+            background: var(--surface); border-color: var(--accent); color: var(--accent);
+        }
+        
+        /* Classes de Feedback (Erro/Acerto) */
+        .int-btn.correct, .dir-btn.correct { background: var(--success) !important; border-color: var(--success) !important; color: #000 !important; }
+        .int-btn.wrong, .dir-btn.wrong { background: var(--error) !important; border-color: var(--error) !important; opacity: 0.6; }
+
+        /* Botão de Ação */
+        .action-area { width: 100%; max-width: 500px; padding: 10px 0; }
+        .btn-action {
+            width: 100%; padding: 15px; border-radius: 8px; border: none;
+            font-size: 1.1rem; font-weight: bold; text-transform: uppercase;
+            cursor: pointer; transition: all 0.2s;
+            background: #444; color: #888; pointer-events: none;
+        }
+        .btn-action.ready { background: var(--success); color: white; pointer-events: auto; }
+        .btn-action.next { background: var(--primary); color: white; pointer-events: auto; }
+
+        /* === MODAL DE CONFIGURAÇÕES === */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            display: none; justify-content: center; align-items: center; z-index: 100;
+        }
+        .modal-overlay.open { display: flex; }
+        
+        .modal-content {
+            background: var(--surface); width: 90%; max-width: 400px; max-height: 85%;
+            border-radius: 12px; padding: 20px; overflow-y: auto;
+            border: 1px solid #444; display: flex; flex-direction: column; gap: 15px;
+        }
+        
+        .modal-header { font-size: 1.2rem; font-weight: bold; color: white; text-align: center; margin-bottom: 5px; }
+        .modal-section-title { font-size: 0.9rem; color: var(--text-dim); text-transform: uppercase; font-weight: bold; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 5px; }
+
+        /* Botões de Toggle (Configurações) */
+        .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .config-grid-full { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+        .toggle-btn {
+            padding: 10px; border-radius: 6px; border: none; cursor: pointer;
+            font-weight: bold; font-size: 0.9rem; transition: all 0.2s;
+            background: #444; color: #aaa; /* Estado Inativo (Cinza) */
+        }
+        
+        /* Estado Ativo (Verde) */
+        .toggle-btn.active {
+            background: var(--success); color: #000;
+        }
+
+        .btn-save {
+            background: var(--primary); color: white; padding: 15px;
+            border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px;
+        }
+
+        /* === RESPONSIVIDADE LANDSCAPE === */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .game-container { flex-direction: row; align-items: stretch; }
+            .play-area { width: 30%; height: auto; justify-content: center; }
+            .input-area { width: 70%; justify-content: flex-start; overflow-y: auto; }
+            .intervals-grid { grid-template-columns: repeat(4, 1fr); }
+            .btn-play { width: 50px; height: 50px; font-size: 1.5rem; }
+            .btn-action { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="game-header">
+        <button onclick="window.location.href='index.html'" class="btn-icon">←</button>
+        <div class="header-title">Treino de Ouvido</div>
+        <button id="btn-settings" class="btn-icon" onclick="settings.abrir()">⚙️</button>
+    </header>
+
+    <main class="game-container">
+        <div class="play-area">
+            <button class="btn-play" id="btn-play" onclick="game.tocarDesafio()">🔊</button>
+            <span class="play-label">Ouvir</span>
+            <div class="score-box">Pontos: <span id="score-val">0</span></div>
+        </div>
+
+        <div class="input-area">
+            <div style="font-size: 0.8rem; color: #888; margin-bottom: -10px;">QUAL A DIREÇÃO?</div>
+            <div class="direction-toggle">
+                <button class="dir-btn" id="btn-asc" onclick="game.selecionarDirecao('asc')">↗ Ascendente</button>
+                <button class="dir-btn" id="btn-desc" onclick="game.selecionarDirecao('desc')">↘ Descendente</button>
+            </div>
+
+            <div style="font-size: 0.8rem; color: #888; margin-bottom: -5px;">QUAL O INTERVALO?</div>
+            <div class="intervals-grid" id="intervals-grid">
+                </div>
+
+            <div class="action-area">
+                <button class="btn-action" id="btn-check" onclick="game.verificar()">Verificar</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">Configurações</div>
+            
+            <div class="modal-section-title">Direção do Desafio</div>
+            <div class="config-grid">
+                <button class="toggle-btn active" id="cfg-asc" onclick="settings.toggleDir('asc')">Ascendente</button>
+                <button class="toggle-btn active" id="cfg-desc" onclick="settings.toggleDir('desc')">Descendente</button>
+            </div>
+
+            <div class="modal-section-title">Intervalos Ativos</div>
+            <div class="config-grid-full" id="cfg-intervals-container">
+                </div>
+
+            <button class="btn-save" onclick="settings.salvar()">SALVAR E VOLTAR</button>
+        </div>
+    </div>
+
+<script>
+    // === 1. ENGINE DE ÁUDIO (Bass Synth Pro) ===
+    class AudioEngine {
+        constructor() {
+            this.ctx = null;
+            this.compressor = null; this.masterGain = null;
+        }
+        
+        iniciar() { 
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.compressor = this.ctx.createDynamicsCompressor();
+                this.compressor.threshold.value = -24; this.compressor.ratio.value = 12;
+                this.masterGain = this.ctx.createGain(); this.masterGain.gain.value = 0.8;
+                this.compressor.connect(this.masterGain); this.masterGain.connect(this.ctx.destination);
+            }
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+        }
+        
+        tocarNota(freq, inicio, duracao) {
+            if (!this.ctx) return;
+            const t = inicio;
+            const osc1 = this.ctx.createOscillator(); osc1.type = 'triangle'; osc1.frequency.value = freq;
+            const osc2 = this.ctx.createOscillator(); osc2.type = 'sawtooth'; osc2.frequency.value = freq; osc2.detune.value = 4;
+            const filter = this.ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.Q.value = 3;
+            filter.frequency.setValueAtTime(freq * 4, t); filter.frequency.exponentialRampToValueAtTime(freq * 1.5, t + 0.2);
+            const envelope = this.ctx.createGain();
+            envelope.gain.setValueAtTime(0, t); envelope.gain.linearRampToValueAtTime(1.0, t + 0.02);
+            envelope.gain.exponentialRampToValueAtTime(0.6, t + 0.2); envelope.gain.linearRampToValueAtTime(0.01, t + duracao);
+            const gainOsc2 = this.ctx.createGain(); gainOsc2.gain.value = 0.7;
+            osc1.connect(filter); osc2.connect(gainOsc2).connect(filter);
+            filter.connect(envelope); envelope.connect(this.compressor);
+            osc1.start(t); osc2.start(t); osc1.stop(t + duracao); osc2.stop(t + duracao);
+        }
+
+        tocarIntervalo(notaBaseMidi, semitons, direcao) {
+            this.iniciar();
+            const now = this.ctx.currentTime;
+            const f1 = 440 * Math.pow(2, (notaBaseMidi - 69) / 12);
+            const f2 = 440 * Math.pow(2, (notaBaseMidi + semitons - 69) / 12);
+
+            if (direcao === 'asc') {
+                this.tocarNota(f1, now, 0.8);
+                this.tocarNota(f2, now + 0.9, 1.5);
+            } else {
+                this.tocarNota(f2, now, 0.8);
+                this.tocarNota(f1, now + 0.9, 1.5);
+            }
+        }
+    }
+
+    // === 2. DADOS ===
+    const intervalsData = [
+        { id: '2m', label: '2ª Menor', semi: 1 }, { id: '2M', label: '2ª Maior', semi: 2 },
+        { id: '3m', label: '3ª Menor', semi: 3 }, { id: '3M', label: '3ª Maior', semi: 4 },
+        { id: '4J', label: '4ª Justa', semi: 5 }, { id: 'Tri', label: 'Trítono', semi: 6 },
+        { id: '5J', label: '5ª Justa', semi: 7 }, { id: '6m', label: '6ª Menor', semi: 8 },
+        { id: '6M', label: '6ª Maior', semi: 9 }, { id: '7m', label: '7ª Menor', semi: 10 },
+        { id: '7M', label: '7ª Maior', semi: 11 }, { id: '8J', label: 'Oitava', semi: 12 }
+    ];
+
+    // === 3. GERENCIADOR DE CONFIGURAÇÕES ===
+    class SettingsManager {
+        constructor() {
+            // Estado padrão: tudo ativo
+            this.activeDirs = ['asc', 'desc']; 
+            this.activeIntervals = intervalsData.map(i => i.id);
+            
+            this.modal = document.getElementById('settings-modal');
+            this.containerInt = document.getElementById('cfg-intervals-container');
+            this.btnAsc = document.getElementById('cfg-asc');
+            this.btnDesc = document.getElementById('cfg-desc');
+            
+            this.initRender();
+        }
+
+        initRender() {
+            // Renderiza botões de intervalos no modal
+            intervalsData.forEach(int => {
+                const btn = document.createElement('button');
+                btn.className = 'toggle-btn active'; // Começa ativo
+                btn.innerText = int.id; // Label curto para caber
+                btn.onclick = () => this.toggleInt(int.id, btn);
+                btn.dataset.id = int.id;
+                this.containerInt.appendChild(btn);
+            });
+        }
+
+        abrir() {
+            this.modal.classList.add('open');
+        }
+
+        salvar() {
+            this.modal.classList.remove('open');
+            game.novaRodada(); // Reinicia jogo com novas regras
+        }
+
+        toggleDir(dir) {
+            // Regra: Não pode desativar o último
+            if (this.activeDirs.includes(dir) && this.activeDirs.length === 1) {
+                alert("Você precisa de pelo menos uma direção ativa!");
+                return;
+            }
+
+            if (this.activeDirs.includes(dir)) {
+                this.activeDirs = this.activeDirs.filter(d => d !== dir);
+                document.getElementById('cfg-'+dir).classList.remove('active');
+            } else {
+                this.activeDirs.push(dir);
+                document.getElementById('cfg-'+dir).classList.add('active');
+            }
+        }
+
+        toggleInt(id, btn) {
+            // Regra: Não pode desativar o último
+            if (this.activeIntervals.includes(id) && this.activeIntervals.length === 1) {
+                alert("Selecione pelo menos um intervalo!");
+                return;
+            }
+
+            if (this.activeIntervals.includes(id)) {
+                this.activeIntervals = this.activeIntervals.filter(i => i !== id);
+                btn.classList.remove('active');
+            } else {
+                this.activeIntervals.push(id);
+                btn.classList.add('active');
+            }
+        }
+    }
+
+    // === 4. LÓGICA DO JOGO ===
+    class Game {
+        constructor() {
+            this.audio = new AudioEngine();
+            this.score = 0;
+            this.state = 'waiting';
+            
+            this.ui = {
+                score: document.getElementById('score-val'),
+                btnCheck: document.getElementById('btn-check'),
+                btnAsc: document.getElementById('btn-asc'),
+                btnDesc: document.getElementById('btn-desc'),
+                grid: document.getElementById('intervals-grid')
+            };
+
+            this.initUI();
+            this.novaRodada();
+        }
+
+        initUI() {
+            // Botões de resposta (Grid Principal)
+            intervalsData.forEach(int => {
+                const btn = document.createElement('button');
+                btn.className = 'int-btn';
+                btn.innerText = int.label;
+                btn.onclick = () => this.selecionarIntervalo(int.id, btn);
+                btn.dataset.id = int.id;
+                this.ui.grid.appendChild(btn);
+            });
+        }
+
+        novaRodada() {
+            this.state = 'playing';
+            this.userDir = null; this.userInt = null;
+            
+            // Reset Visual
+            document.querySelectorAll('.int-btn').forEach(b => {
+                b.className = 'int-btn';
+                b.classList.remove('selected', 'correct', 'wrong');
+            });
+            this.ui.btnAsc.className = 'dir-btn';
+            this.ui.btnDesc.className = 'dir-btn';
+            this.ui.btnCheck.className = 'btn-action';
+            this.ui.btnCheck.innerText = 'VERIFICAR';
+
+            // --- LÓGICA FILTRADA PELAS CONFIGURAÇÕES ---
+            // 1. Escolher Direção permitida
+            const allowedDirs = settings.activeDirs;
+            this.currentDirection = allowedDirs[Math.floor(Math.random() * allowedDirs.length)];
+
+            // 2. Escolher Intervalo permitido
+            const allowedIds = settings.activeIntervals;
+            const randomId = allowedIds[Math.floor(Math.random() * allowedIds.length)];
+            this.currentIntervalObj = intervalsData.find(i => i.id === randomId);
+            
+            // 3. Escolher Root (C2 a C4)
+            this.currentRoot = 36 + Math.floor(Math.random() * 24);
+
+            setTimeout(() => this.tocarDesafio(), 500);
+        }
+
+        tocarDesafio() {
+            this.audio.tocarIntervalo(this.currentRoot, this.currentIntervalObj.semi, this.currentDirection);
+        }
+
+        selecionarDirecao(dir) {
+            if (this.state === 'answered') return;
+            this.userDir = dir;
+            this.ui.btnAsc.classList.toggle('selected', dir === 'asc');
+            this.ui.btnDesc.classList.toggle('selected', dir === 'desc');
+            this.atualizarBotaoAcao();
+        }
+
+        selecionarIntervalo(id, btnElement) {
+            if (this.state === 'answered') return;
+            this.userInt = id;
+            document.querySelectorAll('.int-btn').forEach(b => b.classList.remove('selected'));
+            btnElement.classList.add('selected');
+            this.atualizarBotaoAcao();
+        }
+
+        atualizarBotaoAcao() {
+            if (this.userDir && this.userInt) this.ui.btnCheck.classList.add('ready');
+            else this.ui.btnCheck.classList.remove('ready');
+        }
+
+        verificar() {
+            if (this.state === 'answered') {
+                this.novaRodada();
+                return;
+            }
+            if (!this.userDir || !this.userInt) return;
+
+            this.state = 'answered';
+            const acertoDirecao = (this.userDir === this.currentDirection);
+            const acertoIntervalo = (this.userInt === this.currentIntervalObj.id);
+
+            // Feedback Visual
+            const btnDirCorreto = this.currentDirection === 'asc' ? this.ui.btnAsc : this.ui.btnDesc;
+            btnDirCorreto.classList.add('correct');
+            if (!acertoDirecao) {
+                const btnErrado = this.userDir === 'asc' ? this.ui.btnAsc : this.ui.btnDesc;
+                btnErrado.classList.add('wrong');
+            }
+
+            const btnIntCorreto = document.querySelector(`.int-btn[data-id="${this.currentIntervalObj.id}"]`);
+            btnIntCorreto.classList.add('correct');
+            if (!acertoIntervalo) {
+                const btnIntErrado = document.querySelector(`.int-btn[data-id="${this.userInt}"]`);
+                btnIntErrado.classList.add('wrong');
+            }
+
+            if (acertoDirecao && acertoIntervalo) {
+                this.score += 10;
+                this.ui.score.innerText = this.score;
+            }
+
+            this.ui.btnCheck.innerText = "PRÓXIMO ➡";
+            this.ui.btnCheck.className = 'btn-action next';
+        }
+    }
+
+    const settings = new SettingsManager();
+    const game = new Game();
+
+    // Resize Handler
+    window.addEventListener('resize', () => document.body.style.height = window.innerHeight + 'px');
+    window.dispatchEvent(new Event('resize'));
+
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-/* === CONFIGURAÇÕES GERAIS (VARIÁVEIS) === */
+/* === CONFIGURAÇÕES GERAIS === */
 :root {
   --bg-body: #121212;
   --bg-sidebar: #0a0a0a;
@@ -7,992 +7,184 @@
   --text-primary: #e0e0e0;
   --text-secondary: #a0a0a0;
   --accent-color: #ff9f43;
+  --accent-games: #8e44ad;
   --border-radius: 12px;
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --border-color: #333;
 }
 
-/* === RESET E BASE === */
-* {
-  box-sizing: border-box;
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-body);
-}
-::-webkit-scrollbar-thumb {
-  background: #444;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-color);
-}
+* { box-sizing: border-box; }
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-body); }
+::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
 
 body {
-  font-family: "Inter", sans-serif;
-  margin: 0;
-  display: flex;
-  height: 100vh;
-  background: var(--bg-body);
-  color: var(--text-primary);
-}
-
-/* === TELA DE LOGIN === */
-/* Container Principal que centraliza tudo */
-#login-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%); /* Gradiente sutil */
-    padding: 20px;
-}
-.login-box {
-    background: var(--bg-card);
-    padding: 40px;
-    border-radius: 16px;
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-    color: var(--text-primary);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Sombra mais dramática */
-    border: 1px solid #333; /* Borda sutil para definição */
-}
-/* Área do Logo (Imagem PNG/JPG) */
-.login-logo-area {
-    margin-bottom: 20px;
-    display: flex;            /* Centraliza a imagem */
-    justify-content: center;
-}
-
-.login-img {
-    width: 150px;             /* Defina aqui o tamanho que você quer */
-    height: auto;             /* Mantém a proporção */
-    max-width: 100%;          /* Garante que não estoure em telas pequenas */
-    
-    /* Opcional: Se sua imagem for PNG transparente e você quiser um brilho laranja nela */
-    /* filter: drop-shadow(0 0 10px rgba(255, 159, 67, 0.5)); */
-}
-h2 {
-    margin: 0 0 30px 0;
-    font-weight: 600;
-    font-size: 1.1rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-/* === INPUTS MODERNOS (Com label flutuante) === */
-.input-group {
-    position: relative;
-    margin-bottom: 20px;
-    text-align: left;
-}
-
-.login-input {
-    width: 100%;
-    padding: 15px;
-    background: #2d2d2d; /* Fundo do input mais claro que o card */
-    border: 2px solid #444;
-    border-radius: 8px;
-    font-size: 16px;
-    color: white;
-    outline: none;
-    transition: 0.3s;
-}
-/* Label que fica dentro do input */
-.input-group label {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #888;
-    pointer-events: none;
-    transition: 0.3s ease all;
-    background: transparent;
-    padding: 0 5px;
-}
-
-
-/* Mágica: Quando clica ou tem texto, o label sobe e muda de cor */
-.login-input:focus,
-.login-input:not(:placeholder-shown) {
-    border-color: var(--accent-color); /* Borda laranja ao focar */
-    box-shadow: 0 0 15px rgba(255, 159, 67, 0.2);
-}
-
-.login-input:focus + label,
-.login-input:not(:placeholder-shown) + label {
-    top: 0;
-    font-size: 0.85rem;
-    color: var(--accent-color);
-    background: var(--bg-card); /* Truque para cobrir a borda */
-    padding: 2px 5px;
-}
-
-
-/* === BOTÃO === */
-.login-btn {
-    width: 100%;
-    padding: 15px;
-    background: var(--accent-color);
-    color: #000; /* Texto preto no laranja para contraste máximo */
-    border: none;
-    font-weight: 800;
-    cursor: pointer;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: 0.3s;
-    margin-top: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-
-
-.login-btn:hover {
-    background: #e67e22; /* Laranja um pouco mais escuro no hover */
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(230, 126, 34, 0.4);
-}
-
-
-/* Mensagens de Erro */
-.error-msg {
-    color: #ff5252;
-    background: rgba(255, 82, 82, 0.1);
-    padding: 10px;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    display: none; /* Controlado via JS */
-    margin-top: 20px;
-    border: 1px solid #ff5252;
-}
-
-/* === LAYOUT FIXO (DESKTOP) === */
-#app-container {
-  opacity: 0;
-  transition: opacity 1s;
-  pointer-events: none;
-  width: 100%;
-  height: 100vh;
-  display: flex;
+  font-family: "Inter", sans-serif; margin: 0; padding: 0;
+  display: flex; height: 100dvh; background: var(--bg-body); color: var(--text-primary);
   overflow: hidden;
 }
 
-/* === MENU LATERAL === */
+/* === TELA DE LOGIN (CORRIGIDO) === */
+#login-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+    padding: 20px; z-index: 10000; /* Z-Index máximo */
+}
+.login-box {
+    background: var(--bg-card); padding: 40px; border-radius: 16px;
+    width: 100%; max-width: 400px; text-align: center;
+    border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
+.login-logo-area {
+    margin-bottom: 25px; display: flex; justify-content: center;
+}
+.login-img {
+    width: 150px; height: auto; display: block; 
+    /* Removemos qualquer regra que possa ocultar a imagem */
+}
+.login-title {
+    margin: 0 0 30px 0; font-size: 1.2rem; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+}
+.input-group { position: relative; margin-bottom: 20px; text-align: left; }
+.login-input {
+    width: 100%; padding: 15px; background: #2d2d2d; border: 2px solid #444;
+    border-radius: 8px; font-size: 16px; color: white; outline: none; transition: 0.3s;
+}
+.login-input:focus { border-color: var(--accent-color); box-shadow: 0 0 15px rgba(255,159,67,0.2); }
+.input-group label {
+    position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+    color: #888; pointer-events: none; transition: 0.3s; padding: 0 5px;
+}
+.login-input:focus + label, .login-input:not(:placeholder-shown) + label {
+    top: 0; font-size: 0.85rem; color: var(--accent-color); background: var(--bg-card);
+}
+.login-btn {
+    width: 100%; padding: 15px; background: var(--accent-color); color: #000;
+    border: none; font-weight: 800; cursor: pointer; border-radius: 8px;
+    font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s;
+    margin-top: 10px;
+}
+.login-btn:hover { background: #e67e22; transform: translateY(-2px); }
+.error-msg { color: #ff5252; background: rgba(255,82,82,0.1); padding: 10px; border-radius: 6px; display: none; margin-top: 20px; border: 1px solid #ff5252; }
+
+/* === LAYOUT DO APP === */
+#app-container { opacity: 0; transition: opacity 1s; width: 100%; height: 100%; display: flex; }
+
+/* === SIDEBAR === */
 #sidebar {
-  width: 280px;
-  background: var(--bg-sidebar);
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid #333;
-  flex-shrink: 0;
-  z-index: 100;
-}
-
-.logo-area {
-  padding: 30px 20px;
-  text-align: center;
-  border-bottom: 1px solid #222;
-}
-.logo-area h1 {
-  margin: 0;
-  font-family: "Poppins", sans-serif;
-  font-size: 1.4rem;
-  color: var(--accent-color);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  text-shadow: 0 0 10px rgba(255, 159, 67, 0.3);
-}
-
-.mobile-menu-toggle {
-  display: none;
-  margin-top: 10px;
-  width: 100%;
-  padding: 8px;
-  background: transparent;
-  border: 1px solid var(--accent-color);
-  color: var(--accent-color);
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.tools-area {
-  padding: 20px;
-}
-.btn-metronome {
-  width: 100%;
-  padding: 12px;
-  background: linear-gradient(145deg, #2c3e50, #34495e);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  font-family: "Poppins", sans-serif;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: 0.3s;
-  margin-bottom: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-}
-.btn-metronome:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-  filter: brightness(1.1);
-}
-
-.btn-logout {
-  background: #c0392b;
-  color: white;
-  border: none;
-  padding: 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 0;
-  width: 100%;
-  font-size: 0.95rem;
-  font-weight: bold;
-}
-
-#menu-container {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
-}
-
-.module-header {
-  padding: 15px;
-  margin-top: 5px;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: 0.2s;
-}
-.module-header:hover {
-  background: var(--bg-hover);
-}
-
-.lessons-list {
-  display: none;
-  padding-left: 10px;
-  margin-bottom: 10px;
-}
-.lessons-list.open {
-  display: block;
-  animation: slideDown 0.3s ease;
-}
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.lesson-link {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: nowrap;
-  gap: 10px;
-  padding: 10px 15px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  border-left: 2px solid #333;
-  margin-left: 10px;
-  transition: 0.2s;
-}
-.lesson-link:hover {
-  color: white;
-  border-left-color: var(--accent-color);
-  padding-left: 20px;
-}
-.lesson-link.active {
-  color: var(--accent-color);
-  border-left-color: var(--accent-color);
-  background: linear-gradient(90deg, rgba(255, 159, 67, 0.1), transparent);
-  font-weight: bold;
-}
-
-.menu-percent {
-  flex-shrink: 0;
-  white-space: nowrap;
-  font-size: 0.75rem;
-  color: #2ecc71;
-  font-weight: bold;
-  background: rgba(46, 204, 113, 0.15);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-.sidebar-footer {
-  padding: 20px;
-  border-top: 1px solid #333;
-  background: var(--bg-sidebar);
-  margin-top: auto;
-}
-
-/* === ÁREA DE CONTEÚDO === */
-#content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-  display: flex;
-  justify-content: center;
-}
-
-.container {
-  width: 100%;
-  max-width: 900px;
-  background: var(--bg-card);
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow: var(--shadow);
-  height: fit-content;
-  margin-bottom: 40px;
-  border: 1px solid #333;
-}
-
-.breadcrumb {
-  font-size: 0.8rem;
-  color: var(--accent-color);
-  text-transform: uppercase;
-  font-weight: bold;
-  letter-spacing: 1px;
-  margin-bottom: 10px;
-}
-h2.lesson-title {
-  margin-top: 0;
-  font-family: "Poppins", sans-serif;
-  font-size: 2.2rem;
-  color: white;
-  border-bottom: 1px solid #333;
-  padding-bottom: 20px;
-  margin-bottom: 30px;
-}
-.lesson-text {
-  line-height: 1.8;
-  font-size: 1.1rem;
-  color: #ccc;
-  margin-bottom: 30px;
-}
-.link-interno {
-  color: var(--accent-color);
-  font-weight: 600;
-  text-decoration: none;
-  background: rgba(255, 159, 67, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: 0.2s;
-}
-
-.image-container {
-  text-align: center;
-  margin: 30px 0;
-  background: #151515;
-  padding: 20px;
-  border: 1px solid #333;
-  border-radius: var(--border-radius);
-}
-.image-container img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-}
-.no-image {
-  color: #555;
-  font-style: italic;
-}
-
-.audio-section {
-  background: #151515;
-  padding: 25px;
-  border-radius: var(--border-radius);
-  margin-top: 40px;
-  border: 1px solid #333;
-}
-.audio-row {
-  margin-bottom: 20px;
-}
-.audio-label {
-  color: var(--accent-color);
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-  display: block;
-}
-audio {
-  width: 100%;
-  height: 40px;
-  filter: invert(0.9);
-}
-
-.nav-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 50px;
-  padding-top: 30px;
-  border-top: 1px solid #333;
-}
-.nav-btn {
-  padding: 12px 30px;
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid #444;
-  border-radius: 50px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: 0.3s;
-  font-family: "Poppins", sans-serif;
-}
-.nav-btn:hover {
-  background: var(--accent-color);
-  color: #000;
-  border-color: var(--accent-color);
-}
-.nav-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-/* === PROGRESSO E TIMER === */
-.progress-box {
-  background: #1e272e;
-  color: #ecf0f1;
-  border-radius: 8px;
-  padding: 25px;
-  margin-top: 40px;
-  margin-bottom: 20px;
-  text-align: center;
-  border: 1px solid #34495e;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
-.progress-label {
-  font-size: 0.9rem;
-  color: #bdc3c7;
-  font-weight: 600;
-  margin-bottom: 15px;
-  display: block;
-  letter-spacing: 1px;
-}
-.progress-slider {
-  width: 100%;
-  cursor: pointer;
-  height: 12px;
-  background: #34495e;
-  border-radius: 6px;
-  outline: none;
-  -webkit-appearance: none;
-}
-.progress-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #27ae60;
-  cursor: pointer;
-  border: 2px solid #fff;
-  box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
-}
-.progress-value {
-  color: #2ecc71;
-  font-weight: bold;
-  font-size: 1.2rem;
-  margin-left: 8px;
-}
-
-.timer-box {
-  background: linear-gradient(135deg, #1e3799, #0c2461);
-  color: white;
-  padding: 20px;
-  border-radius: var(--border-radius);
-  margin: 30px 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 8px 20px rgba(12, 36, 97, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-.timer-display {
-  font-family: "Courier New", monospace;
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: #fff;
-}
-.timer-btn {
-  background: white;
-  color: #0c2461;
-  border: none;
-  padding: 12px 25px;
-  border-radius: 50px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.timer-btn.running {
-  background: #ff6b6b;
-  color: white;
-}
-
-/* === METRÔNOMO E MODAIS === */
-#metronome-modal,
-#map-modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.95);
-  backdrop-filter: blur(5px);
-  z-index: 2000;
-  justify-content: center;
-  align-items: center;
-}
-.modal-content {
-  background: var(--bg-card);
-  border: 1px solid #333;
-  color: var(--text-primary);
-  border-radius: 16px;
-  position: relative;
-}
-.close-modal {
-  position: absolute;
-  right: -10px;
-  top: -10px;
-  background: #ff5252;
-  color: white;
-  border: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(255, 82, 82, 0.4);
-}
-
-.sequencer-container {
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 8px;
-  height: auto;
-  min-height: 150px;
-  padding: 20px 15px;
-  background: #000;
-  border: 1px solid #333;
-  border-radius: 8px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-}
-.step-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 40px;
-  flex-shrink: 0;
-}
-.step-box {
-  width: 100%;
-  height: 80px;
-  background: #222;
-  border-radius: 4px;
-  cursor: pointer;
-  border: 1px solid #444;
-  transition: all 0.1s ease;
-  position: relative;
-}
-.step-label {
-  margin-top: 10px;
-  font-size: 0.9rem;
-  color: #7f8c8d;
-  font-weight: bold;
-  font-family: monospace;
-}
-.step-box.playing {
-  border-color: #fff;
-  box-shadow: 0 0 10px #03d7d7, 0 0 20px #03d7d7,
-    inset 0 0 10px rgba(255, 255, 255, 0.5);
-  transform: scale(1.05);
-  z-index: 10;
-}
-.step-box.weak.playing {
-  box-shadow: 0 0 15px #7b4292, 0 0 30px #7b4292;
-}
-.step-box.weak::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 40%;
-  background: #7b4292;
-  border-radius: 0 0 4px 4px;
-}
-.step-box.strong::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
-  background: #03d7d7;
-  border-radius: 4px;
-}
-.metro-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 15px;
-}
-.metro-select {
-  background: #333;
-  color: white;
-  border: 1px solid #444;
-  padding: 10px;
-  font-size: 1rem;
-  border-radius: 5px;
-}
-
-/* --- ESTILOS GLOBAIS (DESKTOP E MOBILE) --- */
-
-/* Correção do Mapa Mermaid */
-#roadmap-container {
-    flex: 1;
-    width: 100%;
-    overflow: auto;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 10px;
-    background-color: #fdfdfd;
-}
-
-#mermaid-graph {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  padding-bottom: 50px;
-}
-
-#mermaid-graph svg {
-  max-width: 500px !important; /* Trava no Desktop */
-  width: auto !important;
-  height: auto !important;
-  display: block;
-  margin: 0 auto;
-}
-
-/* Imagens no Texto */
-.lesson-text img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  margin: 20px auto;
-  display: block;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  border: 1px solid #333;
-}
-
-/* Estilos do Diagrama de Baixo */
-.bass-diagram {
-    display: block;
-    margin: 20px auto;
-    max-width: 100%;
-    height: auto;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-.string-line { stroke: #333; stroke-linecap: round; }
-.fret-line { stroke: #999; stroke-width: 2px; }
-.nut-line { stroke: #000; stroke-width: 5px; }
-.fret-number { fill: #666; font-size: 12px; text-anchor: middle; font-family: sans-serif; }
-.diagram-title { font-size: 20px; font-weight: bold; text-anchor: middle; fill: #2c3e50; font-family: sans-serif; }
-.note-circle { stroke: #000; stroke-width: 1px; transition: all 0.2s; }
-.note-text { font-size: 14px; font-weight: bold; text-anchor: middle; dominant-baseline: central; pointer-events: none; font-family: sans-serif; }
-
-/* Lógica de Visualização Diagrama */
-svg.view-finger .label-note, svg.view-finger .label-interval { display: none; }
-svg.view-note .label-finger, svg.view-note .label-interval { display: none; }
-svg.view-interval .label-finger, svg.view-interval .label-note { display: none; }
-
-
-/* ============================================================
-   RESPONSIVIDADE (MOBILE APENAS)
-   Todas as correções de layout mobile ficam AQUI DENTRO
-   ============================================================ */
-@media (max-width: 1024px) {
-
-  /* 1. Timer Compacto */
-  .timer-box {
-    margin: 5px 0 10px 0;
-    color: white;
-    padding: 5px 10px;
-    border-radius: var(--border-radius);
-    background: linear-gradient(135deg, #1e3799, #0c2461);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 20px rgba(12, 36, 97, 0.4);
-    min-height: auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .timer-display {
-    font-family: "Courier New", monospace;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #fff;
-  }
-  .timer-box span {
-    font-size: 0.8rem !important;
-  }
-  .timer-btn {
-    background: white;
-    color: #0c2461;
-    padding: 6px 15px;
-    font-size: 0.7rem;
-    height: fit-content;
-  }
-
-  /* 2. Slider Discreto */
-  .progress-box {
-    padding: 15px;
-    margin-top: 20px;
-    background: #1e272e;
-    border: 1px solid #333;
-    color: #ecf0f1;
-    box-shadow: none;
-  }
-  .progress-label {
-    font-size: 0.8rem;
-    margin-bottom: 5px;
-  }
-  .progress-slider {
-    height: 6px;
-  }
-  .progress-slider::-webkit-slider-thumb {
-    width: 18px;
-    height: 18px;
-    box-shadow: none;
-  }
-
-  /* 3. Diagrama Edge-to-Edge */
-  .bass-diagram {
-    width: calc(100% + 30px) !important;
-    margin-left: -15px !important;
-    margin-right: -15px !important;
-    border-radius: 0 !important;
-    max-width: none !important;
-    border-left: none;
-    border-right: none;
-    box-shadow: none;
-    margin-top: 15px;
-    margin-bottom: 0;
-  }
-  .diagram-controls {
-    width: calc(100% + 30px);
-    margin-left: -15px;
-    background: #1a1a1a;
-    padding: 10px 0;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #333;
-  }
-
-  /* 4. Mermaid Mobile */
-  #mermaid-graph svg {
-    max-width: 100% !important;
-  }
-
-  /* 5. Imagens no Texto */
-  .lesson-text img {
-    margin: 15px 0;
-    width: 100%;
-  }
-
-  /* 6. Layout Geral (Destrava corpo do site) */
-  body {
-    flex-direction: column;
-    height: auto !important;
-    min-height: 100vh;
-    overflow-y: auto !important;
-  }
-  #app-container {
-    flex-direction: column;
-    height: auto !important;
-    min-height: 100vh;
-    overflow: visible !important;
-    overflow-x: hidden;
-  }
-  #sidebar {
-    width: 100%;
-    height: auto;
-    min-height: auto;
-    border-right: none;
-    border-bottom: 1px solid #333;
-    position: relative;
-    z-index: 1000;
-    flex-shrink: 0;
-  }
-  .logo-area {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-  }
-  .mobile-menu-toggle {
-    display: block;
-    margin-top: 0;
-    width: auto;
-    padding: 5px 10px;
-    font-size: 0.8rem;
-    height: fit-content;
-    align-self: center;
-  }
-  .tools-area, #menu-container, .sidebar-footer {
-    display: none;
-  }
-  #sidebar.mobile-open {
-    height: 100vh !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    background: var(--bg-sidebar);
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-  }
-  #sidebar.mobile-open .tools-area,
-  #sidebar.mobile-open #menu-container,
-  #sidebar.mobile-open .sidebar-footer {
-    display: block;
-  }
-  #content {
-    width: 100%;
-    height: auto !important;
-    padding: 15px 15px 150px 15px !important;
-    display: block;
-    margin-top: 0;
-    overflow: visible !important;
-  }
-  .container {
-    padding: 15px;
-    width: 100%;
-    border: none;
-    box-shadow: none;
-    height: auto;
-  }
-  h2.lesson-title {
-    font-size: 1.5rem;
-  }
-  .modal-content {
-    width: 95%;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding-top: 50px;
-  }
-  .close-modal {
-    top: 10px;
-    right: 10px;
-    background: #c0392b;
-    z-index: 10;
-  }
-}
-
-
-
-
-/* ============================================================
-   AJUSTE PARA CELULAR DEITADO (LANDSCAPE / TELA BAIXA)
-   Isso evita que o menu suma quando a altura é pouca
-   ============================================================ */
-@media (max-width: 1024px) and (max-height: 600px) {
-  
-  /* 1. Logo menor */
-  .logo-area {
-    padding: 5px 15px !important; /* Reduz muito o padding */
-  }
-  
-  /* 2. Botões de Ferramentas (Metrônomo/Mapa) lado a lado */
-  /* Isso economiza muito espaço vertical */
-  .tools-area {
-    padding: 5px 15px !important;
-    display: flex;
-    gap: 10px;
-  }
-  
-  .btn-metronome, .btn-map-toggle {
-    flex: 1; /* Divide o espaço */
-    font-size: 0.75rem !important; /* Fonte menor */
-    padding: 8px !important;
-    margin-bottom: 0 !important; /* Tira margem de baixo */
-  }
-
-  /* 3. Rodapé (Logout) mais compacto */
-  .sidebar-footer {
-    padding: 10px 15px !important;
-  }
-  .btn-logout {
-    padding: 8px !important;
-    font-size: 0.8rem !important;
-  }
-
-  /* 4. Garante que a lista de aulas tenha espaço */
-  #menu-container {
-    flex: 1; /* Força a ocupar o espaço que sobra */
-    overflow-y: auto; /* Garante a rolagem */
-    padding-top: 5px !important;
-    padding-bottom: 5px !important;
-  }
-  
-  /* Reduz tamanho dos itens da lista */
-  .module-header {
-    padding: 8px 10px !important;
-    margin-top: 2px !important;
-    font-size: 0.9rem !important;
-  }
-  .lesson-link {
-    padding: 6px 10px !important;
-    font-size: 0.85rem !important;
-  }
-}
-
-
-/* Classe para os botões dentro do menu (filhos) */
+  width: 280px; background: var(--bg-sidebar); display: flex; flex-direction: column;
+  border-right: 1px solid #333; flex-shrink: 0; z-index: 100;
+}
+.logo-area { padding: 30px 20px; text-align: center; border-bottom: 1px solid #222; position: relative; }
+.logo-area h1 { margin: 0; font-family: "Poppins"; font-size: 1.4rem; color: var(--accent-color); text-transform: uppercase; letter-spacing: 2px; }
+.mobile-menu-close { display: none; position: absolute; right: 20px; top: 30px; background: none; border: none; color: white; font-size: 1.5rem; }
+.sidebar-scroll-area { flex: 1; overflow-y: auto; padding: 10px; }
+.tools-area { padding: 10px; }
+.btn-metronome, .btn-map, .btn-games {
+  width: 100%; padding: 12px; border: none; border-radius: 12px; cursor: pointer;
+  font-family: "Poppins"; font-weight: 600; display: flex; align-items: center;
+  justify-content: center; gap: 10px; transition: 0.3s; margin-bottom: 10px; color: white;
+}
+.btn-metronome { background: linear-gradient(145deg, #2c3e50, #34495e); }
+.btn-map { background: #27ae60; }
+.btn-games { background: var(--accent-games); justify-content: space-between; }
+#games-submenu { display: none; flex-direction: column; gap: 5px; padding-left: 10px; margin-bottom: 10px;}
 .sub-item {
-    width: 95% !important;     /* Um pouco mais estreito */
-    margin-left: 5% !important; /* Recuo para a direita (efeito escada) */
-    margin-top: 5px !important;
-    font-size: 0.9rem !important; /* Texto levemente menor */
-    padding: 10px !important;     /* Altura levemente menor */
-    border-left: 3px solid rgba(255,255,255,0.3) !important; /* Detalhe visual */
+    background: rgba(255,255,255,0.05); border: none; color: #ccc; padding: 10px;
+    border-radius: 6px; text-align: left; cursor: pointer; font-size: 0.9rem;
+    border-left: 3px solid transparent; transition: 0.2s;
 }
+.sub-item:hover { background: rgba(255,255,255,0.1); border-left-color: var(--accent-games); color: white; }
+#games-arrow { transition: transform 0.3s; font-size: 0.8rem; }
+.rotate-arrow { transform: rotate(180deg); }
+#menu-container { padding-top: 10px; }
+.module-header {
+  padding: 15px; margin-top: 5px; border-radius: 12px; cursor: pointer;
+  font-weight: 600; color: var(--text-primary); display: flex; justify-content: space-between;
+  align-items: center; transition: 0.2s;
+}
+.module-header:hover { background: var(--bg-hover); }
+.lessons-list { display: none; padding-left: 10px; margin-bottom: 10px; }
+.lessons-list.open { display: block; animation: slideDown 0.3s ease; }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+.lesson-link {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding: 10px 15px; cursor: pointer; font-size: 0.9rem; color: var(--text-secondary);
+  border-left: 2px solid #333; margin-left: 10px; transition: 0.2s;
+}
+.lesson-link:hover { color: white; border-left-color: var(--accent-color); padding-left: 20px; }
+.lesson-link.active { color: var(--accent-color); border-left-color: var(--accent-color); background: linear-gradient(90deg, rgba(255,159,67,0.1), transparent); font-weight: bold; }
+.menu-percent { font-size: 0.75rem; color: #2ecc71; background: rgba(46,204,113,0.15); padding: 2px 6px; border-radius: 4px; }
+.sidebar-footer { padding: 20px; border-top: 1px solid #333; }
+.btn-logout { background: #c0392b; color: white; border: none; padding: 12px; border-radius: 4px; width: 100%; font-weight: bold; cursor: pointer; }
 
-/* Animação suave para a seta */
-#games-arrow {
-    transition: transform 0.3s ease;
-}
-.rotate-arrow {
-    transform: rotate(180deg);
+/* === CONTEÚDO === */
+#content { flex: 1; overflow-y: auto; padding: 0; display: flex; flex-direction: column; background: var(--bg-body); }
+.mobile-header { display: none; padding: 15px; background: var(--bg-card); border-bottom: 1px solid #333; align-items: center; gap: 15px; flex-shrink: 0; }
+.mobile-menu-toggle { background: none; border: 1px solid var(--accent-color); color: var(--accent-color); padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 1.2rem; }
+.mobile-title { font-weight: bold; color: var(--accent-color); font-family: 'Poppins'; }
+.container { width: 100%; max-width: 900px; margin: 0 auto; padding: 40px; background: var(--bg-card); border-radius: 16px; margin-bottom: 40px; border: 1px solid #333; height: fit-content; align-self: center; }
+.breadcrumb { font-size: 0.8rem; color: var(--accent-color); text-transform: uppercase; font-weight: bold; letter-spacing: 1px; margin-bottom: 10px; }
+.lesson-title { font-family: "Poppins"; font-size: 2.2rem; color: white; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+.lesson-text { line-height: 1.8; font-size: 1.1rem; color: #ccc; margin-bottom: 30px; }
+.image-container { text-align: center; margin: 30px 0; background: #151515; padding: 20px; border: 1px solid #333; border-radius: 12px; }
+.image-container img { max-width: 100%; height: auto; border-radius: 8px; }
+.audio-section { background: #151515; padding: 25px; border-radius: 12px; margin-top: 40px; border: 1px solid #333; }
+.audio-label { color: var(--accent-color); font-size: 0.85rem; text-transform: uppercase; display: block; margin-bottom: 5px; }
+audio { width: 100%; height: 40px; filter: invert(0.9); margin-bottom: 15px; }
+
+/* Timer e Progresso */
+.timer-box { background: linear-gradient(135deg, #1e3799, #0c2461); color: white; padding: 20px; border-radius: 12px; margin: 30px 0; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 8px 20px rgba(12, 36, 97, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); }
+.timer-display { font-family: "Courier New", monospace; font-size: 2.5rem; font-weight: bold; color: #fff; }
+.timer-btn { background: white; color: #0c2461; border: none; padding: 12px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+.timer-btn.running { background: #ff6b6b; color: white; }
+.progress-box { background: #1e272e; color: #ecf0f1; border-radius: 8px; padding: 25px; margin-top: 40px; text-align: center; border: 1px solid #34495e; }
+.progress-slider { width: 100%; cursor: pointer; height: 12px; background: #34495e; border-radius: 6px; outline: none; -webkit-appearance: none; }
+.progress-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #27ae60; cursor: pointer; border: 2px solid #fff; }
+.progress-value { color: #2ecc71; font-weight: bold; font-size: 1.2rem; }
+.nav-buttons { display: flex; justify-content: space-between; margin-top: 50px; padding-top: 30px; border-top: 1px solid #333; }
+.nav-btn { padding: 12px 30px; background: transparent; color: var(--text-secondary); border: 1px solid #444; border-radius: 50px; cursor: pointer; font-size: 1rem; transition: 0.3s; }
+.nav-btn:hover:not(:disabled) { background: var(--accent-color); color: #000; border-color: var(--accent-color); }
+.nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Modais */
+#metronome-modal, #map-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(5px); z-index: 2000; justify-content: center; align-items: center; }
+.modal-content { background: var(--bg-card); border: 1px solid #333; color: var(--text-primary); border-radius: 16px; position: relative; padding: 20px; max-width: 700px; width: 95%; }
+.close-modal { position: absolute; right: -10px; top: -10px; background: #ff5252; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; }
+.sequencer-container { display: flex; justify-content: flex-start; align-items: flex-start; gap: 8px; height: auto; min-height: 150px; padding: 20px 15px; background: #000; border: 1px solid #333; border-radius: 8px; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+.step-wrapper { display: flex; flex-direction: column; align-items: center; width: 40px; flex-shrink: 0; }
+.step-box { width: 100%; height: 80px; background: #222; border-radius: 4px; cursor: pointer; border: 1px solid #444; transition: all 0.1s ease; position: relative; }
+.step-box.playing { border-color: #fff; box-shadow: 0 0 10px #03d7d7, 0 0 20px #03d7d7, inset 0 0 10px rgba(255, 255, 255, 0.5); transform: scale(1.05); z-index: 10; }
+.step-box.weak.playing { box-shadow: 0 0 15px #7b4292, 0 0 30px #7b4292; }
+.step-box.weak::after { content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 40%; background: #7b4292; border-radius: 0 0 4px 4px; }
+.step-box.strong::after { content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 100%; background: #03d7d7; border-radius: 4px; }
+.metro-select { background: #333; color: white; border: 1px solid #444; padding: 10px; border-radius: 5px; }
+#mermaid-graph svg { max-width: 500px !important; height: auto !important; margin: 0 auto; display: block; }
+
+/* CORREÇÃO DIAGRAMA SVG (Fundo Branco) */
+.lesson-text svg { background-color: #ffffff !important; border-radius: 8px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin: 20px auto; display: block; max-width: 100%; height: auto; border: 1px solid #ccc; }
+.lesson-text svg text { fill: #1a1a1a !important; font-family: 'Inter', sans-serif; }
+.lesson-text svg line, .lesson-text svg path, .lesson-text svg circle { stroke: #1a1a1a !important; }
+.string-name { font-weight: 900 !important; font-size: 20px !important; fill: #000000 !important; }
+.fret-number { font-weight: normal; font-size: 14px !important; fill: #666666 !important; }
+.diagram-controls { display: flex; justify-content: center; gap: 10px; margin-top: 15px; background: transparent; padding: 0; }
+.btn-diagram { background-color: #e0e0e0 !important; color: #121212 !important; border: 1px solid #999 !important; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 700 !important; transition: all 0.2s; }
+.btn-diagram:hover { background-color: #ffffff !important; border-color: var(--accent-color) !important; transform: translateY(-2px); }
+.nut-line { stroke-width: 6px !important; stroke: #000 !important; }
+
+@media (max-width: 1024px) {
+    #sidebar { position: fixed; left: -280px; top: 0; height: 100dvh; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 20px rgba(0,0,0,0.5); }
+    #sidebar.mobile-open { left: 0; }
+    .mobile-header { display: flex; }
+    .mobile-menu-close { display: block; }
+    .container { padding: 20px; max-width: 100%; border: none; box-shadow: none; }
+    .lesson-title { font-size: 1.5rem; }
+    .timer-box { flex-direction: row; padding: 10px; min-height: auto; }
+    .timer-display { font-size: 1.5rem; }
+    .timer-btn { padding: 6px 15px; font-size: 0.7rem; }
+    .step-box { height: 60px; width: 30px; }
+    .sequencer-container { min-height: 120px; }
 }

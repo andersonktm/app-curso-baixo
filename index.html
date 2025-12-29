@@ -1,304 +1,183 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-  <head>
+<head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lógica do Groove - Curso de Baixo</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Lógica do Groove</title>
+    
     <link rel="manifest" href="manifest.json" />
-
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Poppins:wght@500;700&display=swap" rel="stylesheet" />
+    
+    <link rel="stylesheet" href="style.css?v=14" />
+</head>
+<body>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Poppins:wght@500;700&display=swap"
-      rel="stylesheet"
-    />
-
-    <link rel="stylesheet" href="style.css?v=9" />
-  </head>
-  <body>
-
-      <div id="login-screen">
+    <div id="login-screen">
         <div class="login-box">
-            
-          <div class="login-logo-area">
-              <img src="logo.png" alt="Logo Lógica do Groove" class="login-img" width="150">
-          </div>
+            <div class="login-logo-area">
+                <img src="logo.png" alt="Logo Lógica do Groove" class="login-img">
+            </div>
 
-          <h2>Área Restrita a Alunos</h2>
-          
-        <form id="login-form">
+            <h2 class="login-title">Área do Aluno</h2>
+
+            <form id="login-form">
                 <div class="input-group">
                     <input type="email" id="email" class="login-input" placeholder=" " required>
                     <label for="email">E-mail</label>
                 </div>
-              
-            <div class="input-group">
+                <div class="input-group">
                     <input type="password" id="password" class="login-input" placeholder=" " required>
                     <label for="password">Senha</label>
                 </div>
-
-         <button type="button" id="btnLogin" class="login-btn">ENTRAR NA ÁREA DO ALUNO</button>
+                
+                <button type="submit" id="btnLogin" class="login-btn">ENTRAR NA ÁREA DO ALUNO</button>
             </form>
-
-          <p id="error-msg" class="error-msg"></p>
+            
+            <p id="error-msg" class="error-msg"></p>
         </div>
-      </div>
-
-
-
-
-
+    </div>
 
     <div id="app-container">
-      <div id="metronome-modal">
-        <div
-          class="modal-content"
-          style="text-align: center; padding: 20px; max-width: 700px"
-        >
-          <button class="close-modal" onclick="toggleMetronome()">X</button>
-          <h2 style="color: #2c3e50; margin-top: 0">Metrônomo Pro</h2>
-          <div class="metro-controls">
-            <div>
-              <label style="font-weight: bold; color: #7f8c8d">Compasso:</label>
-              <select
-                id="time-sig"
-                class="metro-select"
-                onchange="generateSteps()"
-              >
-                <option value="4/4">4/4 (Rock/Pop)</option>
-                <option value="2/4">2/4 (Samba/Polka)</option>
-                <option value="3/4">3/4 (Valsa)</option>
-                <option value="2/2">2/2 (Cut Time)</option>
-                <option value="6/8">6/8 (Blues/Jazz)</option>
-                <option value="7/4">7/4 (Prog)</option>
-              </select>
+        
+        <aside id="sidebar">
+            <div class="logo-area">
+                <h1>Lógica do Groove</h1>
+                <button class="mobile-menu-close" onclick="toggleMobileMenu()">✕</button>
             </div>
-            <div style="font-size: 2rem; font-weight: bold; color: #e67e22">
-              <span id="bpm-val">100</span>
-              <span style="font-size: 1rem; color: #7f8c8d">BPM</span>
-            </div>
-          </div>
-          <p style="font-size: 0.8rem; color: #666; margin: 0">
-            Toque nas barras: Mudo > Fraco (Roxo) > Forte (Azul)
-          </p>
-          <div id="sequencer-track" class="sequencer-container"></div>
-          <input
-            type="range"
-            id="bpm-range"
-            min="40"
-            max="220"
-            value="100"
-            style="width: 100%; margin: 20px 0; cursor: pointer"
-            oninput="updateBpm(this.value)"
-          />
-          <button
-            id="btn-play-metro"
-            onclick="togglePlayMetronome()"
-            style="
-              background: #2c3e50;
-              color: white;
-              border: none;
-              padding: 15px 50px;
-              font-size: 1.2rem;
-              border-radius: 50px;
-              cursor: pointer;
-              transition: 0.2s;
-            "
-          >
-            ▶ INICIAR
-          </button>
-        </div>
-      </div>
 
-      <div
-        id="map-modal"
-        style="
-          display: none;
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.9);
-          z-index: 2000;
-          justify-content: center;
-          align-items: center;
-        "
-      >
-        <div
-          class="modal-content"
-          style="
-            width: 95%;
-            max-width: 1000px;
-            height: 90%;
-            background: white;
-            padding: 10px;
-            border-radius: 8px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-          "
-        >
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              border-bottom: 1px solid #eee;
-              padding-bottom: 10px;
-              margin-bottom: 10px;
-            "
-          >
-            <h2 style="margin: 0; color: #2c3e50">Seu Caminho de Evolução</h2>
-            <button
-              class="close-modal"
-              onclick="toggleMap()"
-              style="position: static"
-            >
-              X
+            <div class="sidebar-scroll-area">
+                <div class="tools-area">
+                    <button class="btn-metronome" onclick="toggleMetronome()"><span>⏱️</span> Metrônomo</button>
+                    <button class="btn-map" onclick="toggleMap()"><span>🗺️</span> Mapa de Estudo</button>
+                    
+                    <button class="btn-games" onclick="toggleGamesMenu()"> 
+                        <span>🎮 Jogos & Treinos</span> <span id="games-arrow">▼</span>
+                    </button>
+                    <div id="games-submenu">
+                        <button class="sub-item" onclick="window.location.href='game.html'"><span>🎼</span> Treino de Notas</button>
+                        <button class="sub-item" onclick="window.location.href='flashcards.html'"><span>🃏</span> Flashcards</button>
+                        <button class="sub-item" onclick="window.location.href='ear_training.html'"><span>👂</span> Treino de Ouvido</button>
+                        <button class="sub-item" onclick="window.location.href='songs.html'"><span>🎶</span> Interval Songs</button>
+                        <button class="sub-item" onclick="window.location.href='game_virus.html'"><span>🦠</span> Desafio Vírus</button>
+                    </div>
+                </div>
+
+                <div id="menu-container"></div>
+            </div>
+
+            <div class="sidebar-footer">
+                <button class="btn-logout" id="btnLogout">🚪 Sair</button>
+            </div>
+        </aside>
+
+        <main id="content">
+            <div class="mobile-header">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <span class="mobile-title">Lógica do Groove</span>
+            </div>
+
+            <div class="container">
+                <div class="breadcrumb" id="display-module">Painel</div>
+                <h2 class="lesson-title" id="display-title">Bem-vindo</h2>
+
+                <div id="study-timer" class="timer-box" style="display: none">
+                    <div style="display: flex; flex-direction: column">
+                        <span style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8;">Tempo de Prática</span>
+                        <span id="timer-display" class="timer-display">00:00</span>
+                    </div>
+                    <button id="btn-timer" class="timer-btn" onclick="toggleStudyTimer()">▶ INICIAR</button>
+                </div>
+
+                <div class="image-container" id="img-box" style="display: none;">
+                    <img id="display-img" src="" alt="Diagrama" />
+                </div>
+
+                <div class="lesson-text" id="display-text">Selecione uma aula no menu.</div>
+
+                <div id="audio-container" class="audio-section" style="display: none">
+                    <div class="audio-row" id="row-bass">
+                        <span class="audio-label">🎸 Baixo Isolado:</span>
+                        <audio id="player-bass" controls controlsList="nodownload"><source src="" type="audio/mpeg" /></audio>
+                    </div>
+                    <div class="audio-row" id="row-backing">
+                        <span class="audio-label">🥁 Backing Track:</span>
+                        <audio id="player-back" controls controlsList="nodownload"><source src="" type="audio/mpeg" /></audio>
+                    </div>
+                </div>
+
+                <div class="progress-box" id="progress-area" style="display: none">
+                    <label class="progress-label">PROGRESSO: <span id="progress-val" class="progress-value">0%</span></label>
+                    <input type="range" id="progress-slider" class="progress-slider" min="0" max="100" value="0" />
+                </div>
+
+                <div class="nav-buttons">
+                    <button id="btn-prev" class="nav-btn" onclick="changeLesson(-1)">⬅ Anterior</button>
+                    <button id="btn-next" class="nav-btn" onclick="changeLesson(1)">Próximo ➡</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="metronome-modal">
+        <div class="modal-content" style="text-align: center; padding: 20px; max-width: 700px">
+            <button class="close-modal" onclick="toggleMetronome()">X</button>
+            <h2 style="color: #2c3e50; margin-top: 0">Metrônomo Pro</h2>
+            
+            <div class="metro-controls">
+                <div>
+                    <label style="font-weight: bold; color: #7f8c8d">Compasso:</label>
+                    <select id="time-sig" class="metro-select" onchange="generateSteps()">
+                        <option value="4/4">4/4 (Rock/Pop)</option>
+                        <option value="2/4">2/4 (Samba/Polka)</option>
+                        <option value="2/2">2/2 (Cut Time)</option>
+                        <option value="3/4">3/4 (Valsa)</option>
+                        <option value="5/4">5/4 (Jazz/Fusion)</option>
+                        <option value="6/8">6/8 (Blues/Jazz)</option>
+                        <option value="9/8">9/8 (Compound)</option>
+                        <option value="12/8">12/8 (Slow Blues)</option>
+                        <option value="7/4">7/4 (Prog)</option>
+                    </select>
+                </div>
+                <div style="font-size: 2rem; font-weight: bold; color: #e67e22">
+                    <span id="bpm-val">100</span>
+                    <span style="font-size: 1rem; color: #7f8c8d">BPM</span>
+                </div>
+            </div>
+
+            <p style="font-size: 0.8rem; color: #666; margin: 0">
+                Toque nas barras: Mudo > Fraco (Roxo) > Forte (Azul)
+            </p>
+            
+            <div id="sequencer-track" class="sequencer-container"></div>
+            
+            <input type="range" id="bpm-range" min="40" max="220" value="100" 
+                   style="width: 100%; margin: 20px 0; cursor: pointer" 
+                   oninput="updateBpm(this.value)" />
+            
+            <button id="btn-play-metro" onclick="togglePlayMetronome()" 
+                    style="background: #2c3e50; color: white; border: none; padding: 15px 50px; font-size: 1.2rem; border-radius: 50px; cursor: pointer; transition: 0.2s;">
+                ▶ INICIAR
             </button>
-          </div>
-          <div
-            id="roadmap-container"
-            style="flex: 1; overflow: auto; text-align: center; cursor: move"
-          >
-            <div class="mermaid" id="mermaid-graph"></div>
-          </div>
-          <p
-            style="
-              text-align: center;
-              color: #7f8c8d;
-              font-size: 0.8rem;
-              margin-top: 5px;
-            "
-          >
-            Clique numa caixa para ir para a aula.
-          </p>
-        </div>
-      </div>
-
-      <div id="sidebar">
-        <div class="logo-area">
-          <h1>Lógica do Groove</h1>
-          <button class="mobile-menu-toggle" onclick="toggleMobileMenu()"> ☰ Menu </button>
-        </div>
-
-        <div class="tools-area">
-          <button class="btn-metronome" onclick="toggleMetronome()"> <span>⏱️</span>
-            Abrir Metrônomo
-          </button>
-          
-          <button class="btn-metronome" onclick="toggleMap()" style="background: #27ae60" > <span>🗺️</span>
-            Mapa de Estudo
-          </button>
-
-          <button class="btn-metronome" id="btn-games-toggle" onclick="toggleGamesMenu()" style="background: #8e44ad; display: flex; justify-content: space-between; align-items: center;"> 
-    <span>🎮 Jogos & Treinos</span>
-    <span id="games-arrow" style="font-size: 0.8rem;">▼</span>
-</button>
-
-<div id="games-submenu" style="display: none; overflow: hidden; transition: all 0.3s ease;">
-    
-    <button class="btn-metronome sub-item" style="background: #9b59b6;" onclick="window.location.href='game.html'"> 
-        <span>🎼</span> Treino de Notas
-    </button>
-
-    <button class="btn-metronome sub-item" style="background: #2980b9;" onclick="window.location.href='flashcards.html'"> 
-        <span>👂</span> Adivinhe o Intervalo
-    </button>
-
-    <button class="btn-metronome sub-item" style="background: #c0392b;" onclick="window.location.href='songs.html'">
-        <span>🎶</span> Interval Songs
-    </button>
-
-    <button class="btn-metronome sub-item" style="background: #d35400;" onclick="window.location.href='jogo_virus.html'"> 
-        <span>🦠</span> Desafio Vírus
-    </button>
-
-</div>
-
-</div>
-
-
-
-        <div id="menu-container"></div>
-          <div class="sidebar-footer" style="padding: 10px; border-top: 1px solid #34495e;">
-              <button class="btn-logout" id="btnLogout">🚪 Sair / Logout</button>
-          </div>
-      </div>
-
-      <div id="content">
-
-
-<div class="container">
-    
-    <div class="breadcrumb" id="display-module">Módulo...</div>
-    <h2 class="lesson-title" id="display-title">Título da Aula...</h2>
-
-    <div id="study-timer" class="timer-box" style="display: none">
-        <div style="display: flex; flex-direction: column">
-            <span style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8;">Tempo de Prática</span>
-            <span id="timer-display" class="timer-display">00:00</span>
-        </div>
-        <button id="btn-timer" class="timer-btn" onclick="toggleStudyTimer()">▶ INICIAR</button>
-    </div>
-
-    <div class="image-container" id="img-box" style="display: none;">
-        <img id="display-img" src="" alt="Diagrama da aula" />
-    </div>
-
-    <div class="lesson-text" id="display-text">
-        Selecione uma aula no menu.
-    </div>
-
-    <div id="audio-container" class="audio-section" style="display: none">
-        <div class="audio-row" id="row-bass">
-            <span class="audio-label">🎸 Baixo Isolado (Referência):</span>
-            <audio id="player-bass" controls controlsList="nodownload">
-                <source src="" type="audio/mpeg" />
-            </audio>
-        </div>
-        <div class="audio-row" id="row-backing">
-            <span class="audio-label">🥁 Backing Track (Para Praticar):</span>
-            <audio id="player-back" controls controlsList="nodownload">
-                <source src="" type="audio/mpeg" />
-            </audio>
         </div>
     </div>
 
-    <div class="progress-box" id="progress-area" style="display: none">
-        <label class="progress-label">
-            SEU PROGRESSO NESTA AULA:
-            <span id="progress-val" class="progress-value">0%</span>
-        </label>
-        <input type="range" id="progress-slider" class="progress-slider" min="0" max="100" value="0" />
-        <p style="font-size: 0.75rem; color: #7f8c8d; margin-top: 12px; margin-bottom: 0; font-style: italic;">
-            Arraste para marcar. O progresso é salvo na sua conta.
-        </p>
+    <div id="map-modal">
+        <div class="modal-content" style="width:95%; max-width:1000px; height:90%; background:white; padding:10px; display:flex; flex-direction:column;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:10px;">
+                <h2 style="margin:0; color:#2c3e50">Mapa de Evolução</h2>
+                <button class="close-modal" style="position:static" onclick="toggleMap()">X</button>
+            </div>
+            <div id="roadmap-container" style="flex:1; overflow:auto; display:flex; justify-content:center;">
+                <div class="mermaid" id="mermaid-graph"></div>
+            </div>
+        </div>
     </div>
 
-    <div class="nav-buttons">
-        <button id="btn-prev" class="nav-btn" onclick="changeLesson(-1)">⬅ Anterior</button>
-        <button id="btn-next" class="nav-btn" onclick="changeLesson(1)">Próximo ➡</button>
-    </div>
-
-</div>
-
-
-
-
-
-
-
-
-      </div>
-    </div>
-
-    <script src="script.js?v=10"></script>
-    <script type="module" src="firebase.js?"></script>
-  </body>
+    <script src="script.js?v=14"></script>
+    <script type="module" src="firebase.js?v=14"></script>
+</body>
 </html>

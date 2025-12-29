@@ -2,34 +2,357 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Músicas de Intervalos</title>
-    <link rel="stylesheet" href="songs.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Músicas de Referência - Lógica do Groove</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* =========================================
+           ESTILO GERAL (Dark Mode Pro)
+           ========================================= */
+        :root {
+            --bg-dark: #121212;
+            --surface: #1e1e1e;
+            --surface-light: #2c2c2c;
+            --accent: #e67e22;
+            --text: #ecf0f1;
+            --text-dim: #b0b0b0;
+            --border: #333;
+        }
+
+        html, body {
+            width: 100%; height: 100%; margin: 0; padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* App feel */
+            position: fixed; display: flex; flex-direction: column;
+            user-select: none; -webkit-touch-callout: none;
+        }
+
+        /* === HEADER === */
+        .app-header {
+            background: var(--surface);
+            height: 70px; padding: 0 15px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0; z-index: 10;
+        }
+
+        .btn-back {
+            background: var(--surface-light); border: none; color: white;
+            padding: 0 16px; border-radius: 6px; cursor: pointer;
+            font-weight: 600; font-size: 0.9rem; text-decoration: none;
+            display: flex; align-items: center; justify-content: center; height: 36px;
+            transition: background 0.2s;
+        }
+        .btn-back:active { transform: scale(0.95); }
+
+        .header-title {
+            color: var(--accent); font-size: 1rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 1px; text-align: center;
+        }
+
+        /* === BARRA DE BUSCA === */
+        .search-container {
+            padding: 10px 15px; background: var(--bg-dark);
+            border-bottom: 1px solid var(--border); flex-shrink: 0;
+        }
+        .search-input {
+            width: 100%; padding: 12px; border-radius: 8px;
+            border: 1px solid var(--border); background: var(--surface);
+            color: white; font-size: 1rem; outline: none;
+            transition: border-color 0.2s; box-sizing: border-box;
+        }
+        .search-input:focus { border-color: var(--accent); }
+
+        /* === LISTA DE CARDS (CONTEÚDO) === */
+        .content-area {
+            flex: 1; overflow-y: auto; padding: 15px;
+            display: grid; gap: 15px;
+            /* Layout Grid Responsivo: Cria colunas automaticamente se couber */
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            align-content: start;
+            /* Smooth scrolling */
+            -webkit-overflow-scrolling: touch; 
+        }
+
+        /* === O CARTÃO DO INTERVALO === */
+        .interval-card {
+            background: var(--surface); border-radius: 12px;
+            border: 1px solid var(--border); overflow: hidden;
+            display: flex; flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .card-header {
+            background: var(--surface-light); padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .card-title { font-weight: 800; font-size: 1.1rem; color: var(--accent); }
+        .card-subtitle { font-size: 0.8rem; color: var(--text-dim); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; }
+
+        .card-body { padding: 15px; display: flex; flex-direction: column; gap: 15px; }
+
+        /* Seções Ascendente / Descendente */
+        .section-title {
+            font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim);
+            margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-weight: bold;
+        }
+        .section-title i { color: var(--accent); }
+
+        .song-list { display: flex; flex-direction: column; gap: 8px; }
+
+        .song-item {
+            background: rgba(255,255,255,0.03); padding: 8px 10px;
+            border-radius: 6px; display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .song-info { display: flex; flex-direction: column; }
+        .song-title { font-weight: 600; color: #fff; }
+        .song-artist { font-size: 0.8rem; color: #888; font-style: italic; }
+
+        .yt-btn {
+            color: #ff4444; font-size: 1.2rem; padding: 5px;
+            transition: transform 0.2s; cursor: pointer; text-decoration: none;
+        }
+        .yt-btn:active { transform: scale(0.9); }
+
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+
+    </style>
 </head>
 <body>
 
-    <div class="container">
-        <header>
-            <h1>Referência de Músicas por Intervalo</h1>
-            <a href="index.html" class="btn-voltar">Voltar para o Menu</a>
-        </header>
+    <header class="app-header">
+        <a href="index.html" class="btn-back">← Voltar</a>
+        <div class="header-title">Biblioteca de<br>Intervalos</div>
+        <div style="width: 50px;"></div> </header>
 
-        <div class="table-container">
-            <table id="songs-table">
-                <thead>
-                    <tr>
-                        <th class="col-interval">Intervalo</th>
-                        <th class="col-direction">Ascendente (Subindo) <i class="fas fa-arrow-up"></i></th>
-                        <th class="col-direction">Descendente (Descendo) <i class="fas fa-arrow-down"></i></th>
-                    </tr>
-                </thead>
-                <tbody id="songs-list">
-                    </tbody>
-            </table>
-        </div>
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar música, artista ou intervalo...">
     </div>
 
-    <script src="songs.js"></script>
+    <main class="content-area" id="cards-container">
+        </main>
+
+<script>
+    // === DADOS ===
+    const intervalSongsData = [
+        {
+            interval: "Segunda Menor", semitones: "1 semitom",
+            ascending: [
+                { title: "Isn't She Lovely", artist: "Stevie Wonder" },
+                { title: "A Hard Day's Night", artist: "The Beatles" },
+                { title: "Jaws Theme", artist: "John Williams" }
+            ],
+            descending: [
+                { title: "For Whom the Bell Tolls", artist: "Metallica" },
+                { title: "Jurassik Park Theme", artist: "John Williams" },
+                { title: "Fur Elise", artist: "Beethoven" }
+            ]
+        },
+        {
+            interval: "Segunda Maior", semitones: "1 tom",
+            ascending: [
+                { title: "Happy Birthday", artist: "Traditional" },
+                { title: "Silent Night", artist: "Traditional" },
+                { title: "Body and Soul", artist: "John Green" }
+            ],
+            descending: [
+                { title: "Yesterday", artist: "The Beatles" },
+                { title: "Mary Had a Little Lamb", artist: "Traditional" },
+                { title: "The First Noel", artist: "Traditional" }
+            ]
+        },
+        {
+            interval: "Terça Menor", semitones: "1,5 tons",
+            ascending: [
+                { title: "Seven Nation Army", artist: "The White Stripes" },
+                { title: "Greensleeves", artist: "Traditional" },
+                { title: "Smoke on the Water", artist: "Deep Purple" }
+            ],
+            descending: [
+                { title: "Hey Jude", artist: "The Beatles" },
+                { title: "Frosty the Snowman", artist: "Traditional" }
+            ]
+        },
+        {
+            interval: "Terça Maior", semitones: "2 tons",
+            ascending: [
+                { title: "When the Saints Go Marching In", artist: "Traditional" },
+                { title: "Ob-la-di Ob-la-da", artist: "The Beatles" },
+                { title: "Kumbaya", artist: "Traditional" }
+            ],
+            descending: [
+                { title: "Summertime", artist: "Gershwin" },
+                { title: "Beethoven's 5th (Fate)", artist: "Beethoven" }
+            ]
+        },
+        {
+            interval: "Quarta Justa", semitones: "2,5 tons",
+            ascending: [
+                { title: "Here Comes the Bride", artist: "Wagner" },
+                { title: "Amazing Grace", artist: "Traditional" },
+                { title: "Harry Potter Theme", artist: "John Williams" }
+            ],
+            descending: [
+                { title: "O Come All Ye Faithful", artist: "Traditional" },
+                { title: "I've Been Working on the Railroad", artist: "Traditional" }
+            ]
+        },
+        {
+            interval: "Trítono", semitones: "3 tons",
+            ascending: [
+                { title: "The Simpsons Theme", artist: "Danny Elfman" },
+                { title: "Maria (West Side Story)", artist: "Bernstein" }
+            ],
+            descending: [
+                { title: "Enter Sandman", artist: "Metallica" },
+                { title: "Black Sabbath", artist: "Black Sabbath" }
+            ]
+        },
+        {
+            interval: "Quinta Justa", semitones: "3,5 tons",
+            ascending: [
+                { title: "Star Wars Theme", artist: "John Williams" },
+                { title: "Twinkle Twinkle Little Star", artist: "Traditional" },
+                { title: "Superman Theme", artist: "John Williams" }
+            ],
+            descending: [
+                { title: "The Flintstones", artist: "Theme" },
+                { title: "Game of Thrones", artist: "Theme" }
+            ]
+        },
+        {
+            interval: "Sexta Menor", semitones: "4 tons",
+            ascending: [
+                { title: "The Entertainer", artist: "Scott Joplin" },
+                { title: "In My Life", artist: "The Beatles" }
+            ],
+            descending: [
+                { title: "Love Story Theme", artist: "Francis Lai" }
+            ]
+        },
+        {
+            interval: "Sexta Maior", semitones: "4,5 tons",
+            ascending: [
+                { title: "My Way", artist: "Frank Sinatra" },
+                { title: "NBC Chimes", artist: "NBC" }
+            ],
+            descending: [
+                { title: "Nobody Knows the Trouble I've Seen", artist: "Traditional" }
+            ]
+        },
+        {
+            interval: "Sétima Menor", semitones: "5 tons",
+            ascending: [
+                { title: "The Winner Takes It All", artist: "ABBA" },
+                { title: "Star Trek Theme", artist: "Original" }
+            ],
+            descending: [
+                { title: "Watermelon Man", artist: "Herbie Hancock" }
+            ]
+        },
+        {
+            interval: "Sétima Maior", semitones: "5,5 tons",
+            ascending: [
+                { title: "Take on Me", artist: "A-Ha" },
+                { title: "Don't Know Why", artist: "Norah Jones" }
+            ],
+            descending: [
+                { title: "I Love You (Cole Porter)", artist: "Jazz Standard" }
+            ]
+        },
+        {
+            interval: "Oitava Justa", semitones: "6 tons",
+            ascending: [
+                { title: "Somewhere Over the Rainbow", artist: "Judy Garland" },
+                { title: "Singin' in the Rain", artist: "Gene Kelly" }
+            ],
+            descending: [
+                { title: "Willow Weep for Me", artist: "Jazz Standard" }
+            ]
+        }
+    ];
+
+    // === LÓGICA DE RENDERIZAÇÃO ===
+    const container = document.getElementById('cards-container');
+    const searchInput = document.getElementById('searchInput');
+
+    function renderCards(filterText = "") {
+        container.innerHTML = "";
+        const term = filterText.toLowerCase();
+
+        intervalSongsData.forEach(data => {
+            // Filtro: Verifica Título da Música, Artista ou Nome do Intervalo
+            const allSongs = [...data.ascending, ...data.descending];
+            const matchSongs = allSongs.some(s => s.title.toLowerCase().includes(term) || s.artist.toLowerCase().includes(term));
+            const matchInterval = data.interval.toLowerCase().includes(term);
+
+            if (term === "" || matchInterval || matchSongs) {
+                const card = document.createElement('div');
+                card.className = 'interval-card';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span class="card-title">${data.interval}</span>
+                        <span class="card-subtitle">${data.semitones}</span>
+                    </div>
+                    <div class="card-body">
+                        <div>
+                            <div class="section-title"><i class="fas fa-arrow-up"></i> Ascendente (Subindo)</div>
+                            <div class="song-list">
+                                ${generateListHTML(data.ascending)}
+                            </div>
+                        </div>
+                        <div style="border-top: 1px solid #333; padding-top: 10px;">
+                            <div class="section-title"><i class="fas fa-arrow-down"></i> Descendente (Descendo)</div>
+                            <div class="song-list">
+                                ${generateListHTML(data.descending)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+        });
+    }
+
+    function generateListHTML(songs) {
+        if (!songs || songs.length === 0) return '<div class="song-item" style="color:#666;">- Nenhuma referência -</div>';
+        
+        return songs.map(song => {
+            const query = encodeURIComponent(`${song.title} ${song.artist} audio`);
+            return `
+                <div class="song-item">
+                    <div class="song-info">
+                        <span class="song-title">${song.title}</span>
+                        <span class="song-artist">${song.artist}</span>
+                    </div>
+                    <a href="https://www.youtube.com/results?search_query=${query}" target="_blank" class="yt-btn" title="Ouvir no YouTube">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Evento de Busca
+    searchInput.addEventListener('input', (e) => {
+        renderCards(e.target.value);
+    });
+
+    // Fix Rotação
+    window.addEventListener('resize', () => document.body.style.height = window.innerHeight + 'px');
+    
+    // Início
+    renderCards();
+
+</script>
 </body>
 </html>
