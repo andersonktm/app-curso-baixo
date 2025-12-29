@@ -1,27 +1,51 @@
 /* =================================================================
-   1. CORREÇÃO DE NAVEGAÇÃO E FLASH DE LOGIN
-   ================================================================= */
-// Verifica IMEDIATAMENTE se o usuário já estava logado para evitar que a tela de login "pisque"
-(function preventLoginFlash() {
-    if (localStorage.getItem("groove_logged_in") === "true") {
-        // Injeta CSS para esconder o login e mostrar o app antes de tudo carregar
-        const style = document.createElement('style');
-        style.innerHTML = `
-            #login-screen { display: none !important; }
-            #app-container { opacity: 1 !important; }
-        `;
-        document.head.appendChild(style);
-    }
-})();
-
-/* =================================================================
-   2. CONFIGURAÇÃO E VARIÁVEIS GLOBAIS
+   1. GESTÃO DE ESTADO & CACHE (SISTEMA HÍBRIDO)
    ================================================================= */
 let courseData = [];
 let graphDefinition = "";
 const lessonCache = {}; 
 let currentModule = 0;
 let currentLesson = 0;
+
+// === AUTO-INICIALIZAÇÃO (Carregamento Instantâneo) ===
+// Executa antes de qualquer coisa para evitar o "flash" do login
+(function bootFromCache() {
+    const savedData = localStorage.getItem("groove_data");
+    const isLoggedIn = localStorage.getItem("groove_logged_in");
+
+    if (isLoggedIn === "true" && savedData) {
+        try {
+            // Se tem dados salvos, carrega a interface IMEDIATAMENTE
+            const parsedData = JSON.parse(savedData);
+            
+            // Injeta CSS para esconder o login forçadamente enquanto carrega
+            const style = document.createElement('style');
+            style.innerHTML = `#login-screen { display: none !important; } #app-container { opacity: 1 !important; }`;
+            document.head.appendChild(style);
+
+            // Carrega variáveis globais
+            courseData = parsedData.lista_aulas || [];
+            graphDefinition = parsedData.mapa_mermaid || "";
+
+            // Aguarda o DOM estar pronto para desenhar
+            document.addEventListener('DOMContentLoaded', () => {
+                generateMenu();
+                if (courseData.length > 0) {
+                    // Tenta recuperar a última aula visitada
+                    const lastMod = parseInt(localStorage.getItem("last_module") || 0);
+                    const lastLess = parseInt(localStorage.getItem("last_lesson") || 0);
+                    loadLesson(lastMod, lastLess);
+                }
+                generateSteps();
+            });
+            console.log("⚡ App carregado via Cache Local");
+        } catch (e) {
+            console.error("Erro ao ler cache:", e);
+            // Se o cache estiver corrompido, limpa e espera o Firebase
+            localStorage.removeItem("groove_data");
+        }
+    }
+})();
 
 // Link Mágico (Mapa -> Aula)
 window.carregarAula = function (mod, less) {
@@ -31,35 +55,42 @@ window.carregarAula = function (mod, less) {
 };
 
 /* =================================================================
-   3. INICIALIZAÇÃO (Boot)
+   2. CONEXÃO COM FIREBASE (Atualização em Segundo Plano)
    ================================================================= */
 window.iniciarCurso = function (dadosDoFirebase) {
-  console.log("🔥 App Iniciado - Dados Recebidos");
+  console.log("🔥 Dados recebidos da Nuvem");
   
-  // Confirma o login no armazenamento local
+  // 1. Salva os dados novos no celular do usuário
   localStorage.setItem("groove_logged_in", "true");
+  localStorage.setItem("groove_data", JSON.stringify(dadosDoFirebase));
   
-  // Remove qualquer estilo forçado anterior e mostra o app
-  document.getElementById("login-screen").style.display = "none";
-  document.getElementById("app-container").style.opacity = "1";
-  
+  // 2. Atualiza as variáveis
   courseData = dadosDoFirebase.lista_aulas;
   graphDefinition = dadosDoFirebase.mapa_mermaid || "";
 
+  // 3. Garante que a interface esteja certa (caso o cache fosse antigo)
+  const loginScreen = document.getElementById("login-screen");
+  const appContainer = document.getElementById("app-container");
+  
+  if (loginScreen) loginScreen.style.display = "none";
+  if (appContainer) appContainer.style.opacity = "1";
+
   generateMenu();
+  
+  // Só carrega a aula se ainda não tiver carregado pelo cache
+  if (!document.getElementById("display-title").innerText || document.getElementById("display-title").innerText === "Bem-vindo") {
+      if (courseData.length > 0) loadLesson(0, 0);
+  }
 
-  if (courseData.length > 0) loadLesson(0, 0);
-
-  generateSteps(); // Inicializa visual do metrônomo
+  generateSteps();
 };
 
-/* === LÓGICA DE LOGIN MANUAL (FALLBACK) === */
+/* === LÓGICA DE LOGIN MANUAL === */
 document.addEventListener('DOMContentLoaded', () => {
-    // Configura o formulário de login
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
-            e.preventDefault(); 
+            e.preventDefault();
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
             const btn = document.getElementById('btnLogin');
@@ -67,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.innerText = "Entrando...";
             btn.disabled = true;
             
-            // Tenta usar a função global do firebase.js
             if (window.loginWithFirebase) {
                 window.loginWithFirebase(email, pass).catch(err => {
                     btn.innerText = "ENTRAR NA ÁREA DO ALUNO";
@@ -75,9 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert("Erro: " + err.message);
                 });
             } else {
-                // Fallback de segurança se o firebase.js falhar
                 setTimeout(() => {
-                    alert("Conectando ao servidor... Tente novamente em instantes.");
+                    alert("Erro de conexão. Verifique se o firebase.js carregou.");
                     btn.innerText = "ENTRAR NA ÁREA DO ALUNO";
                     btn.disabled = false;
                 }, 2000);
@@ -85,22 +114,26 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Configura o Botão de Sair (Logout)
+    // LÓGICA DE LOGOUT
     const btnLogout = document.getElementById("btnLogout");
     if (btnLogout) {
         btnLogout.addEventListener("click", () => {
-            // Limpa a "memória" do login
-            localStorage.removeItem("groove_logged_in");
-            // Se houver função de logout do firebase, chama ela
-            if (window.logoutFirebase) window.logoutFirebase();
-            // Recarrega a página para voltar à tela de login limpa
-            window.location.reload();
+            if(confirm("Deseja realmente sair?")) {
+                // Limpa tudo para garantir que o próximo login seja limpo
+                localStorage.removeItem("groove_logged_in");
+                localStorage.removeItem("groove_data");
+                localStorage.removeItem("last_module");
+                localStorage.removeItem("last_lesson");
+                
+                if (window.logoutFirebase) window.logoutFirebase();
+                window.location.reload();
+            }
         });
     }
 });
 
 /* =================================================================
-   4. MENU E NAVEGAÇÃO
+   3. MENU E NAVEGAÇÃO
    ================================================================= */
 function generateMenu() {
   const container = document.getElementById("menu-container");
@@ -117,13 +150,17 @@ function generateMenu() {
     lessonList.className = "lessons-list";
     lessonList.id = `mod-list-${modIdx}`;
     
-    if (modIdx === 0) lessonList.classList.add("open");
+    // Mantém aberto se for o módulo atual
+    if (modIdx === currentModule) lessonList.classList.add("open");
 
     mod.lessons.forEach((less, lessIdx) => {
       const btn = document.createElement("div");
       btn.className = "lesson-link";
       btn.id = `link-${modIdx}-${lessIdx}`;
       btn.innerHTML = `${less.title} <span id="percent-${modIdx}-${lessIdx}" class="menu-percent"></span>`;
+      
+      if(modIdx === currentModule && lessIdx === currentLesson) btn.classList.add("active");
+
       btn.onclick = () => {
           loadLesson(modIdx, lessIdx);
           closeMobileMenu();
@@ -160,44 +197,101 @@ function toggleGamesMenu() {
 }
 
 /* =================================================================
-   5. CARREGAMENTO DE AULA
+   4. CARREGAMENTO DE AULA
    ================================================================= */
 async function loadLesson(modIdx, lessIdx) {
   if (!courseData[modIdx] || !courseData[modIdx].lessons[lessIdx]) return;
   
   currentModule = modIdx;
   currentLesson = lessIdx;
+  
+  // Salva onde o aluno parou
+  localStorage.setItem("last_module", modIdx);
+  localStorage.setItem("last_lesson", lessIdx);
+
   const basicData = courseData[modIdx].lessons[lessIdx];
 
-  document.getElementById("display-module").innerText = courseData[modIdx].module;
-  document.getElementById("display-title").innerText = basicData.title;
+  const titleEl = document.getElementById("display-title");
+  if(titleEl) titleEl.innerText = basicData.title;
+  
+  const modEl = document.getElementById("display-module");
+  if(modEl) modEl.innerText = courseData[modIdx].module;
+
   const textContainer = document.getElementById("display-text");
-  textContainer.innerHTML = '<div style="opacity:0.6; text-align:center;">⏳ Carregando...</div>';
+  if(textContainer) textContainer.innerHTML = '<div style="opacity:0.6; text-align:center;">⏳ Carregando conteúdo...</div>';
 
   resetMedia();
 
+  // Cache Strategy (Conteúdo Pesado)
   let fullData = lessonCache[`m${modIdx}l${lessIdx}`];
   if (!fullData && window.fetchLessonContent) {
-      const content = await window.fetchLessonContent(modIdx, lessIdx);
-      if (content) {
-          fullData = { ...basicData, ...content };
-          lessonCache[`m${modIdx}l${lessIdx}`] = fullData;
-      }
+      // Se não tem no cache de memória, tenta buscar (o firebase.js cuida disso)
+      try {
+          const content = await window.fetchLessonContent(modIdx, lessIdx);
+          if (content) {
+              fullData = { ...basicData, ...content };
+              lessonCache[`m${modIdx}l${lessIdx}`] = fullData;
+          }
+      } catch(e) { console.log("Carregando dados locais apenas."); }
   }
   if (!fullData) fullData = basicData;
 
-  if (fullData.text && typeof DOMPurify !== 'undefined') {
-      textContainer.innerHTML = DOMPurify.sanitize(fullData.text.replace(/\n/g, "<br>"), {
-          ALLOWED_TAGS: ['b', 'i', 'strong', 'em', 'p', 'br', 'ul', 'li', 'h3', 'h4', 'span', 'div', 'img', 'svg', 'g', 'circle', 'line', 'text', 'button'],
-          ALLOWED_ATTR: ['style', 'class', 'onclick', 'src', 'alt', 'width', 'height', 'viewBox', 'x', 'y', 'r', 'fill', 'stroke', 'stroke-width', 'transform', 'data-view']
-      });
-  } else {
-      textContainer.innerHTML = fullData.text || "Conteúdo indisponível.";
+  // Renderiza Texto
+  if (textContainer) {
+      if (fullData.text && typeof DOMPurify !== 'undefined') {
+          textContainer.innerHTML = DOMPurify.sanitize(fullData.text.replace(/\n/g, "<br>"), {
+              ALLOWED_TAGS: ['b', 'i', 'strong', 'em', 'p', 'br', 'ul', 'li', 'h3', 'h4', 'span', 'div', 'img', 'svg', 'g', 'circle', 'line', 'text', 'button', 'path'],
+              ALLOWED_ATTR: ['style', 'class', 'onclick', 'src', 'alt', 'width', 'height', 'viewBox', 'x', 'y', 'r', 'fill', 'stroke', 'stroke-width', 'transform', 'data-view', 'd']
+          });
+      } else {
+          textContainer.innerHTML = fullData.text || "Conteúdo indisponível.";
+      }
+      
+      // Reativa os botões de diagrama SVG
+      setupDiagramButtons(textContainer);
   }
 
-  // Ativa botões de diagrama SVG
-  const diagBtns = textContainer.querySelectorAll('.btn-diagram');
-  diagBtns.forEach(btn => {
+  // Imagem
+  const imgBox = document.getElementById("img-box");
+  const imgEl = document.getElementById("display-img");
+  if (imgBox && imgEl) {
+      if (fullData.img) {
+          imgEl.src = fullData.img;
+          imgBox.style.display = "block";
+      } else {
+          imgBox.style.display = "none";
+      }
+  }
+
+  // Áudio
+  const audioContainer = document.getElementById("audio-container");
+  if (audioContainer) {
+      if (fullData.audioBass || fullData.audioBack) {
+          audioContainer.style.display = "block";
+          if(fullData.audioBass) {
+              document.getElementById("player-bass").src = fullData.audioBass;
+              document.getElementById("row-bass").style.display = "block";
+          }
+          if(fullData.audioBack) {
+              document.getElementById("player-back").src = fullData.audioBack;
+              document.getElementById("row-backing").style.display = "block";
+          }
+      } else {
+          audioContainer.style.display = "none";
+      }
+  }
+
+  updateActiveLink();
+  updateNavButtons();
+  if (fullData.duration) initTimer(fullData.duration);
+  
+  const contentDiv = document.getElementById("content");
+  if(contentDiv) contentDiv.scrollTop = 0;
+}
+
+function setupDiagramButtons(container) {
+    const diagBtns = container.querySelectorAll('.btn-diagram');
+    diagBtns.forEach(btn => {
       btn.onclick = function() {
           const mode = this.getAttribute('data-view');
           const wrapper = this.closest('.diagram-wrapper');
@@ -216,42 +310,19 @@ async function loadLesson(modIdx, lessIdx) {
           }
       };
   });
-
-  const imgBox = document.getElementById("img-box");
-  const imgEl = document.getElementById("display-img");
-  if (fullData.img) {
-      imgEl.src = fullData.img;
-      imgBox.style.display = "block";
-  } else {
-      imgBox.style.display = "none";
-  }
-
-  if (fullData.audioBass || fullData.audioBack) {
-      document.getElementById("audio-container").style.display = "block";
-      if(fullData.audioBass) {
-          document.getElementById("player-bass").src = fullData.audioBass;
-          document.getElementById("row-bass").style.display = "block";
-      }
-      if(fullData.audioBack) {
-          document.getElementById("player-back").src = fullData.audioBack;
-          document.getElementById("row-backing").style.display = "block";
-      }
-  }
-
-  updateActiveLink();
-  updateNavButtons();
-  if (fullData.duration) initTimer(fullData.duration);
-  document.getElementById("content").scrollTop = 0;
 }
 
 function resetMedia() {
-    document.getElementById("audio-container").style.display = "none";
+    const ac = document.getElementById("audio-container");
+    if(ac) ac.style.display = "none";
+    
     document.getElementById("row-bass").style.display = "none";
     document.getElementById("row-backing").style.display = "none";
+    
     const p1 = document.getElementById("player-bass");
     const p2 = document.getElementById("player-back");
-    p1.pause(); p1.src = "";
-    p2.pause(); p2.src = "";
+    if(p1) { p1.pause(); p1.src = ""; }
+    if(p2) { p2.pause(); p2.src = ""; }
 }
 
 function changeLesson(dir) {
@@ -267,10 +338,16 @@ function changeLesson(dir) {
 }
 
 function updateNavButtons() {
+    const btnPrev = document.getElementById("btn-prev");
+    const btnNext = document.getElementById("btn-next");
+    
+    if(!courseData.length) return;
+
     const isFirst = currentModule === 0 && currentLesson === 0;
     const isLast = currentModule === courseData.length - 1 && currentLesson === courseData[currentModule].lessons.length - 1;
-    document.getElementById("btn-prev").disabled = isFirst;
-    document.getElementById("btn-next").disabled = isLast;
+    
+    if(btnPrev) btnPrev.disabled = isFirst;
+    if(btnNext) btnNext.disabled = isLast;
 }
 
 function updateActiveLink() {
@@ -278,12 +355,13 @@ function updateActiveLink() {
     const active = document.getElementById(`link-${currentModule}-${currentLesson}`);
     if (active) {
         active.classList.add("active");
-        active.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // Scroll suave apenas se necessário
+        // active.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
 
 /* =================================================================
-   6. METRÔNOMO PRO
+   5. METRÔNOMO PRO
    ================================================================= */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const lookahead = 25.0; 
@@ -411,7 +489,7 @@ function updateBpm(val) {
 }
 
 /* =================================================================
-   7. TIMER & ALARME CUSTOMIZADO
+   6. TIMER & ALARME CUSTOM
    ================================================================= */
 let studyTimer = null, studySecs = 0, isTimerRunning = false, initialSecs = 0;
 
@@ -428,6 +506,7 @@ function initTimer(duration) {
         const btn = document.getElementById("btn-timer");
         btn.innerText = "▶ INICIAR";
         btn.classList.remove("running");
+        btn.disabled = false;
     } else {
         display.style.display = "none";
     }
@@ -478,7 +557,7 @@ function finishTimer() {
 function playAlarm() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const now = audioCtx.currentTime;
-    const volume = 0.5; // Controle de volume
+    const volume = 0.5;
 
     for (let cycle = 0; cycle < 2; cycle++) {
         const cycleDelay = cycle * 1.5; 
@@ -499,7 +578,7 @@ function playAlarm() {
     }
 }
 
-// === MAPA MERMAID COM CLIQUE ===
+// === MAPA MERMAID ===
 try {
   mermaid.initialize({ startOnLoad: false, theme: "neutral", securityLevel: "loose" });
 } catch (e) {}
@@ -537,5 +616,6 @@ async function toggleMap() {
 
 // Fix Rotação Mobile
 window.addEventListener('resize', () => {
-    document.getElementById("app-container").style.height = window.innerHeight + "px";
+    const app = document.getElementById("app-container");
+    if(app) app.style.height = window.innerHeight + "px";
 });
