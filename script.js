@@ -1,5 +1,21 @@
 /* =================================================================
-   1. GESTÃO DE ESTADO & CONFIG
+   1. CORREÇÃO DE NAVEGAÇÃO E FLASH DE LOGIN
+   ================================================================= */
+// Verifica IMEDIATAMENTE se o usuário já estava logado para evitar que a tela de login "pisque"
+(function preventLoginFlash() {
+    if (localStorage.getItem("groove_logged_in") === "true") {
+        // Injeta CSS para esconder o login e mostrar o app antes de tudo carregar
+        const style = document.createElement('style');
+        style.innerHTML = `
+            #login-screen { display: none !important; }
+            #app-container { opacity: 1 !important; }
+        `;
+        document.head.appendChild(style);
+    }
+})();
+
+/* =================================================================
+   2. CONFIGURAÇÃO E VARIÁVEIS GLOBAIS
    ================================================================= */
 let courseData = [];
 let graphDefinition = "";
@@ -15,10 +31,16 @@ window.carregarAula = function (mod, less) {
 };
 
 /* =================================================================
-   2. INICIALIZAÇÃO (Boot)
+   3. INICIALIZAÇÃO (Boot)
    ================================================================= */
 window.iniciarCurso = function (dadosDoFirebase) {
-  console.log("🔥 App Iniciado");
+  console.log("🔥 App Iniciado - Dados Recebidos");
+  
+  // Confirma o login no armazenamento local
+  localStorage.setItem("groove_logged_in", "true");
+  
+  // Remove qualquer estilo forçado anterior e mostra o app
+  document.getElementById("login-screen").style.display = "none";
   document.getElementById("app-container").style.opacity = "1";
   
   courseData = dadosDoFirebase.lista_aulas;
@@ -31,14 +53,13 @@ window.iniciarCurso = function (dadosDoFirebase) {
   generateSteps(); // Inicializa visual do metrônomo
 };
 
-/* === LÓGICA DE LOGIN === */
+/* === LÓGICA DE LOGIN MANUAL (FALLBACK) === */
 document.addEventListener('DOMContentLoaded', () => {
+    // Configura o formulário de login
     const loginForm = document.getElementById('login-form');
-    
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
-            e.preventDefault(); // Previne recarregamento da página
-            
+            e.preventDefault(); 
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
             const btn = document.getElementById('btnLogin');
@@ -46,29 +67,40 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.innerText = "Entrando...";
             btn.disabled = true;
             
-            // Tenta usar a função global do firebase.js se existir
+            // Tenta usar a função global do firebase.js
             if (window.loginWithFirebase) {
                 window.loginWithFirebase(email, pass).catch(err => {
                     btn.innerText = "ENTRAR NA ÁREA DO ALUNO";
                     btn.disabled = false;
-                    alert("Erro ao logar: " + err.message);
+                    alert("Erro: " + err.message);
                 });
             } else {
-                console.warn("Função loginWithFirebase não encontrada. Verifique firebase.js");
-                // Se o firebase.js ainda não carregou, ele pode capturar depois, 
-                // mas isso aqui é um fallback de segurança.
+                // Fallback de segurança se o firebase.js falhar
                 setTimeout(() => {
-                    // Se nada acontecer em 3s, restaura o botão
+                    alert("Conectando ao servidor... Tente novamente em instantes.");
                     btn.innerText = "ENTRAR NA ÁREA DO ALUNO";
                     btn.disabled = false;
-                }, 3000);
+                }, 2000);
             }
+        });
+    }
+
+    // Configura o Botão de Sair (Logout)
+    const btnLogout = document.getElementById("btnLogout");
+    if (btnLogout) {
+        btnLogout.addEventListener("click", () => {
+            // Limpa a "memória" do login
+            localStorage.removeItem("groove_logged_in");
+            // Se houver função de logout do firebase, chama ela
+            if (window.logoutFirebase) window.logoutFirebase();
+            // Recarrega a página para voltar à tela de login limpa
+            window.location.reload();
         });
     }
 });
 
 /* =================================================================
-   3. MENU E NAVEGAÇÃO
+   4. MENU E NAVEGAÇÃO
    ================================================================= */
 function generateMenu() {
   const container = document.getElementById("menu-container");
@@ -128,7 +160,7 @@ function toggleGamesMenu() {
 }
 
 /* =================================================================
-   4. CARREGAMENTO DE AULA
+   5. CARREGAMENTO DE AULA
    ================================================================= */
 async function loadLesson(modIdx, lessIdx) {
   if (!courseData[modIdx] || !courseData[modIdx].lessons[lessIdx]) return;
@@ -163,7 +195,7 @@ async function loadLesson(modIdx, lessIdx) {
       textContainer.innerHTML = fullData.text || "Conteúdo indisponível.";
   }
 
-  // Ativar botões de diagrama SVG
+  // Ativa botões de diagrama SVG
   const diagBtns = textContainer.querySelectorAll('.btn-diagram');
   diagBtns.forEach(btn => {
       btn.onclick = function() {
@@ -251,7 +283,7 @@ function updateActiveLink() {
 }
 
 /* =================================================================
-   5. METRÔNOMO PRO
+   6. METRÔNOMO PRO
    ================================================================= */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const lookahead = 25.0; 
@@ -379,7 +411,7 @@ function updateBpm(val) {
 }
 
 /* =================================================================
-   6. TIMER & ALARME
+   7. TIMER & ALARME CUSTOMIZADO
    ================================================================= */
 let studyTimer = null, studySecs = 0, isTimerRunning = false, initialSecs = 0;
 
@@ -446,7 +478,7 @@ function finishTimer() {
 function playAlarm() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const now = audioCtx.currentTime;
-    const volume = 0.5; // Volume Alto
+    const volume = 0.5; // Controle de volume
 
     for (let cycle = 0; cycle < 2; cycle++) {
         const cycleDelay = cycle * 1.5; 
@@ -467,7 +499,7 @@ function playAlarm() {
     }
 }
 
-// === MAPA MERMAID ===
+// === MAPA MERMAID COM CLIQUE ===
 try {
   mermaid.initialize({ startOnLoad: false, theme: "neutral", securityLevel: "loose" });
 } catch (e) {}
